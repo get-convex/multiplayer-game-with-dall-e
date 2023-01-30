@@ -26,7 +26,7 @@ export const progress = mutation(async ({ db }) => {
   if (!submission) throw new Error("No submission for the round");
   const roundId = await db.insert(
     "rounds",
-    newRound(submission?._id, MaxOptions)
+    newRound(submission.authorId, submission?._id, MaxOptions)
   );
   if (publicGame) {
     await db.patch(publicGame._id, { roundId });

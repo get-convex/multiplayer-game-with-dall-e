@@ -4,7 +4,7 @@ import withZodArgs, { withZodObjectArg, zId } from "./lib/withZod";
 import { MaxOptions, newRound } from "./round";
 import { withSession } from "./sessions";
 import { Document, Id } from "./_generated/dataModel";
-import { DatabaseReader, mutation } from "./_generated/server";
+import { DatabaseReader, mutation, query } from "./_generated/server";
 
 export const create = mutation(
   withSession(async ({ db, session }) => {
@@ -17,6 +17,47 @@ export const create = mutation(
       state: { stage: "lobby" },
     });
   }, true)
+);
+
+export const get = query(
+  withSession(
+    withZodArgs([z.string()], async ({ db, session }, gameCode) => {
+      // Grab the most recent game with this code.
+      const game = await db
+        .query("games")
+        .withIndex("s", (q) => q.eq("slug", gameCode))
+        .order("desc")
+        .first();
+      if (!game) throw new Error("Game not found");
+      if (!session) throw new Error("Session not initialized");
+      if (!game.playerIds.find((id) => id.equals(session.userId))) {
+        throw new Error("Player not part of this game");
+      }
+      const roundPlayerIs = await Promise.all(
+        game.roundIds.map(async (roundId) => {
+          const round = (await db.get(roundId))!;
+          return round.authorId;
+        })
+      );
+      const players = await Promise.all(
+        game.playerIds.map(async (playerId) => {
+          const player = (await db.get(playerId))!;
+          const { name, emoji, profPicUrl } = player;
+          return {
+            name,
+            emoji,
+            profPicUrl,
+            submitted: !!roundPlayerIs.find((id) => id.equals(playerId)),
+          };
+        })
+      );
+      return {
+        hosting: game.hostId.equals(session.userId),
+        players,
+        state: game.state,
+      };
+    })
+  )
 );
 
 export const join = mutation(
@@ -61,13 +102,13 @@ export const submit = mutation(
         const submissionId = await db.insert("submissions", {
           imageStorageId,
           prompt,
-          author: session.userId,
+          authorId: session.userId,
         });
         const roundIds = game.roundIds;
         roundIds.push(
           await db.insert(
             "rounds",
-            newRound(submissionId, game.playerIds.length)
+            newRound(session.userId, submissionId, game.playerIds.length)
           )
         );
         const patch: Partial<Document<"games">> = { roundIds };

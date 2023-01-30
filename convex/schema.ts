@@ -56,6 +56,7 @@ export default defineSchema({
     author: s.id("users"),
   }),
   rounds: defineTable({
+    author: s.id("users"),
     submissionId: s.id("submissions"),
     stageStart: s.number(),
     stageEnd: s.number(),

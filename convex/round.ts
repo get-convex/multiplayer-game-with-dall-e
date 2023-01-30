@@ -11,9 +11,11 @@ const GuessDurationMs = 30000;
 const RevealDurationMs = 30000;
 
 export const newRound = (
+  authorId: Id<"users">,
   submissionId: Id<"submissions">,
   maxOptions: number
 ): WithoutSystemFields<Document<"rounds">> => ({
+  authorId,
   submissionId,
   stage: "label",
   stageStart: Date.now(),
