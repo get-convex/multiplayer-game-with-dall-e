@@ -5,78 +5,91 @@
  * That is left as an exercise to the reader. Some suggestions for a production
  * app:
  * - Use Convex `auth` to authenticate users rather than passing up a "user"
- * - Check that the user is allowed to be in a given room.
+ * - Check that the user is allowed to be in a given game.
  */
-import { query, mutation } from './_generated/server';
+import { withSession } from "./sessions";
+import { query, mutation } from "./_generated/server";
 
 const LIST_LIMIT = 20;
 
 /**
- * Overwrites the presence data for a given user in a room.
+ * Overwrites the presence data for a given user in a game.
  *
  * It will also set the "updated" timestamp to now, and create the presence
  * document if it doesn't exist yet.
  *
- * @param room - The location associated with the presence data. Examples:
+ * @param game - The location associated with the presence data. Examples:
  * page, chat channel, game instance.
  * @param user - The user associated with the presence data.
  */
 export const update = mutation(
-  async ({ db }, room: string, user: string, data: any) => {
+  withSession(async ({ db, session }, game: string, data: any) => {
+    if (!session) {
+      console.error("Session not initalized in presence:update");
+      return;
+    }
     const existing = await db
-      .query('presence')
-      .withIndex('by_user_room', (q) => q.eq('user', user).eq('room', room))
+      .query("presence")
+      .withIndex("by_user_game", (q) =>
+        q.eq("userId", session.userId).eq("game", game)
+      )
       .unique();
     if (existing) {
       await db.patch(existing._id, { data, updated: Date.now() });
     } else {
-      await db.insert('presence', {
-        user,
+      await db.insert("presence", {
+        userId: session.userId,
         data,
-        room,
+        game,
         updated: Date.now(),
       });
     }
-  }
+  })
 );
 
 /**
- * Updates the "updated" timestampe for a given user's presence in a room.
+ * Updates the "updated" timestamp for a given user's presence in a game.
  *
- * @param room - The location associated with the presence data. Examples:
+ * @param game - The location associated with the presence data. Examples:
  * page, chat channel, game instance.
  * @param user - The user associated with the presence data.
  */
 export const heartbeat = mutation(
-  async ({ db }, room: string, user: string) => {
+  withSession(async ({ db, session }, game: string) => {
+    if (!session) {
+      console.warn("Session not initalized in presence:heartbeat");
+      return;
+    }
     const existing = await db
-      .query('presence')
-      .withIndex('by_user_room', (q) => q.eq('user', user).eq('room', room))
+      .query("presence")
+      .withIndex("by_user_game", (q) =>
+        q.eq("userId", session.userId).eq("game", game)
+      )
       .unique();
     if (existing) {
       await db.patch(existing._id, { updated: Date.now() });
     }
-  }
+  })
 );
 
 /**
- * Lists the presence data for N users in a room, ordered by recent update.
+ * Lists the presence data for N users in a game, ordered by recent update.
  *
- * @param room - The location associated with the presence data. Examples:
+ * @param game - The location associated with the presence data. Examples:
  * page, chat channel, game instance.
  * @returns A list of presence objects, ordered by recent update, limited to
  * the most recent N.
  */
-export const list = query(async ({ db }, room: string) => {
+export const list = query(async ({ db }, game: string) => {
   const presence = await db
-    .query('presence')
-    .withIndex('by_room_updated', (q) => q.eq('room', room))
-    .order('desc')
+    .query("presence")
+    .withIndex("by_game_updated", (q) => q.eq("game", game))
+    .order("desc")
     .take(LIST_LIMIT);
-  return presence.map(({ _creationTime, updated, user, data }) => ({
+  return presence.map(({ _creationTime, updated, userId, data }) => ({
     created: _creationTime,
     updated,
-    user,
+    userId,
     data,
   }));
 });

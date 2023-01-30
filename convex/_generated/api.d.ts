@@ -10,9 +10,12 @@
  */
 
 import type { ApiFromModules } from "convex/api";
+import type * as game from "../game";
 import type * as lib_withUser from "../lib/withUser";
 import type * as lib_withZod from "../lib/withZod";
 import type * as presence from "../presence";
+import type * as publicGame from "../publicGame";
+import type * as round from "../round";
 import type * as sessions from "../sessions";
 
 /**
@@ -25,8 +28,11 @@ import type * as sessions from "../sessions";
  * `ConvexReactClient` to create app-specific types.
  */
 export type API = ApiFromModules<{
+  game: typeof game;
   "lib/withUser": typeof lib_withUser;
   "lib/withZod": typeof lib_withZod;
   presence: typeof presence;
+  publicGame: typeof publicGame;
+  round: typeof round;
   sessions: typeof sessions;
 }>;

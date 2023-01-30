@@ -1,4 +1,4 @@
-import { WithoutSystemFields } from "convex/server";
+import { getUser } from "./lib/withUser";
 import { Document, Id } from "./_generated/dataModel";
 import { mutation, MutationCtx, query, QueryCtx } from "./_generated/server";
 
@@ -17,7 +17,8 @@ export const withSession = <Ctx extends QueryCtx, Args extends any[], Output>(
   func: (
     ctx: Ctx & { session: Document<"sessions"> | null },
     ...args: Args
-  ) => Promise<Output>
+  ) => Promise<Output>,
+  required?: boolean
 ): ((
   ctx: Ctx,
   sessionId: Id<"sessions"> | null,
@@ -27,6 +28,13 @@ export const withSession = <Ctx extends QueryCtx, Args extends any[], Output>(
     if (sessionId && sessionId.tableName !== "sessions")
       throw new Error("Invalid Session ID");
     const session = sessionId ? await ctx.db.get(sessionId) : null;
+    if (required && !session) {
+      throw new Error(
+        "Session must be initialized first. " +
+          "Are you wrapping your code with <SessionProvider>? " +
+          "Are you requiring a session from a query that executes immediately?"
+      );
+    }
     return func({ ...ctx, session }, ...args);
   };
 };
@@ -99,9 +107,23 @@ export const queryWithSession = <
  * Creates a session and returns the id. For use with the SessionProvider on the
  * client.
  */
-export const create = mutation(async ({ db }) => {
+export const create = mutation(async ({ db, auth }) => {
+  const identity = await auth.getUserIdentity();
+  let userId: Id<"users"> | null = null;
+  if (identity) {
+    const existingUser = await getUser(db, identity.tokenIdentifier);
+    if (existingUser) {
+      userId = existingUser._id;
+    }
+  }
+  if (!userId) {
+    userId = await db.insert("users", {
+      name: "Anonymous",
+      emoji: "👻",
+    });
+  }
   return db.insert("sessions", {
-    // TODO: insert your default values here
+    userId,
   });
 });
 
@@ -114,19 +136,3 @@ export const get = queryWithSession(async ({ session }) => {
   // want to limit what you return to clients.
   return session;
 });
-
-/**
- * Updates the current session data.
- * TODO: update based on your usecase.
- */
-export const patch = mutationWithSession(
-  async (
-    { db, session },
-    patch: Partial<WithoutSystemFields<Document<"sessions">>>
-  ) => {
-    if (!session) throw new Error("Session not initialized yet");
-    // Depending on your usecase, you might not want to allow patching
-    // all or any fields from the client.
-    db.patch(session._id, patch);
-  }
-);

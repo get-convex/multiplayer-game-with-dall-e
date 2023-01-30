@@ -1,5 +1,12 @@
-import { QueryCtx, MutationCtx, mutation, query } from "../_generated/server";
+import {
+  QueryCtx,
+  MutationCtx,
+  mutation,
+  query,
+  DatabaseReader,
+} from "../_generated/server";
 import { Document } from "../_generated/dataModel";
+import { Auth } from "convex/server";
 
 /**
  * Wrapper for a Convex query or mutation function that provides a user in ctx.
@@ -23,19 +30,24 @@ export const withUser = <Ctx extends QueryCtx, Args extends any[], Output>(
         "Unauthenticated call to function requiring authentication"
       );
     }
-    // Note: If you don't want to define an index right away, you can use
-    // db.query("users")
-    //  .filter(q => q.eq(q.field("tokenIdentifier"), identity.tokenIdentifier))
-    //  .unique();
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) =>
-        q.eq("tokenIdentifier", identity.tokenIdentifier)
-      )
-      .unique();
+    const user = await getUser(ctx.db, identity.tokenIdentifier);
     if (!user) throw new Error("User not found");
     return func({ ...ctx, user }, ...args);
   };
+};
+
+export const getUser = (
+  db: DatabaseReader,
+  tokenIdentifier: string
+): Promise<Document<"users"> | null> => {
+  // Note: If you don't want to define an index right away, you can use
+  // db.query("users")
+  //  .filter(q => q.eq(q.field("tokenIdentifier"), identity.tokenIdentifier))
+  //  .unique();
+  return db
+    .query("users")
+    .withIndex("by_token", (q) => q.eq("tokenIdentifier", tokenIdentifier))
+    .unique();
 };
 
 /**
