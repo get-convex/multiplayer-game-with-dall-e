@@ -1,8 +1,15 @@
 import { useState } from "react";
+import { useQuery } from "../convex/_generated/react";
 import "./App.css";
+import GameRound from "./GameRound";
+import { useSessionMutation } from "./hooks/sessionsClient";
 
 function App() {
   const [count, setCount] = useState(0);
+  //const hostGame = useSessionMutation("game:create");
+  //const [gameCode, setGameCode] = useState("");
+  //const joinGame = useSessionMutation("game:join");
+  const roundId = useQuery("publicGame:get");
 
   return (
     <div className="App">
@@ -10,16 +17,12 @@ function App() {
         <h1>Name That Prompt! by Convex</h1>
       </header>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+        {roundId ? (
+          <GameRound roundId={roundId} />
+        ) : (
+          <article aria-busy="true"></article>
+        )}
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </div>
   );
 }
