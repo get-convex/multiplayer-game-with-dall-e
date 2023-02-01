@@ -1,8 +1,9 @@
 import { z } from "zod";
-import withUser from "./lib/withUser";
-import withZodArgs, { withZodObjectArg, zId } from "./lib/withZod";
+import withZodArgs, { withZodObjectArg } from "./lib/withZod";
+import { zId } from "./lib/zodUtils";
 import { MaxOptions, newRound } from "./round";
 import { withSession } from "./sessions";
+import { ClientGameStateZ } from "./shared";
 import { Document, Id } from "./_generated/dataModel";
 import { DatabaseReader, mutation, query } from "./_generated/server";
 
@@ -21,42 +22,46 @@ export const create = mutation(
 
 export const get = query(
   withSession(
-    withZodArgs([z.string()], async ({ db, session }, gameCode) => {
-      // Grab the most recent game with this code.
-      const game = await db
-        .query("games")
-        .withIndex("s", (q) => q.eq("slug", gameCode))
-        .order("desc")
-        .first();
-      if (!game) throw new Error("Game not found");
-      if (!session) throw new Error("Session not initialized");
-      if (!game.playerIds.find((id) => id.equals(session.userId))) {
-        throw new Error("Player not part of this game");
-      }
-      const roundPlayerIs = await Promise.all(
-        game.roundIds.map(async (roundId) => {
-          const round = (await db.get(roundId))!;
-          return round.authorId;
-        })
-      );
-      const players = await Promise.all(
-        game.playerIds.map(async (playerId) => {
-          const player = (await db.get(playerId))!;
-          const { name, emoji, profPicUrl } = player;
-          return {
-            name,
-            emoji,
-            profPicUrl,
-            submitted: !!roundPlayerIs.find((id) => id.equals(playerId)),
-          };
-        })
-      );
-      return {
-        hosting: game.hostId.equals(session.userId),
-        players,
-        state: game.state,
-      };
-    })
+    withZodArgs(
+      [z.string()],
+      async ({ db, session }, gameCode) => {
+        // Grab the most recent game with this code.
+        const game = await db
+          .query("games")
+          .withIndex("s", (q) => q.eq("slug", gameCode))
+          .order("desc")
+          .first();
+        if (!game) throw new Error("Game not found");
+        if (!session) throw new Error("Session not initialized");
+        if (!game.playerIds.find((id) => id.equals(session.userId))) {
+          throw new Error("Player not part of this game");
+        }
+        const roundPlayerIs = await Promise.all(
+          game.roundIds.map(async (roundId) => {
+            const round = (await db.get(roundId))!;
+            return round.authorId;
+          })
+        );
+        const players = await Promise.all(
+          game.playerIds.map(async (playerId) => {
+            const player = (await getUserById(db, playerId))!;
+            const { name, pictureUrl } = player;
+            return {
+              name,
+              pictureUrl,
+              submitted: !!roundPlayerIs.find((id) => id.equals(playerId)),
+            };
+          })
+        );
+        return {
+          gameId: game._id,
+          hosting: game.hostId.equals(session.userId),
+          players,
+          state: game.state,
+        };
+      },
+      ClientGameStateZ
+    )
   )
 );
 

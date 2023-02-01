@@ -1,6 +1,7 @@
 import { WithoutSystemFields } from "convex/server";
 import { optional, z } from "zod";
-import withZodArgs, { withZodObjectArg, zId } from "./lib/withZod";
+import withZodArgs, { withZodObjectArg } from "./lib/withZod";
+import { zId } from "./lib/zodUtils";
 import { withSession } from "./sessions";
 import { Document, Id } from "./_generated/dataModel";
 import { DatabaseReader, mutation, query } from "./_generated/server";

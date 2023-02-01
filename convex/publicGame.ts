@@ -1,6 +1,7 @@
 import { z } from "zod";
 import withUser from "./lib/withUser";
-import withZodArgs, { withZodObjectArg, zId } from "./lib/withZod";
+import withZodArgs, { withZodObjectArg } from "./lib/withZod";
+import { zId } from "./lib/zodUtils";
 import { MaxOptions, newRound } from "./round";
 import { withSession } from "./sessions";
 import { Document, Id } from "./_generated/dataModel";
