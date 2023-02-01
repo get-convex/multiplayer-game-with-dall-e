@@ -110,18 +110,9 @@ export const queryWithSession = <
  */
 export const create = mutation(async ({ db, auth }) => {
   const identity = await auth.getUserIdentity();
-  let userId: Id<"users"> | null = null;
-  if (identity) {
-    const existingUser = await getUser(db, identity.tokenIdentifier);
-    if (existingUser) {
-      userId = existingUser._id;
-    }
-  }
+  let userId = identity && (await getOrCreateUser(db, identity));
   if (!userId) {
-    userId = await db.insert("users", {
-      name: "Anonymous",
-      emoji: "👻",
-    });
+    userId = await createAnonymousUser(db);
   }
   return db.insert("sessions", {
     userId,

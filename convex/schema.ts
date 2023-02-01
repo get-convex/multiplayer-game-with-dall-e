@@ -4,10 +4,9 @@ export default defineSchema({
   // For withUser:
   users: defineTable({
     name: s.string(),
-    emoji: s.string(),
-    email: s.optional(s.string()),
-    profPicUrl: s.optional(s.string()),
+    pictureUrl: s.string(),
     tokenIdentifier: s.optional(s.string()),
+    claimedByUserId: s.optional(s.id("users")),
   }).index("by_token", ["tokenIdentifier"]),
   // End withUser
   // For presence:
@@ -53,10 +52,10 @@ export default defineSchema({
   submissions: defineTable({
     imageStorageId: s.string(),
     prompt: s.string(),
-    author: s.id("users"),
+    authorId: s.id("users"),
   }),
   rounds: defineTable({
-    author: s.id("users"),
+    authorId: s.id("users"),
     submissionId: s.id("submissions"),
     stageStart: s.number(),
     stageEnd: s.number(),

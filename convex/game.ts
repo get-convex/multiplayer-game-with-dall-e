@@ -4,13 +4,14 @@ import { zId } from "./lib/zodUtils";
 import { MaxOptions, newRound } from "./round";
 import { withSession } from "./sessions";
 import { ClientGameStateZ } from "./shared";
+import { getUserById } from "./users";
 import { Document, Id } from "./_generated/dataModel";
-import { DatabaseReader, mutation, query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 
 export const create = mutation(
   withSession(async ({ db, session }) => {
     if (!session) throw new Error("Session not initialized");
-    const gameId = db.insert("games", {
+    return db.insert("games", {
       hostId: session.userId,
       playerIds: [session.userId],
       roundIds: [],

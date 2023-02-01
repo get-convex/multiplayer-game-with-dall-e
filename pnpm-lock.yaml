@@ -1,10 +1,12 @@
 lockfileVersion: 5.4
 
 specifiers:
+  '@types/md5': ^2.3.2
   '@types/react': ^18.0.26
   '@types/react-dom': ^18.0.9
   '@vitejs/plugin-react': ^3.0.0
   convex: ^0.7.1
+  md5: ^2.3.0
   react: ^18.2.0
   react-dom: ^18.2.0
   typescript: ^4.9.3
@@ -13,11 +15,13 @@ specifiers:
 
 dependencies:
   convex: 0.7.1_biqbaboplfbrettd7655fr4n2y
+  md5: 2.3.0
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
   zod: 3.20.2
 
 devDependencies:
+  '@types/md5': 2.3.2
   '@types/react': 18.0.27
   '@types/react-dom': 18.0.10
   '@vitejs/plugin-react': 3.0.1_vite@4.0.4
@@ -507,6 +511,10 @@ packages:
       '@jridgewell/sourcemap-codec': 1.4.14
     dev: true
 
+  /@types/md5/2.3.2:
+    resolution: {integrity: sha512-v+JFDu96+UYJ3/UWzB0mEglIS//MZXgRaJ4ubUPwOM0gvLc/kcQ3TWNYwENEK7/EcXGQVrW8h/XqednSjBd/Og==}
+    dev: true
+
   /@types/prop-types/15.7.5:
     resolution: {integrity: sha512-JCB8C6SnDoQf0cNycqd/35A7MjcnK+ZTqE7judS6o7utxUCg6imJg3QK2qzHKszlTjcj2cn+NwMB2i96ubpj7w==}
     dev: true
@@ -580,6 +588,10 @@ packages:
       supports-color: 5.5.0
     dev: true
 
+  /charenc/0.0.2:
+    resolution: {integrity: sha512-yrLQ/yVUFXkzg7EDQsPieE/53+0RlaWTs+wBrvW36cyilJ2SaDWfl4Yj7MtLTXleV9uEKefbAGUPv2/iWSooRA==}
+    dev: false
+
   /color-convert/1.9.3:
     resolution: {integrity: sha512-QfAUtd+vFdAtFQcC8CCyYt1fYWxSqAiK2cSD6zDB8N3cpsEBAvRxp9zOGg6G/SHHJYAT88/az/IuDGALsNVbGg==}
     dependencies:
@@ -617,6 +629,10 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       uuid: 9.0.0
+    dev: false
+
+  /crypt/0.0.2:
+    resolution: {integrity: sha512-mCxBlsHFYh9C+HVpiEacem8FEBnMXgU9gy4zmNC+SXAZNB/1idgp/aulFJ4FgCi7GPEVbfyng092GqL2k2rmow==}
     dev: false
 
   /csstype/3.1.1:
@@ -936,6 +952,10 @@ packages:
       safer-buffer: 2.1.2
     dev: false
 
+  /is-buffer/1.1.6:
+    resolution: {integrity: sha512-NcdALwpXkTm5Zvvbk7owOUSvVvBKDgKP5/ewfXEznmQFfs4ZRmanOeKBTjRVjka3QFoN6XJ+9F3USqfHqTaU5w==}
+    dev: false
+
   /is-core-module/2.11.0:
     resolution: {integrity: sha512-RRjxlvLDkD1YJwDbroBHMb+cukurkDWNyHx7D3oNB5x9rb5ogcksMC5wHCadcXoo67gVr/+3GFySh3134zi6rw==}
     dependencies:
@@ -976,6 +996,14 @@ packages:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.14
     dev: true
+
+  /md5/2.3.0:
+    resolution: {integrity: sha512-T1GITYmFaKuO91vxyoQMFETst+O71VUPEU3ze5GNzDm0OWdP8v1ziTaAEPUr/3kLsY3Sftgz242A1SetQiDL7g==}
+    dependencies:
+      charenc: 0.0.2
+      crypt: 0.0.2
+      is-buffer: 1.1.6
+    dev: false
 
   /ms/2.1.2:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}
