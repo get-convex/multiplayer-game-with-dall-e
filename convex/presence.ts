@@ -23,28 +23,31 @@ const LIST_LIMIT = 20;
  * @param user - The user associated with the presence data.
  */
 export const update = mutation(
-  withSession(async ({ db, session }, game: string, data: any) => {
-    if (!session) {
-      console.error("Session not initalized in presence:update");
-      return;
-    }
-    const existing = await db
-      .query("presence")
-      .withIndex("by_user_game", (q) =>
-        q.eq("userId", session.userId).eq("game", game)
-      )
-      .unique();
-    if (existing) {
-      await db.patch(existing._id, { data, updated: Date.now() });
-    } else {
-      await db.insert("presence", {
-        userId: session.userId,
-        data,
-        game,
-        updated: Date.now(),
-      });
-    }
-  })
+  withSession(
+    async ({ db, session }, game: string, data: any) => {
+      if (!session) {
+        console.error("Session not initalized in presence:update");
+        return;
+      }
+      const existing = await db
+        .query("presence")
+        .withIndex("by_user_game", (q) =>
+          q.eq("userId", session.userId).eq("game", game)
+        )
+        .unique();
+      if (existing) {
+        await db.patch(existing._id, { data, updated: Date.now() });
+      } else {
+        await db.insert("presence", {
+          userId: session.userId,
+          data,
+          game,
+          updated: Date.now(),
+        });
+      }
+    },
+    { optional: true }
+  )
 );
 
 /**
@@ -55,21 +58,24 @@ export const update = mutation(
  * @param user - The user associated with the presence data.
  */
 export const heartbeat = mutation(
-  withSession(async ({ db, session }, game: string) => {
-    if (!session) {
-      console.warn("Session not initalized in presence:heartbeat");
-      return;
-    }
-    const existing = await db
-      .query("presence")
-      .withIndex("by_user_game", (q) =>
-        q.eq("userId", session.userId).eq("game", game)
-      )
-      .unique();
-    if (existing) {
-      await db.patch(existing._id, { updated: Date.now() });
-    }
-  })
+  withSession(
+    async ({ db, session }, game: string) => {
+      if (!session) {
+        console.warn("Session not initalized in presence:heartbeat");
+        return;
+      }
+      const existing = await db
+        .query("presence")
+        .withIndex("by_user_game", (q) =>
+          q.eq("userId", session.userId).eq("game", game)
+        )
+        .unique();
+      if (existing) {
+        await db.patch(existing._id, { updated: Date.now() });
+      }
+    },
+    { optional: true }
+  )
 );
 
 /**

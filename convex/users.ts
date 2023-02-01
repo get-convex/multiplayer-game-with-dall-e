@@ -12,7 +12,6 @@ export const loggedIn = mutation(
     if (!identity) {
       throw new Error("Trying to store a user without authentication present.");
     }
-    if (!session) throw new Error("Session not initialized");
     const userId = await getOrCreateUser(db, identity);
     if (!userId.equals(session.userId)) {
       const sessionUser = (await db.get(session.userId))!;
@@ -56,7 +55,6 @@ export const createAnonymousUser = (db: DatabaseWriter) => {
 
 export const loggedOut = mutation(
   withSession(async ({ db, session }) => {
-    if (!session) throw new Error("Session not initialized");
     await db.patch(session._id, { userId: await createAnonymousUser(db) });
   })
 );

@@ -10,7 +10,6 @@ import { mutation, query } from "./_generated/server";
 
 export const create = mutation(
   withSession(async ({ db, session }) => {
-    if (!session) throw new Error("Session not initialized");
     return db.insert("games", {
       hostId: session.userId,
       playerIds: [session.userId],
@@ -18,7 +17,7 @@ export const create = mutation(
       slug: randomSlug(),
       state: { stage: "lobby" },
     });
-  }, true)
+  })
 );
 
 export const get = query(
@@ -33,7 +32,6 @@ export const get = query(
           .order("desc")
           .first();
         if (!game) throw new Error("Game not found");
-        if (!session) throw new Error("Session not initialized");
         if (!game.playerIds.find((id) => id.equals(session.userId))) {
           throw new Error("Player not part of this game");
         }
@@ -69,7 +67,6 @@ export const get = query(
 export const join = mutation(
   withSession(
     withZodArgs([z.string()], async ({ db, session }, slug: string) => {
-      if (!session) throw new Error("Session not initialized");
       // Grab the most recent game with this slug, if it exists
       const game = await db
         .query("games")
@@ -91,8 +88,7 @@ export const join = mutation(
       }
 
       return game._id;
-    }),
-    true
+    })
   )
 );
 
@@ -101,7 +97,6 @@ export const submit = mutation(
     withZodObjectArg(
       { prompt: z.string(), imageStorageId: z.string(), gameId: zId("games") },
       async ({ db, session }, { prompt, imageStorageId, gameId }) => {
-        if (!session) throw new Error("Session not initialized");
         const game = await db.get(gameId);
         if (!game) throw new Error("Game not found");
         // TODO: check they haven't submitted already.
@@ -145,7 +140,6 @@ export const progress = mutation(
         ]),
       ],
       async ({ db, session }, gameId, fromStage) => {
-        if (!session) throw new Error("Session not initialized");
         const game = await db.get(gameId);
         if (!game) throw new Error("Game not found");
         if (!game.hostId.equals(session.userId))

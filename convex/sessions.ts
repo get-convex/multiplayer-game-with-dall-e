@@ -1,4 +1,3 @@
-import { getUser } from "./lib/withUser";
 import { createAnonymousUser, getOrCreateUser } from "./users";
 import { Document, Id } from "./_generated/dataModel";
 import { mutation, MutationCtx, query, QueryCtx } from "./_generated/server";
@@ -14,22 +13,64 @@ import { mutation, MutationCtx, query, QueryCtx } from "./_generated/server";
  * @param func - Your function that can now take in a `session` in the first param.
  * @returns A function to be passed to `query` or `mutation`.
  */
-export const withSession = <Ctx extends QueryCtx, Args extends any[], Output>(
+export function withSession<Ctx extends QueryCtx, Args extends any[], Output>(
+  func: (
+    ctx: Ctx & { session: Document<"sessions"> },
+    ...args: Args
+  ) => Promise<Output>
+): (
+  ctx: Ctx,
+  sessionId: Id<"sessions"> | null,
+  ...args: Args
+) => Promise<Output>;
+/**
+ * Wrapper for a Convex query or mutation function that provides a session in ctx.
+ *
+ * Requires the sessionId as the first parameter. This is provided by default by
+ * using useSessionQuery or useSessionMutation.
+ * Pass this to `query`, `mutation`, or another wrapper. E.g.:
+ * export default mutation(withSession(async ({ db, auth, session }, arg1) => {...}));
+ * @param func - Your function that can now take in a `session` in the first param.
+ * @returns A function to be passed to `query` or `mutation`.
+ */
+export function withSession<Ctx extends QueryCtx, Args extends any[], Output>(
   func: (
     ctx: Ctx & { session: Document<"sessions"> | null },
     ...args: Args
   ) => Promise<Output>,
-  required?: boolean
-): ((
+  options: { optional: true }
+): (
   ctx: Ctx,
   sessionId: Id<"sessions"> | null,
   ...args: Args
-) => Promise<Output>) => {
+) => Promise<Output>;
+/**
+ * Wrapper for a Convex query or mutation function that provides a session in ctx.
+ *
+ * Requires the sessionId as the first parameter. This is provided by default by
+ * using useSessionQuery or useSessionMutation.
+ * Throws an exception if there isn't a valid session.
+ * Pass this to `query`, `mutation`, or another wrapper. E.g.:
+ * export default mutation(withSession(async ({ db, auth, session }, arg1) => {...}));
+ * @param func - Your function that can now take in a `session` in the first param.
+ * @returns A function to be passed to `query` or `mutation`.
+ */
+export function withSession<Ctx extends QueryCtx, Args extends any[], Output>(
+  func: (
+    ctx: Ctx & { session: Document<"sessions"> | null },
+    ...args: Args
+  ) => Promise<Output>,
+  options?: { optional: true }
+): (
+  ctx: Ctx,
+  sessionId: Id<"sessions"> | null,
+  ...args: Args
+) => Promise<Output> {
   return async (ctx: Ctx, sessionId: Id<"sessions"> | null, ...args: Args) => {
     if (sessionId && sessionId.tableName !== "sessions")
       throw new Error("Invalid Session ID");
     const session = sessionId ? await ctx.db.get(sessionId) : null;
-    if (required && !session) {
+    if (!options?.optional && !session) {
       throw new Error(
         "Session must be initialized first. " +
           "Are you wrapping your code with <SessionProvider>? " +
@@ -38,7 +79,7 @@ export const withSession = <Ctx extends QueryCtx, Args extends any[], Output>(
     }
     return func({ ...ctx, session }, ...args);
   };
-};
+}
 
 /**
  * Wrapper for a Convex mutation function that provides a session in ctx.
@@ -73,7 +114,7 @@ export const mutationWithSession = <Args extends any[], Output>(
  *
  * Requires the sessionId as the first parameter. This is provided by default by
  * using useSessionQuery.
- * Throws an exception if there isn't a session logged in.
+ * If the session isn't initialized yet, it will pass null.
  * You can't return null, because we use that sentinel value as a sign that
  * the session hasn't been initialized yet.
  * E.g.:
@@ -86,22 +127,11 @@ export const queryWithSession = <
   Output extends NonNullable<any>
 >(
   func: (
-    ctx: QueryCtx & { session: Document<"sessions"> },
+    ctx: QueryCtx & { session: Document<"sessions"> | null },
     ...args: Args
   ) => Promise<Output | null>
 ) => {
-  return query(
-    withSession((ctx, ...args: Args) => {
-      const { session } = ctx;
-      if (!session) {
-        // If the session hasn't been initialized yet, let's act like the query
-        // hasn't finished yet. On the client, it will be translated to
-        // `undefined`.
-        return Promise.resolve(null);
-      }
-      return func({ ...ctx, session }, ...args);
-    })
-  );
+  return query(withSession(func, { optional: true }));
 };
 
 /**

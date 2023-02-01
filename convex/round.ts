@@ -89,7 +89,6 @@ export const addPrompt = mutation(
     withZodObjectArg(
       { roundId: zId("rounds"), prompt: z.string() },
       async ({ db, session }, { roundId, prompt }) => {
-        if (!session) throw new Error("Session not initialized");
         const round = await db.get(roundId);
         if (!round) throw new Error("Round not found");
         if (round.stage !== "label") {
@@ -133,8 +132,7 @@ export const addPrompt = mutation(
         await db.patch(round._id, patch);
         return { success: true };
       }
-    ),
-    true
+    )
   )
 );
 
@@ -153,7 +151,6 @@ export const vote = mutation(
     withZodObjectArg(
       { roundId: zId("rounds"), prompt: z.string() },
       async ({ db, session }, { roundId, prompt }) => {
-        if (!session) throw new Error("Session not initialized");
         const round = await db.get(roundId);
         if (!round) throw new Error("Round not found");
         if (round.stage !== "label") {
@@ -202,8 +199,7 @@ export const vote = mutation(
         await db.patch(round._id, patch);
         return { success: true, retry: true };
       }
-    ),
-    true
+    )
   )
 );
 
