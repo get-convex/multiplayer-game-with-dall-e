@@ -2,7 +2,7 @@ import { z } from "zod";
 import withZodArgs, { withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
 import { newRound } from "./round";
-import { withSession } from "./sessions";
+import { withSession } from "./lib/withSession";
 import { Document, Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 

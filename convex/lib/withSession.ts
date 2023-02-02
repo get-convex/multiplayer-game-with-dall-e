@@ -1,6 +1,6 @@
-import { createAnonymousUser, getOrCreateUser } from "./users";
-import { Document, Id } from "./_generated/dataModel";
-import { mutation, MutationCtx, query, QueryCtx } from "./_generated/server";
+import { createAnonymousUser, getOrCreateUser } from "../users";
+import { Document, Id } from "../_generated/dataModel";
+import { mutation, MutationCtx, query, QueryCtx } from "../_generated/server";
 
 /**
  * Wrapper for a Convex query or mutation function that provides a session in ctx.
@@ -149,14 +149,4 @@ export const create = mutation(async ({ db, auth }) => {
   return db.insert("sessions", {
     userId,
   });
-});
-
-/**
- * Gets the current session.
- * TODO: update based on your usecase.
- */
-export const get = queryWithSession(async ({ session }) => {
-  // Depending on what sensitive data you store in here, you might
-  // want to limit what you return to clients.
-  return session;
 });

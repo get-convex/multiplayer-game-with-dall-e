@@ -2,7 +2,7 @@ import { WithoutSystemFields } from "convex/server";
 import { optional, z } from "zod";
 import withZodArgs, { withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
-import { queryWithSession, withSession } from "./sessions";
+import { queryWithSession, withSession } from "./lib/withSession";
 import { Document, Id } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
 

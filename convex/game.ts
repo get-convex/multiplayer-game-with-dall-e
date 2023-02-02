@@ -2,7 +2,7 @@ import { z } from "zod";
 import withZodArgs from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
 import { calculateScoreDeltas, MaxOptions } from "./round";
-import { withSession } from "./sessions";
+import { withSession } from "./lib/withSession";
 import { ClientGameStateZ } from "./shared";
 import { getUserById } from "./users";
 import { Document, Id } from "./_generated/dataModel";

@@ -7,7 +7,7 @@
  * - Use Convex `auth` to authenticate users rather than passing up a "user"
  * - Check that the user is allowed to be in a given game.
  */
-import { withSession } from "./sessions";
+import { withSession } from "./lib/withSession";
 import { query, mutation } from "./_generated/server";
 
 const LIST_LIMIT = 20;
