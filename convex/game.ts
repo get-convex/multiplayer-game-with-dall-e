@@ -48,6 +48,7 @@ export const get = query(
             const player = (await getUserById(db, playerId))!;
             const { name, pictureUrl } = player;
             return {
+              me: player._id.equals(session.userId),
               name,
               pictureUrl,
               submitted: !!roundPlayerIs.find((id) => id.equals(playerId)),

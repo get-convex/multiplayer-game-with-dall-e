@@ -20,8 +20,14 @@ function App() {
         <section>
           {gameCode ? (
             <Game gameCode={gameCode} />
-          ) : roundId ? (
+          ) : roundId ? (<>
             <GameRound roundId={roundId} />
+            <button >Host Game</button>
+            <form>
+              <input type="text"
+            <button >Join Game</button>
+            </form>
+            </>
           ) : (
             <article aria-busy="true"></article>
           )}

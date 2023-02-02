@@ -11,6 +11,7 @@ export const ClientGameStateZ = z.object({
   hosting: z.boolean(),
   players: z.array(
     z.object({
+      me: z.boolean(),
       name: z.string(),
       pictureUrl: z.string(),
       submitted: z.boolean(),
