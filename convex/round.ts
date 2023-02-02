@@ -4,7 +4,7 @@ import withZodArgs, { withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
 import { queryWithSession, withSession } from "./sessions";
 import { Document, Id } from "./_generated/dataModel";
-import { DatabaseReader, mutation, query } from "./_generated/server";
+import { mutation } from "./_generated/server";
 
 export const MaxOptions = 8;
 const LabelDurationMs = 30000;

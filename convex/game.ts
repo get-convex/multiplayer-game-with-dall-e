@@ -8,6 +8,8 @@ import { getUserById } from "./users";
 import { Document, Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 
+const GenerateDurationMs = 120000;
+
 export const create = mutation(
   withSession(async ({ db, session }) => {
     const gameId = await db.insert("games", {
@@ -152,7 +154,7 @@ export const progress = mutation(
           z.literal("recap"),
         ]),
       ],
-      async ({ db, session }, gameId, fromStage) => {
+      async ({ db, session, scheduler }, gameId, fromStage) => {
         const game = await db.get(gameId);
         if (!game) throw new Error("Game not found");
         if (!game.hostId.equals(session.userId))
@@ -166,6 +168,15 @@ export const progress = mutation(
           );
         }
         await db.patch(game._id, { state });
+        if (state.stage === "generate") {
+          scheduler.runAfter(
+            GenerateDurationMs,
+            "game:progress",
+            session._id,
+            gameId,
+            state.stage
+          );
+        }
       }
     )
   )
