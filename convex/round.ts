@@ -2,7 +2,7 @@ import { WithoutSystemFields } from "convex/server";
 import { optional, z } from "zod";
 import withZodArgs, { withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
-import { withSession } from "./sessions";
+import { queryWithSession, withSession } from "./sessions";
 import { Document, Id } from "./_generated/dataModel";
 import { DatabaseReader, mutation, query } from "./_generated/server";
 
@@ -26,23 +26,45 @@ export const newRound = (
   options: [{ prompt, authorId, votes: [], likes: [] }],
 });
 
-export const getRound = query(
+export const getRound = queryWithSession(
   withZodArgs(
     [zId("rounds")],
-    async ({ db, storage }, roundId) => {
+    async ({ db, session, storage }, roundId) => {
       const round = await db.get(roundId);
       if (!round) throw new Error("Round not found");
       const { stage, stageEnd } = round;
       const imageUrl = await storage.getUrl(round.imageStorageId);
+
+      const userInfo = async (userId: Id<"users">) => {
+        const user = (await db.get(userId))!;
+        return {
+          me: user._id.equals(session?.userId),
+          name: user.name,
+          pictureUrl: user.pictureUrl,
+        };
+      };
+
       switch (stage) {
         case "label":
-          return { stage, imageUrl, stageEnd };
+          return {
+            stage,
+            imageUrl,
+            stageEnd,
+            submitted: await Promise.all(
+              round.options.map((option) => userInfo(option.authorId))
+            ),
+          };
         case "guess":
+          const allGuesses = round.options.reduce(
+            (all, { votes }) => all.concat(votes),
+            [] as Id<"users">[]
+          );
           return {
             options: round.options.map((option) => option.prompt),
             stage,
             imageUrl,
             stageEnd,
+            submitted: await Promise.all(allGuesses.map(userInfo)),
           };
         case "reveal":
           // TODO
@@ -59,11 +81,25 @@ export const getRound = query(
         stage: z.literal("label"),
         imageUrl: z.string(),
         stageEnd: z.number(),
+        submitted: z.array(
+          z.object({
+            me: z.boolean(),
+            name: z.string(),
+            pictureUrl: z.string(),
+          })
+        ),
       }),
       z.object({
         stage: z.literal("guess"),
         imageUrl: z.string(),
         stageEnd: z.number(),
+        submitted: z.array(
+          z.object({
+            me: z.boolean(),
+            name: z.string(),
+            pictureUrl: z.string(),
+          })
+        ),
         options: z.array(z.string()),
       }),
       z.object({
@@ -84,7 +120,7 @@ export const getRound = query(
   )
 );
 
-export const addPrompt = mutation(
+export const addOption = mutation(
   withSession(
     withZodObjectArg(
       { roundId: zId("rounds"), prompt: z.string() },
@@ -153,7 +189,7 @@ export const vote = mutation(
       async ({ db, session }, { roundId, prompt }) => {
         const round = await db.get(roundId);
         if (!round) throw new Error("Round not found");
-        if (round.stage !== "label") {
+        if (round.stage !== "guess") {
           return { success: false, reason: "Too late to vote." };
         }
         const optionVotedFor = round.options.find(
@@ -189,14 +225,14 @@ export const vote = mutation(
             .concat(...round.options.slice(voteIndex + 1));
         }
         optionVotedFor.votes.push(session.userId);
+        await db.patch(round._id, { options: round.options });
 
         const totalVotes = round.options
           .map((option) => option.votes.length)
           .reduce((total, votes) => total + votes, 0);
-        const patch: Partial<typeof round> =
-          totalVotes === round.maxOptions ? beingRevealPatch(round) : {};
-        patch.options = round.options;
-        await db.patch(round._id, patch);
+        if (totalVotes === round.maxOptions) {
+          await db.patch(round._id, revealPatch(round));
+        }
         return { success: true, retry: true };
       }
     )
@@ -204,7 +240,7 @@ export const vote = mutation(
 );
 
 // Modifies parameter to progress to guessing
-const beingRevealPatch = (
+const revealPatch = (
   round: Document<"rounds">
 ): Partial<Document<"rounds">> => ({
   stage: "reveal",

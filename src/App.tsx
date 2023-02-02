@@ -12,10 +12,8 @@ function App() {
   const hostGame = useSessionMutation("game:create");
   const [gameId, setGameId] = useState(() => {
     if (typeof window === "undefined") return null;
-    console.log(window.location.hash);
     const id = window.location.hash.substring(1);
     if (!id || id.length !== 22) return null;
-    console.log({ id });
     return new Id("games", id);
   });
   useEffect(() => {
@@ -31,16 +29,20 @@ function App() {
       <header>
         <h1>Name That Prompt! by Convex</h1>
       </header>
-      <main>
-        <section>
-          {gameId ? (
-            <Game gameId={gameId} />
-          ) : roundId ? (
-            <GameRound roundId={roundId} />
-          ) : (
-            <article aria-busy="true"></article>
-          )}
-        </section>
+      <section>
+        {gameId ? (
+          <Game gameId={gameId} done={(nextGameId) => setGameId(nextGameId)} />
+        ) : (
+          <>
+            {roundId ? (
+              <GameRound roundId={roundId} />
+            ) : (
+              <article aria-busy="true"></article>
+            )}
+          </>
+        )}
+      </section>
+      {!gameId && (
         <section>
           <button
             onClick={async () => {
@@ -63,7 +65,7 @@ function App() {
             <button type="submit">Join Game</button>
           </form>
         </section>
-      </main>
+      )}
     </>
   );
 }

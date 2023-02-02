@@ -30,6 +30,7 @@ export const ClientGameStateZ = z.object({
       roundId: zId("rounds"),
     }),
   ]),
+  nextGameId: z.nullable(zId("games")),
 });
 
 export type ClientGameState = z.infer<typeof ClientGameStateZ>;

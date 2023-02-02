@@ -4,9 +4,9 @@ import { useQuery } from "../convex/_generated/react";
 import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
 
 const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
-  const round = useQuery("round:getRound", roundId);
+  const round = useSessionQuery("round:getRound", roundId);
   const [prompt, setPrompt] = useState("");
-  const addPrompt = useSessionMutation("round:addPrompt");
+  const addPrompt = useSessionMutation("round:addOption");
   const [guess, setGuess] = useState("");
   const submitGuess = useSessionMutation("round:vote");
   if (!round) return <article aria-busy="true"></article>;
@@ -17,9 +17,10 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
         <div>
           <img src={round.imageUrl} />
           <form
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
-              addPrompt({ roundId, prompt });
+              const result = await addPrompt({ roundId, prompt });
+              if (!result.success) console.error({ result });
             }}
           >
             <input
@@ -27,7 +28,7 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
             />
-            <input type="submit">Submit prompt</input>
+            <input type="submit" value="Submit prompt" />
           </form>
         </div>
       );
@@ -36,9 +37,10 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
         <div>
           <img src={round.imageUrl} />
           <form
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
-              submitGuess({ roundId, prompt: guess });
+              const result = await submitGuess({ roundId, prompt: guess });
+              if (!result.success) console.error({ result });
             }}
           >
             <label>Guess the prompt!</label>
@@ -50,17 +52,17 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
             >
               {round.options.map((option) => (
                 <option key={option} value={option}>
-                  option
+                  {option}
                 </option>
               ))}
             </select>
             <ul></ul>
-            <input type="submit">Submit guess</input>
+            <input type="submit" value="Submit guess" />
           </form>
         </div>
       );
     case "reveal":
-      return <>TODO</>;
+      return <>Reveal!</>;
   }
 };
 export default GameRound;

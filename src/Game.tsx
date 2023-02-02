@@ -15,14 +15,32 @@ const NextButton = (props: {
   );
 };
 
-const Game: React.FC<{ gameId: Id<"games"> }> = ({ gameId }) => {
+const Submission = (props: { submissionId: Id<"submissions"> }) => {
+  const submission = useSessionQuery("submissions:get", props.submissionId);
+  console.log(submission);
+  return submission ? (
+    <figure>
+      <img src={submission.url} />
+    </figure>
+  ) : (
+    <article aria-busy="true"></article>
+  );
+};
+
+const Game: React.FC<{
+  gameId: Id<"games">;
+  done: (nextGameId: Id<"games"> | null) => void;
+}> = ({ gameId, done }) => {
   const game = useSessionQuery("game:get", gameId);
   const name = useSessionQuery("users:getName");
   const setName = useSingleFlight(useSessionMutation("users:setName"));
   const [prompt, setPrompt] = useState("");
   const startSubmission = useSessionMutation("submissions:start");
+  const [submissionId, setSubmissionId] = useState<Id<"submissions">>();
   const addRound = useSessionMutation("submissions:addToGame");
+  const playAgain = useSessionMutation("game:playAgain");
   if (!game) return <article aria-busy="true"></article>;
+  if (game.nextGameId) done(game.nextGameId);
   const footer = (
     <>
       {game.hosting && (
@@ -61,13 +79,24 @@ const Game: React.FC<{ gameId: Id<"games"> }> = ({ gameId }) => {
         </>
       );
     case "generate":
-      return (
+      return game.players.find((player) => player.me && player.submitted) ? (
         <>
-          Describe an image:
+          <ul>
+            {game.players.map((player) => (
+              <li key={player.pictureUrl}>
+                <img src={player.pictureUrl} />
+                {player.name} {player.submitted && "✅"}
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <>
+          Generate an image:
           <form
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
-              startSubmission({ gameId, prompt });
+              setSubmissionId(await startSubmission({ gameId, prompt }));
             }}
           >
             <input
@@ -75,14 +104,46 @@ const Game: React.FC<{ gameId: Id<"games"> }> = ({ gameId }) => {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
             />
-            <input type="submit">Submit prompt</input>
+            <input type="submit" value="Submit prompt" />
           </form>
+          {submissionId && (
+            <>
+              <Submission submissionId={submissionId} />
+              <button
+                type="submit"
+                onClick={(e) => addRound({ submissionId, gameId })}
+              >
+                Submit
+              </button>
+            </>
+          )}
         </>
       );
     case "rounds":
-      return <GameRound roundId={game.state.roundId} />;
+      return (
+        <>
+          <GameRound roundId={game.state.roundId} />
+          {footer}
+        </>
+      );
     case "recap":
-      return <></>;
+      return (
+        <>
+          Done!
+          <button type="submit" onClick={(e) => done(null)}>
+            Home
+          </button>
+          <button
+            type="submit"
+            onClick={async (e) => {
+              const nextGameId = await playAgain(gameId);
+              done(nextGameId);
+            }}
+          >
+            Play again
+          </button>
+        </>
+      );
   }
 };
 export default Game;

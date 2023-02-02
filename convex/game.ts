@@ -22,6 +22,28 @@ export const create = mutation(
   })
 );
 
+export const playAgain = mutation(
+  withSession(
+    withZodArgs([zId("games")], async ({ db, session }, oldGameId) => {
+      const oldGame = await db.get(oldGameId);
+      if (!oldGame) throw new Error("Old game doesn't exist");
+      if (!oldGame.playerIds.find((id) => id.equals(session.userId))) {
+        throw new Error("You weren't part of that game");
+      }
+      const gameId = await db.insert("games", {
+        hostId: session.userId,
+        playerIds: oldGame.playerIds,
+        roundIds: [],
+        slug: oldGame.slug,
+        state: { stage: "lobby" },
+      });
+      await db.patch(oldGame._id, { nextGameId: gameId });
+      await db.patch(session._id, { gameId });
+      return gameId;
+    })
+  )
+);
+
 export const get = query(
   withSession(
     withZodArgs(
@@ -56,6 +78,7 @@ export const get = query(
           hosting: game.hostId.equals(session.userId),
           players,
           state: game.state,
+          nextGameId: game.nextGameId ?? null,
         };
       },
       ClientGameStateZ
@@ -133,9 +156,10 @@ export const progress = mutation(
 );
 
 const nextState = (
-  state: Document<"games">["state"],
+  fromState: Document<"games">["state"],
   roundIds: Id<"rounds">[]
 ): Document<"games">["state"] => {
+  let state = { ...fromState };
   switch (state.stage) {
     case "lobby":
       state.stage = "generate";

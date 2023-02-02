@@ -47,6 +47,7 @@ export default defineSchema({
         roundId: s.id("rounds"),
       })
     ),
+    nextGameId: s.optional(s.id("games")),
   }).index("s", ["slug"]),
   publicGame: defineTable({
     roundId: s.id("rounds"),
