@@ -29,6 +29,12 @@ async function claimSessionUser(
   }
   // Point the session at the new user going forward.
   await db.patch(session._id, { userId: newUserId });
+  if (session.submissionId) {
+    const submission = await db.get(session.submissionId);
+    if (submission && submission.authorId.equals(userToClaim._id)) {
+      await db.patch(submission?._id, { authorId: newUserId });
+    }
+  }
   if (session.gameId) {
     const game = (await db.get(session.gameId))!;
     if (game.hostId.equals(userToClaim._id)) {
@@ -42,10 +48,6 @@ async function claimSessionUser(
       const round = (await db.get(roundId))!;
       if (round.authorId.equals(userToClaim._id)) {
         await db.patch(round._id, { authorId: newUserId });
-      }
-      const submission = (await db.get(round.submissionId))!;
-      if (submission.authorId.equals(userToClaim._id)) {
-        await db.patch(submission._id, { authorId: newUserId });
       }
       const options = round.options.map((option) =>
         option.authorId.equals(userToClaim._id)
@@ -104,7 +106,8 @@ export const createAnonymousUser = (db: DatabaseWriter) => {
 
 export const loggedOut = mutation(
   withSession(async ({ db, session }) => {
-    await db.patch(session._id, { userId: await createAnonymousUser(db) });
+    // Wipe the slate clean
+    await db.replace(session._id, { userId: await createAnonymousUser(db) });
   })
 );
 

@@ -18,21 +18,36 @@ function App() {
       </header>
       <main>
         <section>
-          {gameCode ? (
-            <Game gameCode={gameCode} />
-          ) : roundId ? (<>
+          {gameId ? (
+            <Game gameId={gameId} />
+          ) : roundId ? (
             <GameRound roundId={roundId} />
-            <button >Host Game</button>
-            <form>
-              <input type="text"
-            <button >Join Game</button>
-            </form>
-            </>
           ) : (
             <article aria-busy="true"></article>
           )}
         </section>
-        <section></section>
+        <section>
+          <button
+            onClick={async () => {
+              setGameId(await hostGame());
+            }}
+          >
+            Host Game
+          </button>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setGameId(await joinGame(gameCode));
+            }}
+          >
+            <input
+              type="text"
+              value={gameCode}
+              onChange={(e) => setGameCode(e.target.value.substring(0, 4))}
+            />
+            <button type="submit">Join Game</button>
+          </form>
+        </section>
       </main>
     </>
   );

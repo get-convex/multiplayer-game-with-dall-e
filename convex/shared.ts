@@ -7,7 +7,7 @@ import { z } from "zod";
 import { zId } from "./lib/zodUtils";
 
 export const ClientGameStateZ = z.object({
-  gameId: zId("games"),
+  gameCode: z.string(),
   hosting: z.boolean(),
   players: z.array(
     z.object({

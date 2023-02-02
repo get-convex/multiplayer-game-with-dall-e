@@ -1,7 +1,7 @@
 import { z } from "zod";
-import withZodArgs, { withZodObjectArg } from "./lib/withZod";
+import withZodArgs from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
-import { MaxOptions, newRound } from "./round";
+import { MaxOptions } from "./round";
 import { withSession } from "./sessions";
 import { ClientGameStateZ } from "./shared";
 import { getUserById } from "./users";
@@ -25,14 +25,10 @@ export const create = mutation(
 export const get = query(
   withSession(
     withZodArgs(
-      [z.string()],
-      async ({ db, session }, gameCode) => {
+      [zId("games")],
+      async ({ db, session }, gameId) => {
         // Grab the most recent game with this code.
-        const game = await db
-          .query("games")
-          .withIndex("s", (q) => q.eq("slug", gameCode))
-          .order("desc")
-          .first();
+        const game = await db.get(gameId);
         if (!game) throw new Error("Game not found");
         if (!game.playerIds.find((id) => id.equals(session.userId))) {
           throw new Error("Player not part of this game");
@@ -56,7 +52,7 @@ export const get = query(
           })
         );
         return {
-          gameId: game._id,
+          gameCode: game.slug,
           hosting: game.hostId.equals(session.userId),
           players,
           state: game.state,
@@ -69,60 +65,33 @@ export const get = query(
 
 export const join = mutation(
   withSession(
-    withZodArgs([z.string()], async ({ db, session }, slug: string) => {
-      // Grab the most recent game with this slug, if it exists
-      const game = await db
-        .query("games")
-        .withIndex("s", (q) => q.eq("slug", slug))
-        .order("desc")
-        .first();
-      if (!game) throw new Error("Game not found");
-      if (game.playerIds.length >= MaxOptions) throw new Error("Game is full");
-      if (game.state.stage !== "lobby") throw new Error("Game has started");
-      // keep session up to date, so we know what game this session's in.
-      await db.patch(session._id, { gameId: game._id });
-      // Already in game
-      if (
-        game.playerIds.find((id) => id.equals(session.userId)) === undefined
-      ) {
-        console.warn("User joining game they're already in");
-      } else {
-        const playerIds = game.playerIds;
-        playerIds.push(session.userId);
-        await db.patch(game._id, { playerIds });
-      }
-
-      return game._id;
-    })
-  )
-);
-
-export const submit = mutation(
-  withSession(
-    withZodObjectArg(
-      { prompt: z.string(), imageStorageId: z.string(), gameId: zId("games") },
-      async ({ db, session }, { prompt, imageStorageId, gameId }) => {
-        const game = await db.get(gameId);
+    withZodArgs(
+      [z.string().length(4)],
+      async ({ db, session }, slug: string) => {
+        // Grab the most recent game with this slug, if it exists
+        const game = await db
+          .query("games")
+          .withIndex("s", (q) => q.eq("slug", slug))
+          .order("desc")
+          .first();
         if (!game) throw new Error("Game not found");
-        // TODO: check they haven't submitted already.
-        const submissionId = await db.insert("submissions", {
-          imageStorageId,
-          prompt,
-          authorId: session.userId,
-        });
-        const roundIds = game.roundIds;
-        roundIds.push(
-          await db.insert(
-            "rounds",
-            newRound(session.userId, submissionId, game.playerIds.length)
-          )
-        );
-        const patch: Partial<Document<"games">> = { roundIds };
-        // Start the game, everyone's submitted.
-        if (roundIds.length === game.playerIds.length) {
-          patch.state = { stage: "rounds", roundId: game.roundIds[0] };
+        if (game.playerIds.length >= MaxOptions)
+          throw new Error("Game is full");
+        if (game.state.stage !== "lobby") throw new Error("Game has started");
+        // keep session up to date, so we know what game this session's in.
+        await db.patch(session._id, { gameId: game._id });
+        // Already in game
+        if (
+          game.playerIds.find((id) => id.equals(session.userId)) !== undefined
+        ) {
+          console.warn("User joining game they're already in");
+        } else {
+          const playerIds = game.playerIds;
+          playerIds.push(session.userId);
+          await db.patch(game._id, { playerIds });
         }
-        await db.patch(game._id, patch);
+
+        return game._id;
       }
     )
   )

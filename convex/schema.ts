@@ -24,6 +24,7 @@ export default defineSchema({
   // For sessions:
   sessions: defineTable({
     userId: s.id("users"),
+    submissionId: s.optional(s.id("submissions")),
     gameId: s.optional(s.id("games")),
   }), // Make as specific as you want
   // End sessions
@@ -50,14 +51,32 @@ export default defineSchema({
   publicGame: defineTable({
     roundId: s.id("rounds"),
   }),
-  submissions: defineTable({
-    imageStorageId: s.string(),
-    prompt: s.string(),
-    authorId: s.id("users"),
-  }),
+  submissions: defineTable(
+    s.union(
+      s.object({
+        prompt: s.string(),
+        authorId: s.id("users"),
+        status: s.literal("generating"),
+      }),
+      s.object({
+        prompt: s.string(),
+        authorId: s.id("users"),
+        status: s.literal("failed"),
+        reason: s.string(),
+      }),
+      s.object({
+        prompt: s.string(),
+        authorId: s.id("users"),
+        status: s.literal("saved"),
+        imageStorageId: s.string(),
+        // used for public game
+        lastUsed: s.number(),
+      })
+    )
+  ).index("status_by_unused", ["status", "lastUsed"]),
   rounds: defineTable({
     authorId: s.id("users"),
-    submissionId: s.id("submissions"),
+    imageStorageId: s.string(),
     stageStart: s.number(),
     stageEnd: s.number(),
     stage: s.union(s.literal("label"), s.literal("guess"), s.literal("reveal")),

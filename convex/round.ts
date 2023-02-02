@@ -13,17 +13,19 @@ const RevealDurationMs = 30000;
 
 export const newRound = (
   authorId: Id<"users">,
-  submissionId: Id<"submissions">,
+  imageStorageId: string,
+  prompt: string,
   maxOptions: number
 ): WithoutSystemFields<Document<"rounds">> => ({
   authorId,
-  submissionId,
+  imageStorageId,
   stage: "label",
   stageStart: Date.now(),
   stageEnd: Date.now() + LabelDurationMs,
   maxOptions,
-  options: [],
+  options: [{ prompt, authorId, votes: [], likes: [] }],
 });
+
 export const getRound = query(
   withZodArgs(
     [zId("rounds")],
@@ -31,9 +33,7 @@ export const getRound = query(
       const round = await db.get(roundId);
       if (!round) throw new Error("Round not found");
       const { stage, stageEnd } = round;
-      const submission = await db.get(round.submissionId);
-      if (!submission) throw new Error("Round's submission is missing");
-      const imageUrl = await storage.getUrl(submission.imageStorageId);
+      const imageUrl = await storage.getUrl(round.imageStorageId);
       switch (stage) {
         case "label":
           return { stage, imageUrl, stageEnd };

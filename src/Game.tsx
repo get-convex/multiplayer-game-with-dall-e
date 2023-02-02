@@ -15,19 +15,20 @@ const NextButton = (props: {
   );
 };
 
-const Game: React.FC<{ gameCode: string }> = ({ gameCode }) => {
-  const game = useSessionQuery("game:get", gameCode);
+const Game: React.FC<{ gameId: Id<"games"> }> = ({ gameId }) => {
+  const game = useSessionQuery("game:get", gameId);
   const name = useSessionQuery("users:getName");
   const setName = useSingleFlight(useSessionMutation("users:setName"));
   const [prompt, setPrompt] = useState("");
-  const submit = useSessionMutation("game:submit");
+  const startSubmission = useSessionMutation("submissions:start");
+  const addRound = useSessionMutation("submissions:addToGame");
   if (!game) return <article aria-busy="true"></article>;
   const footer = (
     <>
       {game.hosting && (
         <section>
           <p>You are the host of this game.</p>
-          <NextButton gameId={game.gameId} stage={game.state.stage} />
+          <NextButton gameId={gameId} stage={game.state.stage} />
         </section>
       )}
     </>
@@ -36,11 +37,11 @@ const Game: React.FC<{ gameCode: string }> = ({ gameCode }) => {
     case "lobby":
       return (
         <>
-          Join: {gameCode}
+          Invite friends to join: {game.gameCode}
           {name && (
             <input
               name="name"
-              value={name}
+              defaultValue={name}
               type="text"
               onChange={(e) => setName(e.target.value)}
               placeholder="Type Name"
@@ -66,7 +67,7 @@ const Game: React.FC<{ gameCode: string }> = ({ gameCode }) => {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              submit({ gameId: game.gameId, prompt });
+              startSubmission({ gameId, prompt });
             }}
           >
             <input

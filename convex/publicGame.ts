@@ -3,7 +3,10 @@ import { mutation, query } from "./_generated/server";
 
 export const get = query(async ({ db }) => {
   const publicGame = await db.query("publicGame").unique();
-  if (!publicGame) throw new Error("No public game currently.");
+  if (!publicGame) {
+    console.warn("No public game currently.");
+    return null;
+  }
   return publicGame.roundId;
 });
 
@@ -16,12 +19,21 @@ export const progress = mutation(async ({ db }) => {
       throw new Error("Previous round not over.");
     }
   }
-  // TODO
-  const submission = await db.query("submissions").first();
+  const submission = await db
+    .query("submissions")
+    .withIndex("status_by_unused", (q) => q.eq("status", "saved"))
+    .first();
   if (!submission) throw new Error("No submission for the round");
+  if (submission.status !== "saved") throw new Error("Bad submission");
+  await db.patch(submission._id, { lastUsed: Date.now() });
   const roundId = await db.insert(
     "rounds",
-    newRound(submission.authorId, submission?._id, MaxOptions)
+    newRound(
+      submission.authorId,
+      submission.imageStorageId,
+      submission.prompt,
+      MaxOptions
+    )
   );
   if (publicGame) {
     await db.patch(publicGame._id, { roundId });
