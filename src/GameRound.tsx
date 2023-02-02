@@ -8,7 +8,8 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
   const [prompt, setPrompt] = useState("");
   const addPrompt = useSessionMutation("round:addOption");
   const [guess, setGuess] = useState("");
-  const submitGuess = useSessionMutation("round:vote");
+  const submitGuess = useSessionMutation("round:guess");
+  const [error, setError] = useState<string>();
   if (!round) return <article aria-busy="true"></article>;
 
   switch (round.stage) {
@@ -20,7 +21,7 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
             onSubmit={async (e) => {
               e.preventDefault();
               const result = await addPrompt({ roundId, prompt });
-              if (!result.success) console.error({ result });
+              if (!result.success) setError(result.reason);
             }}
           >
             <input
@@ -28,7 +29,14 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
             />
-            <input type="submit" value="Submit prompt" />
+            <label>
+              {error}
+              <input
+                type="submit"
+                value="Submit prompt"
+                aria-invalid={!!error}
+              />
+            </label>
           </form>
         </div>
       );
@@ -40,29 +48,55 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
             onSubmit={async (e) => {
               e.preventDefault();
               const result = await submitGuess({ roundId, prompt: guess });
-              if (!result.success) console.error({ result });
+              if (!result.success) setError(result.reason);
             }}
           >
-            <label>Guess the prompt!</label>
-            <select
-              id="select"
-              name="select"
-              required
-              onChange={(e) => setGuess(e.target.value)}
-            >
+            <fieldset>
+              <legend>Guess the prompt!</legend>
               {round.options.map((option) => (
-                <option key={option} value={option}>
+                <label key={option}>
+                  <input
+                    type="radio"
+                    disabled={option === prompt}
+                    checked={option === guess}
+                    onChange={() => setGuess(option)}
+                  />
                   {option}
-                </option>
+                </label>
               ))}
-            </select>
-            <ul></ul>
-            <input type="submit" value="Submit guess" />
+            </fieldset>
+            <label>
+              {error}
+              <input
+                type="submit"
+                value="Submit guess"
+                disabled={!guess}
+                aria-invalid={!!error}
+              />
+            </label>
           </form>
         </div>
       );
     case "reveal":
-      return <>Reveal!</>;
+      return (
+        <>
+          Reveal!
+          <ul>
+            {round.results.map((player) => (
+              <li key={player.pictureUrl}>
+                <section>
+                  <img src={player.pictureUrl} />
+                  {player.name}
+                  {player.me && "👈"}
+                  <p>Prompt: {player.prompt}</p>
+                  <p>Scores: {JSON.stringify(player.scoreDeltas)}</p>
+                  <p>Likes: {player.likes.length}</p>
+                </section>
+              </li>
+            ))}
+          </ul>
+        </>
+      );
   }
 };
 export default GameRound;

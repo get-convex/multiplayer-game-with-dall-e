@@ -69,7 +69,16 @@ export const getRound = queryWithSession(
         case "reveal":
           // TODO
           return {
-            results: [],
+            results: await Promise.all(
+              round.options.map(async (option) => ({
+                ...option,
+                ...(await userInfo(option.authorId)),
+                scoreDeltas: calculateScoreDeltas(
+                  option.authorId.equals(round.authorId),
+                  option
+                ),
+              }))
+            ),
             stage,
             imageUrl,
             stageEnd,
@@ -108,17 +117,42 @@ export const getRound = queryWithSession(
         stageEnd: z.number(),
         results: z.array(
           z.object({
-            author: zId("users"),
+            me: z.boolean(),
+            name: z.string(),
+            pictureUrl: z.string(),
             prompt: z.string(),
             votes: z.array(zId("users")),
             likes: z.array(zId("users")),
-            scoreDeltas: z.map(zId("users"), z.number()),
+            scoreDeltas: z.array(
+              z.object({ userId: zId("users"), delta: z.number() })
+            ),
           })
         ),
       }),
     ])
   )
 );
+const CorrectAuthorScore = 1000;
+const AlternateAuthorScore = 500;
+const CorrectGuesserScore = 200;
+
+export function calculateScoreDeltas(
+  isCorrect: boolean,
+  option: Document<"rounds">["options"][0]
+) {
+  const scoreDeltas: { userId: Id<"users">; delta: number }[] = [
+    {
+      userId: option.authorId,
+      delta: option.votes.length * CorrectAuthorScore,
+    },
+  ];
+  if (isCorrect) {
+    for (const userId of option.votes) {
+      scoreDeltas.push({ userId, delta: CorrectGuesserScore });
+    }
+  }
+  return scoreDeltas;
+}
 
 export const addOption = mutation(
   withSession(
@@ -144,7 +178,7 @@ export const addOption = mutation(
           round.options.findIndex(
             (option) =>
               // TODO: do fuzzy matching
-              option.prompt === prompt
+              option.prompt.toLocaleLowerCase() === prompt.toLocaleLowerCase()
           ) !== -1
         ) {
           return {
@@ -182,7 +216,7 @@ const beingGuessPatch = (
   stageEnd: Date.now() + GuessDurationMs,
 });
 
-export const vote = mutation(
+export const guess = mutation(
   withSession(
     withZodObjectArg(
       { roundId: zId("rounds"), prompt: z.string() },
@@ -202,6 +236,13 @@ export const vote = mutation(
             success: false,
             retry: true,
             reason: "This prompt does not exist.",
+          };
+        }
+        if (optionVotedFor.authorId.equals(session.userId)) {
+          return {
+            success: false,
+            retry: true,
+            reason: "You can't vote for your own prompt.",
           };
         }
         const existingVote = round.options.find(
@@ -230,7 +271,7 @@ export const vote = mutation(
         const totalVotes = round.options
           .map((option) => option.votes.length)
           .reduce((total, votes) => total + votes, 0);
-        if (totalVotes === round.maxOptions) {
+        if (totalVotes === round.maxOptions - 1) {
           await db.patch(round._id, revealPatch(round));
         }
         return { success: true, retry: true };

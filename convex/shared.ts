@@ -15,19 +15,20 @@ export const ClientGameStateZ = z.object({
       name: z.string(),
       pictureUrl: z.string(),
       submitted: z.boolean(),
+      score: z.number(),
+      likes: z.number(),
     })
   ),
   state: z.union([
     z.object({
-      stage: z.union([
-        z.literal("lobby"),
-        z.literal("generate"),
-        z.literal("recap"),
-      ]),
+      stage: z.union([z.literal("lobby"), z.literal("generate")]),
     }),
     z.object({
       stage: z.literal("rounds"),
       roundId: zId("rounds"),
+    }),
+    z.object({
+      stage: z.literal("recap"),
     }),
   ]),
   nextGameId: z.nullable(zId("games")),

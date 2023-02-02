@@ -1,7 +1,7 @@
 import { z } from "zod";
 import withZodArgs from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
-import { MaxOptions } from "./round";
+import { calculateScoreDeltas, MaxOptions } from "./round";
 import { withSession } from "./sessions";
 import { ClientGameStateZ } from "./shared";
 import { getUserById } from "./users";
@@ -55,12 +55,26 @@ export const get = query(
         if (!game.playerIds.find((id) => id.equals(session.userId))) {
           throw new Error("Player not part of this game");
         }
-        const roundPlayerIs = await Promise.all(
-          game.roundIds.map(async (roundId) => {
-            const round = (await db.get(roundId))!;
-            return round.authorId;
-          })
+        const rounds = await Promise.all(
+          game.roundIds.map(async (roundId) => (await db.get(roundId))!)
         );
+        const playerLikes: { [id: string]: number } = {};
+        const playerScore: { [id: string]: number } = {};
+        for (const round of rounds) {
+          if (round.stage === "reveal") {
+            for (const option of round.options) {
+              playerLikes[option.authorId.id] =
+                option.likes.length + (playerLikes[option.authorId.id] ?? 0);
+              for (const { userId, delta } of calculateScoreDeltas(
+                option.authorId.equals(round.authorId),
+                option
+              )) {
+                playerScore[userId.id] = delta + (playerScore[userId.id] ?? 0);
+              }
+            }
+          }
+        }
+        const roundPlayerIds = rounds.map((round) => round.authorId);
         const players = await Promise.all(
           game.playerIds.map(async (playerId) => {
             const player = (await getUserById(db, playerId))!;
@@ -69,7 +83,9 @@ export const get = query(
               me: player._id.equals(session.userId),
               name,
               pictureUrl,
-              submitted: !!roundPlayerIs.find((id) => id.equals(playerId)),
+              score: playerScore[player._id.id] ?? 0,
+              likes: playerLikes[player._id.id] ?? 0,
+              submitted: !!roundPlayerIds.find((id) => id.equals(playerId)),
             };
           })
         );

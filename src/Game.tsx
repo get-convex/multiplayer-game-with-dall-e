@@ -129,6 +129,14 @@ const Game: React.FC<{
     case "recap":
       return (
         <>
+          <ul>
+            {game.players.map((player) => (
+              <li key={player.pictureUrl}>
+                <img src={player.pictureUrl} />
+                {player.name} Score: {player.score} Likes: {player.likes}
+              </li>
+            ))}
+          </ul>
           Done!
           <button type="submit" onClick={(e) => done(null)}>
             Home
