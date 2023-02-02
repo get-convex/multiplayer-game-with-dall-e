@@ -9,7 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "convex": "^0.7.1",
+    "@types/node": "^18.11.18",
+    "convex": "^0.8.0",
     "md5": "^2.3.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
