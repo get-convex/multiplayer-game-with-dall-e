@@ -68,7 +68,9 @@ export function withSession<Ctx extends QueryCtx, Args extends any[], Output>(
 ) => Promise<Output> {
   return async (ctx: Ctx, sessionId: Id<"sessions"> | null, ...args: Args) => {
     if (sessionId && sessionId.tableName !== "sessions")
-      throw new Error("Invalid Session ID");
+      throw new Error(
+        "Invalid Session ID. Use useSessionMutation or useSessionQuery."
+      );
     const session = sessionId ? await ctx.db.get(sessionId) : null;
     if (!options?.optional && !session) {
       throw new Error(
