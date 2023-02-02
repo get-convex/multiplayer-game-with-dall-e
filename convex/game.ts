@@ -10,13 +10,15 @@ import { mutation, query } from "./_generated/server";
 
 export const create = mutation(
   withSession(async ({ db, session }) => {
-    return db.insert("games", {
+    const gameId = await db.insert("games", {
       hostId: session.userId,
       playerIds: [session.userId],
       roundIds: [],
       slug: randomSlug(),
       state: { stage: "lobby" },
     });
+    await db.patch(session._id, { gameId });
+    return gameId;
   })
 );
 
@@ -76,6 +78,8 @@ export const join = mutation(
       if (!game) throw new Error("Game not found");
       if (game.playerIds.length >= MaxOptions) throw new Error("Game is full");
       if (game.state.stage !== "lobby") throw new Error("Game has started");
+      // keep session up to date, so we know what game this session's in.
+      await db.patch(session._id, { gameId: game._id });
       // Already in game
       if (
         game.playerIds.find((id) => id.equals(session.userId)) === undefined

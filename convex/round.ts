@@ -96,7 +96,7 @@ export const addPrompt = mutation(
         }
         if (
           round.options.findIndex((option) =>
-            option.author.equals(session.userId)
+            option.authorId.equals(session.userId)
           ) !== -1
         ) {
           return { success: false, reason: "You already added a prompt." };
@@ -119,7 +119,7 @@ export const addPrompt = mutation(
         }
 
         round.options.push({
-          author: session.userId,
+          authorId: session.userId,
           prompt,
           votes: [],
           likes: [],

@@ -24,6 +24,7 @@ export default defineSchema({
   // For sessions:
   sessions: defineTable({
     userId: s.id("users"),
+    gameId: s.optional(s.id("games")),
   }), // Make as specific as you want
   // End sessions
 
@@ -63,7 +64,7 @@ export default defineSchema({
     maxOptions: s.number(),
     options: s.array(
       s.object({
-        author: s.id("users"),
+        authorId: s.id("users"),
         prompt: s.string(),
         votes: s.array(s.id("users")),
         likes: s.array(s.id("users")),
