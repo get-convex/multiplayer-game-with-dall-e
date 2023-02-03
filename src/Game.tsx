@@ -56,7 +56,7 @@ const Game: React.FC<{
       return (
         <>
           Invite friends to join: {game.gameCode}
-          {name && (
+          {typeof name === "string" && (
             <input
               name="name"
               defaultValue={name}
