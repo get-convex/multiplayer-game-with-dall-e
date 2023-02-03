@@ -158,7 +158,7 @@ export const addOption = mutation(
   withSession(
     withZodObjectArg(
       { roundId: zId("rounds"), prompt: z.string() },
-      async ({ db, session }, { roundId, prompt }) => {
+      async ({ db, scheduler, session }, { roundId, prompt }) => {
         const round = await db.get(roundId);
         if (!round) throw new Error("Round not found");
         if (round.stage !== "label") {
@@ -194,22 +194,42 @@ export const addOption = mutation(
           votes: [],
           likes: [],
         });
-        const patch: Partial<typeof round> =
-          round.options.length === round.maxOptions
-            ? beingGuessPatch(round)
-            : {};
-        patch.options = round.options;
-        await db.patch(round._id, patch);
+        await db.patch(round._id, { options: round.options });
+        if (round.options.length === round.maxOptions) {
+          await db.patch(round._id, beginGuessPatch(round));
+          scheduler.runAfter(
+            GuessDurationMs,
+            "round:progress",
+            round._id,
+            "guess"
+          );
+        }
         return { success: true };
       }
     )
   )
 );
 
+export const progress = mutation(
+  async (
+    { db },
+    roundId: Id<"rounds">,
+    fromStage: Document<"rounds">["stage"]
+  ) => {
+    const round = await db.get(roundId);
+    if (!round) throw new Error("Round not found: " + roundId.id);
+    if (round.stage === fromStage) {
+      const stage = fromStage === "label" ? "guess" : "reveal";
+      await db.patch(round._id, { stage });
+    }
+  }
+);
+
 // Modifies parameter to progress to guessing
-const beingGuessPatch = (
+const beginGuessPatch = (
   round: Document<"rounds">
 ): Partial<Document<"rounds">> => ({
+  options: round.options.sort(() => Math.random() - 0.5),
   stage: "guess",
   maxOptions: round.options.length,
   stageStart: Date.now(),
