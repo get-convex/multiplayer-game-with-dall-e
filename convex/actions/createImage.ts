@@ -5,9 +5,14 @@ import { action } from "../_generated/server";
 
 export default action(
   async ({ mutation }, prompt: string, submissionId: Id<"submissions">) => {
-    const configuration = new Configuration({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        "Add your OPENAI_API_KEY as an env variable in the " +
+          "[dashboard](https://dasboard.convex.dev)"
+      );
+    }
+    const configuration = new Configuration({ apiKey });
     const fail = (reason: string): Promise<never> =>
       mutation("submissions:update", submissionId, {
         status: "failed",
@@ -16,12 +21,6 @@ export default action(
         throw new Error(reason);
       });
 
-    if (!configuration) {
-      throw new Error(
-        "Add your OPENAI_API_KEY as an env variable in the " +
-          "[dashboard](https://dasboard.convex.dev)"
-      );
-    }
     const openai = new OpenAIApi(configuration);
 
     // Check if the prompt is offensive.
