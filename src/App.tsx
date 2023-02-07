@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Id } from "../convex/_generated/dataModel";
-import { useMutation, useQuery } from "../convex/_generated/react";
+import { useQuery } from "../convex/_generated/react";
 import "./App.css";
 import Game from "./Game";
 import GameRound from "./GameRound";
@@ -14,7 +14,7 @@ function App() {
   const [gameId, setGameId] = useState(() => {
     if (typeof window === "undefined") return null;
     const id = window.location.hash.substring(1);
-    if (!id || id.length !== 22) return null;
+    if (!id || id.length !== ConvexIdLength) return null;
     return new Id("games", id);
   });
   const name = useSessionQuery("users:getName");
@@ -22,10 +22,14 @@ function App() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (gameId) window.location.hash = gameId.id;
+    else window.location.hash = "";
   }, [gameId]);
   const [gameCode, setGameCode] = useState("");
   const joinGame = useSessionMutation("game:join");
   const publicRoundId = useQuery("publicGame:get");
+  const done = useCallback((gameId: Id<"games"> | null) => {
+    setGameId(gameId);
+  }, []);
 
   return (
     <>
@@ -71,7 +75,7 @@ function App() {
       )}
       <section>
         {gameId ? (
-          <Game gameId={gameId} done={(nextGameId) => setGameId(nextGameId)} />
+          <Game gameId={gameId} done={done} />
         ) : (
           <>
             <h2>Public Game</h2>

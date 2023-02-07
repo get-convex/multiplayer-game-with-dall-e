@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ClientGameState } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
 import { useMutation } from "../convex/_generated/react";
 import GameRound from "./GameRound";
 import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
-import useSingleFlight from "./hooks/useSingleFlight";
 
 const NextButton = (props: {
   gameId: Id<"games">;
@@ -44,7 +43,7 @@ const Game: React.FC<{
   done: (nextGameId: Id<"games"> | null) => void;
 }> = ({ gameId, done }) => {
   const start = useMutation("publicGame:progress");
-  start("guess");
+  start("reveal");
   const game = useSessionQuery("game:get", gameId);
   const [prompt, setPrompt] = useState("");
   const startSubmission = useSessionMutation("submissions:start");
