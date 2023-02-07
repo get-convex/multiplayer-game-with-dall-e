@@ -33,14 +33,14 @@ async function claimSessionUser(
   }
   // Point the session at the new user going forward.
   await db.patch(session._id, { userId: newUserId });
-  if (session.submissionId) {
-    const submission = await db.get(session.submissionId);
+  for (const submissionId of session.submissionIds) {
+    const submission = await db.get(submissionId);
     if (submission && submission.authorId.equals(userToClaim._id)) {
       await db.patch(submission?._id, { authorId: newUserId });
     }
   }
-  if (session.gameId) {
-    const game = (await db.get(session.gameId))!;
+  for (const gameId of session.gameIds) {
+    const game = (await db.get(gameId))!;
     if (game.hostId.equals(userToClaim._id)) {
       await db.patch(game._id, { hostId: newUserId });
     }
@@ -111,7 +111,11 @@ export const createAnonymousUser = (db: DatabaseWriter) => {
 export const loggedOut = mutation(
   withSession(async ({ db, session }) => {
     // Wipe the slate clean
-    await db.replace(session._id, { userId: await createAnonymousUser(db) });
+    await db.replace(session._id, {
+      userId: await createAnonymousUser(db),
+      gameIds: [],
+      submissionIds: [],
+    });
   })
 );
 

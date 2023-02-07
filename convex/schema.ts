@@ -9,6 +9,7 @@ export default defineSchema({
     claimedByUserId: s.optional(s.id("users")),
   }).index("by_token", ["tokenIdentifier"]),
   // End withUser
+
   // For presence:
   presence: defineTable({
     userId: s.id("users"),
@@ -21,11 +22,12 @@ export default defineSchema({
     // Index for updating presence data
     .index("by_user_game", ["userId", "game"]),
   // End presence
+
   // For sessions:
   sessions: defineTable({
     userId: s.id("users"),
-    submissionId: s.optional(s.id("submissions")),
-    gameId: s.optional(s.id("games")),
+    submissionIds: s.array(s.id("submissions")),
+    gameIds: s.array(s.id("games")),
   }), // Make as specific as you want
   // End sessions
 

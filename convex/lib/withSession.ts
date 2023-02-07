@@ -148,5 +148,7 @@ export const create = mutation(async ({ db, auth }) => {
   }
   return db.insert("sessions", {
     userId,
+    gameIds: [],
+    submissionIds: [],
   });
 });

@@ -19,7 +19,8 @@ export const create = mutation(
       slug: randomSlug(),
       state: { stage: "lobby" },
     });
-    await db.patch(session._id, { gameId });
+    session.gameIds.push(gameId);
+    await db.patch(session._id, { gameIds: session.gameIds });
     return gameId;
   })
 );
@@ -40,7 +41,8 @@ export const playAgain = mutation(
         state: { stage: "lobby" },
       });
       await db.patch(oldGame._id, { nextGameId: gameId });
-      await db.patch(session._id, { gameId });
+      session.gameIds.push(gameId);
+      await db.patch(session._id, { gameIds: session.gameIds });
       return gameId;
     })
   )
@@ -120,7 +122,8 @@ export const join = mutation(
           throw new Error("Game is full");
         if (game.state.stage !== "lobby") throw new Error("Game has started");
         // keep session up to date, so we know what game this session's in.
-        await db.patch(session._id, { gameId: game._id });
+        session.gameIds.push(game._id);
+        await db.patch(session._id, { gameIds: session.gameIds });
         // Already in game
         if (
           game.playerIds.find((id) => id.equals(session.userId)) !== undefined

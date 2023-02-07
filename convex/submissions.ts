@@ -26,7 +26,8 @@ export const start = mutation(
         });
         // Store the current submission in the session to associate with a
         // new user if we log in.
-        db.patch(session._id, { submissionId });
+        session.submissionIds.push(submissionId);
+        db.patch(session._id, { submissionIds: session.submissionIds });
         scheduler.runAfter(0, "actions/createImage", prompt, submissionId);
         return submissionId;
       }
