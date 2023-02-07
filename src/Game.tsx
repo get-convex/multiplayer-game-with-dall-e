@@ -43,6 +43,8 @@ const Game: React.FC<{
   gameId: Id<"games">;
   done: (nextGameId: Id<"games"> | null) => void;
 }> = ({ gameId, done }) => {
+  const start = useMutation("publicGame:progress");
+  start("guess");
   const game = useSessionQuery("game:get", gameId);
   const [prompt, setPrompt] = useState("");
   const startSubmission = useSessionMutation("submissions:start");
