@@ -50,6 +50,7 @@ export const progress = mutation(
       option.votes = [];
     }
     round.lastUsed = Date.now();
+    round.maxOptions = MaxOptions;
     if (round.stage !== "reveal") throw new Error("<never>");
     const roundId = await db.insert("rounds", round);
     await db.patch(publicGame._id, { roundId });

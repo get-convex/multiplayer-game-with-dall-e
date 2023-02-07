@@ -62,18 +62,20 @@ export const get = query(
         const rounds = await Promise.all(
           game.roundIds.map(async (roundId) => (await db.get(roundId))!)
         );
-        const playerLikes: { [id: string]: number } = {};
-        const playerScore: { [id: string]: number } = {};
+        const playerLikes = new Map<string, number>();
+        const playerScore = new Map<string, number>();
         for (const round of rounds) {
           if (round.stage === "reveal") {
             for (const option of round.options) {
-              playerLikes[option.authorId.id] =
-                option.likes.length + (playerLikes[option.authorId.id] ?? 0);
-              for (const { userId, delta } of calculateScoreDeltas(
+              playerLikes.set(
+                option.authorId.id,
+                option.likes.length + (playerLikes.get(option.authorId.id) ?? 0)
+              );
+              for (const [userId, delta] of calculateScoreDeltas(
                 option.authorId.equals(round.authorId),
                 option
               )) {
-                playerScore[userId.id] = delta + (playerScore[userId.id] ?? 0);
+                playerScore.set(userId, delta + (playerScore.get(userId) ?? 0));
               }
             }
           }
@@ -87,8 +89,8 @@ export const get = query(
               me: player._id.equals(session.userId),
               name,
               pictureUrl,
-              score: playerScore[player._id.id] ?? 0,
-              likes: playerLikes[player._id.id] ?? 0,
+              score: playerScore.get(player._id.id) ?? 0,
+              likes: playerLikes.get(player._id.id) ?? 0,
               submitted: !!roundPlayerIds.find((id) => id.equals(playerId)),
             };
           })

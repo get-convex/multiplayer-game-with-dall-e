@@ -81,21 +81,32 @@ export const getRound = queryWithSession(
         case "reveal":
           // TODO
           const revealState: RevealState = {
-            results: await Promise.all(
-              round.options.map(async (option) => ({
-                actual: round.authorId.equals(option.authorId),
-                ...option,
-                ...(await userInfo(option.authorId)),
-                scoreDeltas: calculateScoreDeltas(
-                  option.authorId.equals(round.authorId),
-                  option
-                ),
-              }))
-            ),
+            results: round.options.map((option) => ({
+              authorId: option.authorId.id,
+              prompt: option.prompt,
+              votes: option.votes.map((uId) => uId.id),
+              likes: option.votes.map((uId) => uId.id),
+              scoreDeltas: calculateScoreDeltas(
+                option.authorId.equals(round.authorId),
+                option
+              ),
+            })),
             stage,
-            mine: round.authorId.equals(session?.userId),
+            me: session!.userId.id,
+            authorId: round.authorId.id,
             imageUrl,
             stageEnd,
+            users: new Map(
+              await Promise.all(
+                round.options.map(
+                  async (option) =>
+                    [
+                      option.authorId.id,
+                      await userInfo(option.authorId),
+                    ] as const
+                )
+              )
+            ),
           };
           return revealState;
       }
@@ -111,15 +122,16 @@ export function calculateScoreDeltas(
   isCorrect: boolean,
   option: Document<"rounds">["options"][0]
 ) {
-  const scoreDeltas: { userId: Id<"users">; delta: number }[] = [
-    {
-      userId: option.authorId,
-      delta: option.votes.length * CorrectAuthorScore,
-    },
-  ];
+  const scoreDeltas = new Map([
+    [
+      option.authorId.id,
+      option.votes.length *
+        (isCorrect ? CorrectAuthorScore : AlternateAuthorScore),
+    ],
+  ]);
   if (isCorrect) {
     for (const userId of option.votes) {
-      scoreDeltas.push({ userId, delta: CorrectGuesserScore });
+      scoreDeltas.set(userId.id, CorrectGuesserScore);
     }
   }
   return scoreDeltas;

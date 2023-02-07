@@ -86,19 +86,41 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
         </div>
       );
     case "reveal":
+      const users = round.users;
       return (
         <>
           Reveal!
           <ul>
-            {round.results.map((player) => (
-              <li key={player.pictureUrl}>
+            {round.results.map((option) => (
+              <li key={option.authorId}>
                 <section>
-                  <img src={player.pictureUrl} />
-                  {player.name}
-                  {player.actual && "👈"}
-                  <p>Prompt: {player.prompt}</p>
-                  <p>Scores: {JSON.stringify(player.scoreDeltas)}</p>
-                  <p>Likes: {player.likes.length}</p>
+                  <img src={users.get(option.authorId)!.pictureUrl} />
+                  {users.get(option.authorId)!.name}
+                  <p>Prompt: {option.prompt}</p>
+                  {round.authorId === option.authorId && "👈"}
+                  {option.votes.length && (
+                    <label>
+                      Votes
+                      <ol>
+                        {option.votes.map((userId) => (
+                          <li>
+                            {users.get(userId)!.name}:{" "}
+                            {option.scoreDeltas.get(userId)}
+                          </li>
+                        ))}
+                      </ol>
+                    </label>
+                  )}
+                  {option.likes.length && (
+                    <label>
+                      {option.likes.length} Likes
+                      <ol>
+                        {option.votes.map((userId) => (
+                          <li>{users.get(userId)!.name}</li>
+                        ))}
+                      </ol>
+                    </label>
+                  )}
                 </section>
               </li>
             ))}

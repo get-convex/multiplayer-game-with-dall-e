@@ -69,23 +69,29 @@ export const GuessStateZ = z.object({
 
 export type GuessState = z.infer<typeof GuessStateZ>;
 
+const userIdString = z.string();
 export const RevealStateZ = z.object({
   stage: z.literal("reveal"),
-  mine: z.boolean(),
+  me: userIdString,
+  authorId: userIdString,
   imageUrl: z.string(),
   stageEnd: z.number(),
-  results: z.array(
+  users: z.map(
+    z.string(),
     z.object({
       me: z.boolean(),
-      actual: z.boolean(),
       name: z.string(),
       pictureUrl: z.string(),
+    })
+  ),
+  results: z.array(
+    z.object({
+      authorId: userIdString,
       prompt: z.string(),
-      votes: z.array(zId("users")),
-      likes: z.array(zId("users")),
-      scoreDeltas: z.array(
-        z.object({ userId: zId("users"), delta: z.number() })
-      ),
+      votes: z.array(userIdString),
+      likes: z.array(userIdString),
+      // userid to score
+      scoreDeltas: z.map(userIdString, z.number()),
     })
   ),
 });
