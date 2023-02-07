@@ -16,15 +16,26 @@ const NextButton = (props: {
 };
 
 const Submission = (props: { submissionId: Id<"submissions"> }) => {
-  const submission = useSessionQuery("submissions:get", props.submissionId);
-  console.log(submission);
-  return submission?.url ? (
-    <figure>
-      <img src={submission.url} />
-    </figure>
-  ) : (
-    <article aria-busy="true"></article>
-  );
+  const result = useSessionQuery("submissions:get", props.submissionId);
+  console.log(result);
+  switch (result?.status) {
+    case "generating":
+      return (
+        <figure>
+          <article aria-busy="true"></article>
+          {result.details}
+        </figure>
+      );
+    case "failed":
+      return <p>❗️{result.reason}</p>;
+    case "saved":
+      return (
+        <figure>
+          <img src={result.url} />
+        </figure>
+      );
+  }
+  return null;
 };
 
 const Game: React.FC<{

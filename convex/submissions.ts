@@ -51,10 +51,27 @@ export const get = query(
         if (submission.result.status === "saved") {
           const { imageStorageId, ...rest } = submission.result;
           const url = await storage.getUrl(imageStorageId);
-          return { ...submission, result: { url, ...rest } };
+          return { url, ...rest };
         }
-        return submission;
-      }
+        return submission.result;
+      },
+      z.union([
+        z.null(),
+        z.object({
+          status: z.literal("generating"),
+          details: z.string(),
+        }),
+        z.object({
+          status: z.literal("failed"),
+          reason: z.string(),
+          elapsedMs: z.number(),
+        }),
+        z.object({
+          status: z.literal("saved"),
+          url: z.string(),
+          elapsedMs: z.number(),
+        }),
+      ])
     )
   )
 );
