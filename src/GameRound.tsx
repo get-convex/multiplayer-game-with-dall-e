@@ -24,6 +24,18 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
           <img src={round.imageUrl} />
           {round.mine ? (
             "This was your image"
+          ) : round.submitted.find((submission) => submission.me) ? (
+            <section>
+              Prompt submitted
+              <ul>
+                {round.submitted.map((player) => (
+                  <li key={player.pictureUrl}>
+                    <img src={player.pictureUrl} />
+                    {player.name} ✅
+                  </li>
+                ))}
+              </ul>
+            </section>
           ) : (
             <form
               onSubmit={async (e) => {
