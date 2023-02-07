@@ -43,7 +43,9 @@ function App() {
             placeholder="Type Name"
           />
         )}
-        <h1>Whose Prompt is it Anyways? by Convex</h1>
+        <h1>
+          Whose Prompt is it Anyways? by <a href="https://convex.dev">Convex</a>
+        </h1>
       </header>
       {!gameId && (
         <>
