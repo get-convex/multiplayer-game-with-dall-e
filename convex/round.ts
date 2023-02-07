@@ -79,12 +79,24 @@ export const getRound = queryWithSession(
           };
           return guessState;
         case "reveal":
+          const allUsers = new Set(
+            round.options.map((option) => option.authorId)
+          );
+
+          round.options.forEach((option) => {
+            for (const id of option.votes) {
+              allUsers.add(id);
+            }
+            for (const id of option.likes) {
+              allUsers.add(id);
+            }
+          });
           const revealState: RevealState = {
             results: round.options.map((option) => ({
               authorId: option.authorId.id,
               prompt: option.prompt,
               votes: option.votes.map((uId) => uId.id),
-              likes: option.votes.map((uId) => uId.id),
+              likes: option.likes.map((uId) => uId.id),
               scoreDeltas: calculateScoreDeltas(
                 option.authorId.equals(round.authorId),
                 option
@@ -97,12 +109,8 @@ export const getRound = queryWithSession(
             stageEnd,
             users: new Map(
               await Promise.all(
-                round.options.map(
-                  async (option) =>
-                    [
-                      option.authorId.id,
-                      await userInfo(option.authorId),
-                    ] as const
+                [...allUsers.keys()].map(
+                  async (userId) => [userId.id, await userInfo(userId)] as const
                 )
               )
             ),

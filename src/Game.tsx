@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ClientGameState } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
+import { useMutation } from "../convex/_generated/react";
 import GameRound from "./GameRound";
 import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
 import useSingleFlight from "./hooks/useSingleFlight";
@@ -17,7 +18,6 @@ const NextButton = (props: {
 
 const Submission = (props: { submissionId: Id<"submissions"> }) => {
   const result = useSessionQuery("submissions:get", props.submissionId);
-  console.log(result);
   switch (result?.status) {
     case "generating":
       return (
@@ -32,6 +32,7 @@ const Submission = (props: { submissionId: Id<"submissions"> }) => {
       return (
         <figure>
           <img src={result.url} />
+          Generated in {result.elapsedMs / 1000} seconds.
         </figure>
       );
   }
@@ -43,8 +44,6 @@ const Game: React.FC<{
   done: (nextGameId: Id<"games"> | null) => void;
 }> = ({ gameId, done }) => {
   const game = useSessionQuery("game:get", gameId);
-  const name = useSessionQuery("users:getName");
-  const setName = useSingleFlight(useSessionMutation("users:setName"));
   const [prompt, setPrompt] = useState("");
   const startSubmission = useSessionMutation("submissions:start");
   const [submissionId, setSubmissionId] = useState<Id<"submissions">>();
@@ -67,24 +66,14 @@ const Game: React.FC<{
       return (
         <>
           Invite friends to join: {game.gameCode}
-          {typeof name === "string" && (
-            <input
-              name="name"
-              defaultValue={name}
-              type="text"
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Type Name"
-            />
-          )}
           <ol>
-            {game.players.map((player) =>
-              player.me ? null : (
-                <li key={player.pictureUrl}>
-                  <img src={player.pictureUrl} />
-                  {player.name}
-                </li>
-              )
-            )}
+            {game.players.map((player) => (
+              <li key={player.pictureUrl}>
+                <img src={player.pictureUrl} />
+                {player.name}
+                {player.me && "👈"}
+              </li>
+            ))}
           </ol>
           {footer}
         </>

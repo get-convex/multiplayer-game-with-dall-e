@@ -12,7 +12,7 @@ export const get = query(async ({ db }) => {
 });
 
 const PublicGuessMs = 15000;
-const PublicRevealMs = 5000;
+const PublicRevealMs = 10000;
 
 export const progress = mutation(
   async ({ db, scheduler }, fromStage: "guess" | "reveal") => {
@@ -26,12 +26,20 @@ export const progress = mutation(
     }
     if (currentRound.stage !== fromStage) {
       console.log("skipping progress: already in the right stage");
-      return;
+      return "noop";
     }
     if (currentRound.stage === "guess") {
+      if (
+        !currentRound.options.find(
+          (option) => option.likes.length || option.votes.length
+        )
+      ) {
+        scheduler.runAfter(PublicGuessMs, "publicGame:progress", "guess");
+        return "guess again";
+      }
       await db.patch(currentRound._id, { stage: "reveal" });
-      scheduler.runAfter(PublicRevealMs, "publicGame:progress", "guess");
-      return;
+      scheduler.runAfter(PublicRevealMs, "publicGame:progress", "reveal");
+      return "->reveal";
     }
     if (currentRound.stage !== "reveal") {
       throw new Error(`Invalid stage: ${currentRound.stage}`);
@@ -39,21 +47,26 @@ export const progress = mutation(
     const round = await db
       .query("rounds")
       .withIndex("public_game", (q) =>
-        q.eq("publicRound", true).eq("stage", "reveal")
+        q.eq("publicRound", false).eq("stage", "reveal")
       )
       .order("asc")
+      .filter((q) => q.gt(q.field("maxOptions"), 4))
       .first();
     if (!round) throw new Error("No public round.");
-    Object.assign(round, beginGuessPatch(round));
+    await db.patch(round._id, { lastUsed: Date.now() });
     for (const option of round.options) {
       option.likes = [];
       option.votes = [];
     }
-    round.lastUsed = Date.now();
+    round.stage = "guess";
+    round.stageStart = Date.now();
+    round.stageEnd = Date.now() + PublicGuessMs;
     round.maxOptions = MaxOptions;
-    if (round.stage !== "reveal") throw new Error("<never>");
-    const roundId = await db.insert("rounds", round);
+    round.publicRound = true;
+    const { _id, _creationTime, ...rest } = round;
+    const roundId = await db.insert("rounds", rest);
     await db.patch(publicGame._id, { roundId });
     scheduler.runAfter(PublicGuessMs, "publicGame:progress", "guess");
+    return "->guess";
   }
 );

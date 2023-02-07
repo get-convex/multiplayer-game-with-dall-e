@@ -93,35 +93,39 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
           <ul>
             {round.results.map((option) => (
               <li key={option.authorId}>
-                <section>
-                  <img src={users.get(option.authorId)!.pictureUrl} />
-                  {users.get(option.authorId)!.name}
-                  <p>Prompt: {option.prompt}</p>
-                  {round.authorId === option.authorId && "👈"}
-                  {option.votes.length && (
-                    <label>
-                      Votes
-                      <ol>
-                        {option.votes.map((userId) => (
-                          <li>
-                            {users.get(userId)!.name}:{" "}
-                            {option.scoreDeltas.get(userId)}
-                          </li>
-                        ))}
-                      </ol>
-                    </label>
-                  )}
-                  {option.likes.length && (
-                    <label>
-                      {option.likes.length} Likes
-                      <ol>
-                        {option.votes.map((userId) => (
-                          <li>{users.get(userId)!.name}</li>
-                        ))}
-                      </ol>
-                    </label>
-                  )}
-                </section>
+                {/*<img src={users.get(option.authorId)!.pictureUrl} />*/}
+                <span>
+                  {option.prompt}:{" "}
+                  {round.authorId === option.authorId && "👈 Actual: "}
+                  {users.get(option.authorId)!.name +
+                    ": +" +
+                    option.scoreDeltas.get(option.authorId)}
+                </span>
+                {option.votes.length ? (
+                  <label>
+                    Votes:
+                    <ol>
+                      {option.votes.map((userId) => (
+                        <li key={userId}>
+                          {users.get(userId)!.name}
+                          {option.scoreDeltas.has(userId)
+                            ? ": +" + option.scoreDeltas.get(userId)
+                            : null}
+                        </li>
+                      ))}
+                    </ol>
+                  </label>
+                ) : null}
+                {option.likes.length ? (
+                  <label>
+                    {option.likes.length} Likes
+                    <ol>
+                      {option.votes.map((userId) => (
+                        <li key={userId}>{users.get(userId)!.name}</li>
+                      ))}
+                    </ol>
+                  </label>
+                ) : null}
               </li>
             ))}
           </ul>
