@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Id } from "../convex/_generated/dataModel";
-import { useQuery } from "../convex/_generated/react";
 import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
 
 const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {

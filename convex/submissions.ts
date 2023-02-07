@@ -95,7 +95,7 @@ export const get = query(
   )
 );
 
-export const health = mutation(async ({ db }) => {
+export const health = query(async ({ db }) => {
   const latestSubmissions = await db
     .query("submissions")
     .order("desc")

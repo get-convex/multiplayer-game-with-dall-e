@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ClientGameState } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
+import { useQuery } from "../convex/_generated/react";
 import GameRound from "./GameRound";
 import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
 
@@ -11,6 +12,22 @@ const NextButton = (props: {
   const progress = useSessionMutation("game:progress");
   return (
     <button onClick={(e) => progress(props.gameId, props.stage)}>Next</button>
+  );
+};
+
+const Health = () => {
+  const health = useQuery("submissions:health") ?? null;
+  return (
+    health && (
+      <section>
+        <strong>
+          Dall-E status {health[1] > 0.8 ? "✅" : health[1] > 0.5 ? "⚠️" : "❌"}
+        </strong>
+        <span>
+          Image generation time: {(health[0] / 1000).toFixed(1)} seconds
+        </span>
+      </section>
+    )
   );
 };
 
@@ -64,6 +81,7 @@ const Game: React.FC<{
       return (
         <>
           Invite friends to join: {game.gameCode}
+          <Health />
           <ol>
             {game.players.map((player) => (
               <li key={player.pictureUrl}>
@@ -90,6 +108,7 @@ const Game: React.FC<{
         </>
       ) : (
         <>
+          <Health />
           Describe an image:
           <form
             onSubmit={async (e) => {
