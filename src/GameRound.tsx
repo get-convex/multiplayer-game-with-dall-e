@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Id } from "../convex/_generated/dataModel";
 import { useQuery } from "../convex/_generated/react";
 import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
@@ -10,6 +10,11 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
   const [guess, setGuess] = useState("");
   const submitGuess = useSessionMutation("round:guess");
   const [error, setError] = useState<string>();
+  useEffect(() => {
+    setPrompt("");
+    setGuess("");
+    setError("");
+  }, [roundId]);
   if (!round) return <article aria-busy="true"></article>;
 
   switch (round.stage) {
