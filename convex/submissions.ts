@@ -3,8 +3,10 @@ import withZodArgs, { withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
 import { newRound } from "./round";
 import { withSession } from "./lib/withSession";
-import { Document, Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
+
+const ImageTimeoutMs = 30000;
 
 export const start = mutation(
   withSession(
@@ -32,10 +34,27 @@ export const start = mutation(
         session.submissionIds.push(submissionId);
         db.patch(session._id, { submissionIds: session.submissionIds });
         scheduler.runAfter(0, "actions/createImage", prompt, submissionId);
+        scheduler.runAfter(ImageTimeoutMs, "submissions:timeout", submissionId);
         return submissionId;
       }
     )
   )
+);
+
+export const timeout = mutation(
+  async ({ db }, submissionId: Id<"submissions">) => {
+    const submission = await db.get(submissionId);
+    if (!submission) throw new Error("No submission found");
+    if (submission.result.status === "generating") {
+      db.patch(submissionId, {
+        result: {
+          status: "failed",
+          reason: "Timed out",
+          elapsedMs: ImageTimeoutMs,
+        },
+      });
+    }
+  }
 );
 
 export const get = query(
