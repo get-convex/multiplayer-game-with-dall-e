@@ -76,16 +76,28 @@ export const get = query(
   )
 );
 
-// TODO: limit to only accessible from the dall-e action
-export const update = mutation(
-  async (
-    { db },
-    submissionId: Id<"submissions">,
-    result: Document<"submissions">["result"]
-  ) => {
-    await db.patch(submissionId, { result });
+export const health = mutation(async ({ db }) => {
+  const latestSubmissions = await db
+    .query("submissions")
+    .order("desc")
+    .filter((q) => q.neq(q.field("result.status"), "generating"))
+    .take(5);
+  let totalTime = 0;
+  let successes = 0;
+  for (const submission of latestSubmissions) {
+    // Appease typescript
+    if (submission.result.status === "generating") continue;
+    totalTime += submission.result.elapsedMs;
+    if (submission.result.status === "saved") successes += 1;
   }
-);
+  const n = latestSubmissions.length;
+  return [totalTime / n, successes / n];
+});
+
+// TODO: limit to only accessible from the dall-e action
+export const update = mutation(async ({ db }, submissionId, result) => {
+  await db.patch(submissionId, { result });
+});
 
 export const addToGame = mutation(
   withSession(
