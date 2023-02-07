@@ -43,7 +43,7 @@ export default action(
 
     mutation("submissions:update", submissionId, {
       status: "generating",
-      details: "Gemerating image...",
+      details: "Generating image...",
     });
     // Query OpenAI for the image.
     const opanaiResponse = await openai.createImage({
