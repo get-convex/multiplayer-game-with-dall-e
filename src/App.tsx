@@ -68,6 +68,7 @@ function App() {
               <input
                 type="text"
                 value={gameCode}
+                placeholder="Game Code"
                 onChange={(e) => setGameCode(e.target.value.substring(0, 4))}
               />
               <button type="submit">Join Game</button>
