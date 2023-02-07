@@ -48,6 +48,7 @@ export const getRound = queryWithSession(
         case "label":
           return {
             stage,
+            mine: round.authorId.equals(session?.userId),
             imageUrl,
             stageEnd,
             submitted: await Promise.all(
@@ -62,6 +63,7 @@ export const getRound = queryWithSession(
           return {
             options: round.options.map((option) => option.prompt),
             stage,
+            mine: round.authorId.equals(session?.userId),
             imageUrl,
             stageEnd,
             submitted: await Promise.all(allGuesses.map(userInfo)),
@@ -71,6 +73,7 @@ export const getRound = queryWithSession(
           return {
             results: await Promise.all(
               round.options.map(async (option) => ({
+                actual: round.authorId.equals(option.authorId),
                 ...option,
                 ...(await userInfo(option.authorId)),
                 scoreDeltas: calculateScoreDeltas(
@@ -80,6 +83,7 @@ export const getRound = queryWithSession(
               }))
             ),
             stage,
+            mine: round.authorId.equals(session?.userId),
             imageUrl,
             stageEnd,
           };
@@ -88,6 +92,7 @@ export const getRound = queryWithSession(
     z.union([
       z.object({
         stage: z.literal("label"),
+        mine: z.boolean(),
         imageUrl: z.string(),
         stageEnd: z.number(),
         submitted: z.array(
@@ -100,6 +105,7 @@ export const getRound = queryWithSession(
       }),
       z.object({
         stage: z.literal("guess"),
+        mine: z.boolean(),
         imageUrl: z.string(),
         stageEnd: z.number(),
         submitted: z.array(
@@ -113,11 +119,13 @@ export const getRound = queryWithSession(
       }),
       z.object({
         stage: z.literal("reveal"),
+        mine: z.boolean(),
         imageUrl: z.string(),
         stageEnd: z.number(),
         results: z.array(
           z.object({
             me: z.boolean(),
+            actual: z.boolean(),
             name: z.string(),
             pictureUrl: z.string(),
             prompt: z.string(),

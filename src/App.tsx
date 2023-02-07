@@ -27,7 +27,7 @@ function App() {
   return (
     <>
       <header>
-        <h1>Name That Prompt! by Convex</h1>
+        <h1>Whose Prompt is it Anyways? by Convex</h1>
       </header>
       <section>
         {gameId ? (

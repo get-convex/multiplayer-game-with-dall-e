@@ -18,7 +18,7 @@ const NextButton = (props: {
 const Submission = (props: { submissionId: Id<"submissions"> }) => {
   const submission = useSessionQuery("submissions:get", props.submissionId);
   console.log(submission);
-  return submission ? (
+  return submission?.url ? (
     <figure>
       <img src={submission.url} />
     </figure>
@@ -92,7 +92,7 @@ const Game: React.FC<{
         </>
       ) : (
         <>
-          Generate an image:
+          Describe an image:
           <form
             onSubmit={async (e) => {
               e.preventDefault();

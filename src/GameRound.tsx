@@ -17,64 +17,72 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
       return (
         <div>
           <img src={round.imageUrl} />
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              const result = await addPrompt({ roundId, prompt });
-              if (!result.success) setError(result.reason);
-            }}
-          >
-            <input
-              type="text"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-            />
-            <label>
-              {error}
+          {round.mine ? (
+            "This was your image"
+          ) : (
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const result = await addPrompt({ roundId, prompt });
+                if (!result.success) setError(result.reason);
+              }}
+            >
               <input
-                type="submit"
-                value="Submit prompt"
-                aria-invalid={!!error}
+                type="text"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
               />
-            </label>
-          </form>
+              <label>
+                {error}
+                <input
+                  type="submit"
+                  value="Submit prompt"
+                  aria-invalid={!!error}
+                />
+              </label>
+            </form>
+          )}
         </div>
       );
     case "guess":
       return (
         <div>
           <img src={round.imageUrl} />
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              const result = await submitGuess({ roundId, prompt: guess });
-              if (!result.success) setError(result.reason);
-            }}
-          >
-            <fieldset>
-              <legend>Guess the prompt!</legend>
-              {round.options.map((option) => (
-                <label key={option}>
-                  <input
-                    type="radio"
-                    disabled={option === prompt}
-                    checked={option === guess}
-                    onChange={() => setGuess(option)}
-                  />
-                  {option}
-                </label>
-              ))}
-            </fieldset>
-            <label>
-              {error}
-              <input
-                type="submit"
-                value="Submit guess"
-                disabled={!guess}
-                aria-invalid={!!error}
-              />
-            </label>
-          </form>
+          {round.mine ? (
+            "This was your image"
+          ) : (
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const result = await submitGuess({ roundId, prompt: guess });
+                if (!result.success) setError(result.reason);
+              }}
+            >
+              <fieldset>
+                <legend>Guess the prompt!</legend>
+                {round.options.map((option) => (
+                  <label key={option}>
+                    <input
+                      type="radio"
+                      disabled={option === prompt}
+                      checked={option === guess}
+                      onChange={() => setGuess(option)}
+                    />
+                    {option}
+                  </label>
+                ))}
+              </fieldset>
+              <label>
+                {error}
+                <input
+                  type="submit"
+                  value="Submit guess"
+                  disabled={!guess}
+                  aria-invalid={!!error}
+                />
+              </label>
+            </form>
+          )}
         </div>
       );
     case "reveal":
@@ -87,7 +95,7 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
                 <section>
                   <img src={player.pictureUrl} />
                   {player.name}
-                  {player.me && "👈"}
+                  {player.actual && "👈"}
                   <p>Prompt: {player.prompt}</p>
                   <p>Scores: {JSON.stringify(player.scoreDeltas)}</p>
                   <p>Likes: {player.likes.length}</p>
