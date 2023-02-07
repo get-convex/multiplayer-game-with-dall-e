@@ -5,6 +5,8 @@ import { action } from "../_generated/server";
 
 export default action(
   async ({ mutation }, prompt: string, submissionId: Id<"submissions">) => {
+    const start = Date.now();
+    const elapsedMs = () => Date.now() - start;
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       throw new Error(
@@ -16,6 +18,7 @@ export default action(
     const fail = (reason: string): Promise<never> =>
       mutation("submissions:update", submissionId, {
         status: "failed",
+        elapsedMs: elapsedMs(),
         reason,
       }).then(() => {
         throw new Error(reason);
@@ -23,6 +26,10 @@ export default action(
 
     const openai = new OpenAIApi(configuration);
 
+    mutation("submissions:update", submissionId, {
+      status: "generating",
+      details: "Moderating prompt...",
+    });
     // Check if the prompt is offensive.
     const modResponse = await openai.createModeration({
       input: prompt,
@@ -34,6 +41,10 @@ export default action(
       );
     }
 
+    mutation("submissions:update", submissionId, {
+      status: "generating",
+      details: "Gemerating image...",
+    });
     // Query OpenAI for the image.
     const opanaiResponse = await openai.createImage({
       prompt,
@@ -42,6 +53,10 @@ export default action(
     const dallEImageUrl = opanaiResponse.data.data[0]["url"];
     if (!dallEImageUrl) return await fail("No image URL returned from OpenAI");
 
+    mutation("submissions:update", submissionId, {
+      status: "generating",
+      details: "Storing image...",
+    });
     // Download the image
     const imageResponse = await fetch(dallEImageUrl);
     if (!imageResponse.ok) {
@@ -68,6 +83,7 @@ export default action(
     await mutation("submissions:update", submissionId, {
       status: "saved",
       imageStorageId: storageId,
+      elapsedMs: elapsedMs(),
     });
   }
 );

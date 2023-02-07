@@ -5,6 +5,14 @@ import { zId } from "./lib/zodUtils";
 import { queryWithSession, withSession } from "./lib/withSession";
 import { Document, Id } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
+import {
+  GuessState,
+  GuessStateZ,
+  LabelState,
+  LabelStateZ,
+  RevealState,
+  RevealStateZ,
+} from "./shared";
 
 export const MaxOptions = 8;
 const LabelDurationMs = 30000;
@@ -46,7 +54,7 @@ export const getRound = queryWithSession(
 
       switch (stage) {
         case "label":
-          return {
+          const labelState: LabelState = {
             stage,
             mine: round.authorId.equals(session?.userId),
             imageUrl,
@@ -55,12 +63,13 @@ export const getRound = queryWithSession(
               round.options.map((option) => userInfo(option.authorId))
             ),
           };
+          return labelState;
         case "guess":
           const allGuesses = round.options.reduce(
             (all, { votes }) => all.concat(votes),
             [] as Id<"users">[]
           );
-          return {
+          const guessState: GuessState = {
             options: round.options.map((option) => option.prompt),
             stage,
             mine: round.authorId.equals(session?.userId),
@@ -68,9 +77,10 @@ export const getRound = queryWithSession(
             stageEnd,
             submitted: await Promise.all(allGuesses.map(userInfo)),
           };
+          return guessState;
         case "reveal":
           // TODO
-          return {
+          const revealState: RevealState = {
             results: await Promise.all(
               round.options.map(async (option) => ({
                 actual: round.authorId.equals(option.authorId),
@@ -87,57 +97,10 @@ export const getRound = queryWithSession(
             imageUrl,
             stageEnd,
           };
+          return revealState;
       }
     },
-    z.union([
-      z.object({
-        stage: z.literal("label"),
-        mine: z.boolean(),
-        imageUrl: z.string(),
-        stageEnd: z.number(),
-        submitted: z.array(
-          z.object({
-            me: z.boolean(),
-            name: z.string(),
-            pictureUrl: z.string(),
-          })
-        ),
-      }),
-      z.object({
-        stage: z.literal("guess"),
-        mine: z.boolean(),
-        imageUrl: z.string(),
-        stageEnd: z.number(),
-        submitted: z.array(
-          z.object({
-            me: z.boolean(),
-            name: z.string(),
-            pictureUrl: z.string(),
-          })
-        ),
-        options: z.array(z.string()),
-      }),
-      z.object({
-        stage: z.literal("reveal"),
-        mine: z.boolean(),
-        imageUrl: z.string(),
-        stageEnd: z.number(),
-        results: z.array(
-          z.object({
-            me: z.boolean(),
-            actual: z.boolean(),
-            name: z.string(),
-            pictureUrl: z.string(),
-            prompt: z.string(),
-            votes: z.array(zId("users")),
-            likes: z.array(zId("users")),
-            scoreDeltas: z.array(
-              z.object({ userId: zId("users"), delta: z.number() })
-            ),
-          })
-        ),
-      }),
-    ])
+    z.union([LabelStateZ, GuessStateZ, RevealStateZ])
   )
 );
 const CorrectAuthorScore = 1000;
@@ -171,6 +134,9 @@ export const addOption = mutation(
         if (!round) throw new Error("Round not found");
         if (round.stage !== "label") {
           return { success: false, reason: "Too late to add a prompt." };
+        }
+        if (round.authorId.equals(session.userId)) {
+          throw new Error("You can't submit a prompt for your own image.");
         }
         if (
           round.options.findIndex((option) =>
@@ -234,7 +200,7 @@ export const progress = mutation(
 );
 
 // Modifies parameter to progress to guessing
-const beginGuessPatch = (
+export const beginGuessPatch = (
   round: Document<"rounds">
 ): Partial<Document<"rounds">> => ({
   options: round.options.sort(() => Math.random() - 0.5),
@@ -317,3 +283,6 @@ const revealPatch = (
   stageStart: Date.now(),
   stageEnd: Date.now() + RevealDurationMs,
 });
+
+// Return the server's current time so clients can calculate timestamp offsets.
+export const serverNow = mutation(() => Date.now());

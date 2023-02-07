@@ -35,3 +35,59 @@ export const ClientGameStateZ = z.object({
 });
 
 export type ClientGameState = z.infer<typeof ClientGameStateZ>;
+
+export const LabelStateZ = z.object({
+  stage: z.literal("label"),
+  mine: z.boolean(),
+  imageUrl: z.string(),
+  stageEnd: z.number(),
+  submitted: z.array(
+    z.object({
+      me: z.boolean(),
+      name: z.string(),
+      pictureUrl: z.string(),
+    })
+  ),
+});
+
+export type LabelState = z.infer<typeof LabelStateZ>;
+
+export const GuessStateZ = z.object({
+  stage: z.literal("guess"),
+  mine: z.boolean(),
+  imageUrl: z.string(),
+  stageEnd: z.number(),
+  submitted: z.array(
+    z.object({
+      me: z.boolean(),
+      name: z.string(),
+      pictureUrl: z.string(),
+    })
+  ),
+  options: z.array(z.string()),
+});
+
+export type GuessState = z.infer<typeof GuessStateZ>;
+
+export const RevealStateZ = z.object({
+  stage: z.literal("reveal"),
+  mine: z.boolean(),
+  imageUrl: z.string(),
+  stageEnd: z.number(),
+  results: z.array(
+    z.object({
+      me: z.boolean(),
+      actual: z.boolean(),
+      name: z.string(),
+      pictureUrl: z.string(),
+      prompt: z.string(),
+      votes: z.array(zId("users")),
+      likes: z.array(zId("users")),
+      scoreDeltas: z.array(
+        z.object({ userId: zId("users"), delta: z.number() })
+      ),
+    })
+  ),
+});
+
+export type RevealState = z.infer<typeof RevealStateZ>;

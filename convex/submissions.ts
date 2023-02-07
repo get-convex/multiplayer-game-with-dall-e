@@ -22,7 +22,10 @@ export const start = mutation(
         const submissionId = await db.insert("submissions", {
           prompt,
           authorId: session.userId,
-          status: "generating",
+          result: {
+            status: "generating",
+            details: "Starting...",
+          },
         });
         // Store the current submission in the session to associate with a
         // new user if we log in.
@@ -45,10 +48,10 @@ export const get = query(
         if (!session.userId.equals(submission.authorId)) {
           throw new Error("This isn't your submission");
         }
-        if (submission.status === "saved") {
-          const { imageStorageId, ...rest } = submission;
+        if (submission.result.status === "saved") {
+          const { imageStorageId, ...rest } = submission.result;
           const url = await storage.getUrl(imageStorageId);
-          return { ...rest, url };
+          return { ...submission, result: { url, ...rest } };
         }
         return submission;
       }
@@ -61,9 +64,9 @@ export const update = mutation(
   async (
     { db },
     submissionId: Id<"submissions">,
-    patch: Partial<Document<"submissions">>
+    result: Document<"submissions">["result"]
   ) => {
-    await db.patch(submissionId, patch);
+    await db.patch(submissionId, { result });
   }
 );
 
@@ -75,13 +78,15 @@ export const addToGame = mutation(
         const game = await db.get(gameId);
         if (!game) throw new Error("Game not found");
         const submission = await db.get(submissionId);
-        if (submission?.status !== "saved") {
-          throw new Error(`Can't add ${submission?.status} submissions: `);
+        if (submission?.result.status !== "saved") {
+          throw new Error(
+            `Can't add ${submission?.result.status} submissions: `
+          );
         }
         if (!submission.authorId.equals(session.userId)) {
           throw new Error("This is not your submission.");
         }
-        const { authorId, prompt, imageStorageId } = submission;
+        const { authorId, prompt, result } = submission;
         for (const roundId of game.roundIds) {
           const round = (await db.get(roundId))!;
           if (round.authorId.equals(authorId)) {
@@ -92,7 +97,12 @@ export const addToGame = mutation(
         roundIds.push(
           await db.insert(
             "rounds",
-            newRound(authorId, imageStorageId, prompt, game.playerIds.length)
+            newRound(
+              authorId,
+              result.imageStorageId,
+              prompt,
+              game.playerIds.length
+            )
           )
         );
         await db.patch(game._id, { roundIds });

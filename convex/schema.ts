@@ -51,32 +51,32 @@ export default defineSchema({
     ),
     nextGameId: s.optional(s.id("games")),
   }).index("s", ["slug"]),
+
   publicGame: defineTable({
     roundId: s.id("rounds"),
   }),
-  submissions: defineTable(
-    s.union(
+
+  submissions: defineTable({
+    prompt: s.string(),
+    authorId: s.id("users"),
+    result: s.union(
       s.object({
-        prompt: s.string(),
-        authorId: s.id("users"),
         status: s.literal("generating"),
+        details: s.string(),
       }),
       s.object({
-        prompt: s.string(),
-        authorId: s.id("users"),
         status: s.literal("failed"),
         reason: s.string(),
+        elapsedMs: s.number(),
       }),
       s.object({
-        prompt: s.string(),
-        authorId: s.id("users"),
         status: s.literal("saved"),
         imageStorageId: s.string(),
-        // used for public game
-        lastUsed: s.number(),
+        elapsedMs: s.number(),
       })
-    )
-  ).index("status_by_unused", ["status", "lastUsed"]),
+    ),
+  }),
+
   rounds: defineTable({
     authorId: s.id("users"),
     imageStorageId: s.string(),
@@ -92,5 +92,8 @@ export default defineSchema({
         likes: s.array(s.id("users")),
       })
     ),
-  }),
+    // For public games
+    lastUsed: s.optional(s.number()),
+    publicRound: s.optional(s.boolean()),
+  }).index("public_game", ["publicRound", "stage", "lastUsed"]),
 });
