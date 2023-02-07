@@ -50,7 +50,7 @@ export const progress = mutation(
         q.eq("publicRound", false).eq("stage", "reveal")
       )
       .order("asc")
-      .filter((q) => q.gt(q.field("maxOptions"), 4))
+      .filter((q) => q.gte(q.field("maxOptions"), 4))
       .first();
     if (!round) throw new Error("No public round.");
     await db.patch(round._id, { lastUsed: Date.now() });
