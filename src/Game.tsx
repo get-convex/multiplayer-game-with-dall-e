@@ -104,7 +104,7 @@ const Game: React.FC<{
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
             />
-            <input type="submit" value="Submit prompt" />
+            <input type="submit" value="Preview" />
           </form>
           {submissionId && (
             <>

@@ -79,7 +79,6 @@ export const getRound = queryWithSession(
           };
           return guessState;
         case "reveal":
-          // TODO
           const revealState: RevealState = {
             results: round.options.map((option) => ({
               authorId: option.authorId.id,
@@ -233,9 +232,7 @@ export const guess = mutation(
           return { success: false, reason: "Too late to vote." };
         }
         const optionVotedFor = round.options.find(
-          (option) =>
-            // TODO: do fuzzy matching
-            option.prompt === prompt
+          (option) => option.prompt === prompt
         );
         if (!optionVotedFor) {
           return {
