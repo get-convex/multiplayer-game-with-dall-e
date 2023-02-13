@@ -1,0 +1,35 @@
+.header {
+  margin-bottom: var(--size-xl);
+}
+
+.faces {
+  height: auto;
+  width: 100%;
+}
+
+.title {
+  font-family: var(--font-family-display);
+  font-size: var(--size-8xl);
+  font-variation-settings: "wdth" 25;
+  font-weight: bold;
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-none);
+  text-transform: uppercase;
+  margin: var(--size-xl) 0;
+}
+
+.convex {
+  font-size: var(--size-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--size-3xs);
+
+  a {
+    text-decoration: none;
+    color: var(--color-white);
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

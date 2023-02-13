@@ -5,6 +5,9 @@ import Game from "./Game";
 import GameRound from "./GameRound";
 import { useSessionMutation, useSessionQuery } from "../hooks/sessionsClient";
 import useSingleFlight from "../hooks/useSingleFlight";
+import styles from "./App.module.scss";
+import Hero from "./Hero";
+import Username from "./Username";
 
 const ConvexIdLength = 22;
 
@@ -16,8 +19,7 @@ function App() {
     if (!id || id.length !== ConvexIdLength) return null;
     return new Id("games", id);
   });
-  const name = useSessionQuery("users:getName");
-  const setName = useSingleFlight(useSessionMutation("users:setName"));
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (gameId) window.location.hash = gameId.id;
@@ -31,22 +33,11 @@ function App() {
   }, []);
 
   return (
-    <>
-      <header>
-        <img src="/faces.svg" />
-        <h1>
-          Whose Prompt is it Anyways? by <a href="https://convex.dev">Convex</a>
-        </h1>
-      </header>
-      {typeof name === "string" && (
-        <input
-          name="name"
-          defaultValue={name}
-          type="text"
-          onChange={e => setName(e.target.value)}
-          placeholder="Type Name"
-        />
-      )}
+    <div className={styles.root}>
+      <Hero />
+      <div className={styles.usernameWrapper}>
+        <Username />
+      </div>
       {!gameId && (
         <>
           <section>
@@ -81,16 +72,16 @@ function App() {
           <Game gameId={gameId} done={done} />
         ) : (
           <>
-            <h2>Public Game</h2>
+            <h2 className={styles.subtitle}>Public game</h2>
             {publicRoundId ? (
               <GameRound roundId={publicRoundId} />
             ) : (
-              <article aria-busy="true"></article>
+              <p>Loading...</p>
             )}
           </>
         )}
       </section>
-    </>
+    </div>
   );
 }
 

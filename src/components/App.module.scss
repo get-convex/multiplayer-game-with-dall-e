@@ -1,0 +1,18 @@
+.root {
+  padding: var(--size-lg);
+  padding-top: 5rem;
+}
+
+.usernameWrapper {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+}
+
+.subtitle {
+  font-size: var(--size-6xl);
+  font-family: var(--font-family-display);
+  font-variation-settings: "wdth" 25;
+  letter-spacing: var(--letter-spacing-tight);
+}

@@ -1,0 +1,23 @@
+.root {
+  border-bottom: 1px solid var(--color-light);
+  display: flex;
+  gap: var(--size-md);
+  padding: var(--size-xs);
+
+  &:focus-within {
+    border-bottom: 1px solid var(--color-white);
+  }
+}
+
+.input {
+  border: none;
+  background: none;
+  color: var(--color-white);
+  font-size: var(--size-xl);
+  flex-grow: 1;
+  padding: var(--size-xs);
+
+  &:focus {
+    outline: none;
+  }
+}
