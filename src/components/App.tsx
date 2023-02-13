@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { Id } from "../convex/_generated/dataModel";
-import { useQuery } from "../convex/_generated/react";
+import { Id } from "../../convex/_generated/dataModel";
+import { useQuery } from "../../convex/_generated/react";
 import Game from "./Game";
 import GameRound from "./GameRound";
-import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
-import useSingleFlight from "./hooks/useSingleFlight";
+import { useSessionMutation, useSessionQuery } from "../hooks/sessionsClient";
+import useSingleFlight from "../hooks/useSingleFlight";
 
 const ConvexIdLength = 22;
 
@@ -33,19 +33,20 @@ function App() {
   return (
     <>
       <header>
-        {typeof name === "string" && (
-          <input
-            name="name"
-            defaultValue={name}
-            type="text"
-            onChange={e => setName(e.target.value)}
-            placeholder="Type Name"
-          />
-        )}
+        <img src="/faces.svg" />
         <h1>
           Whose Prompt is it Anyways? by <a href="https://convex.dev">Convex</a>
         </h1>
       </header>
+      {typeof name === "string" && (
+        <input
+          name="name"
+          defaultValue={name}
+          type="text"
+          onChange={e => setName(e.target.value)}
+          placeholder="Type Name"
+        />
+      )}
       {!gameId && (
         <>
           <section>

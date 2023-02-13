@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { ClientGameState } from "../convex/shared";
-import { Id } from "../convex/_generated/dataModel";
-import { useQuery } from "../convex/_generated/react";
+import { ClientGameState } from "../../convex/shared";
+import { Id } from "../../convex/_generated/dataModel";
+import { useQuery } from "../../convex/_generated/react";
 import GameRound from "./GameRound";
-import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
+import { useSessionMutation, useSessionQuery } from "../hooks/sessionsClient";
 
 const NextButton = (props: {
   gameId: Id<"games">;
@@ -11,7 +11,7 @@ const NextButton = (props: {
 }) => {
   const progress = useSessionMutation("game:progress");
   return (
-    <button onClick={(e) => progress(props.gameId, props.stage)}>Next</button>
+    <button onClick={e => progress(props.gameId, props.stage)}>Next</button>
   );
 };
 
@@ -83,7 +83,7 @@ const Game: React.FC<{
           Invite friends to join: {game.gameCode}
           <Health />
           <ol>
-            {game.players.map((player) => (
+            {game.players.map(player => (
               <li key={player.pictureUrl}>
                 <img src={player.pictureUrl} />
                 {player.name}
@@ -95,10 +95,10 @@ const Game: React.FC<{
         </>
       );
     case "generate":
-      return game.players.find((player) => player.me && player.submitted) ? (
+      return game.players.find(player => player.me && player.submitted) ? (
         <>
           <ul>
-            {game.players.map((player) => (
+            {game.players.map(player => (
               <li key={player.pictureUrl}>
                 <img src={player.pictureUrl} />
                 {player.name} {player.submitted && "✅"}
@@ -111,7 +111,7 @@ const Game: React.FC<{
           <Health />
           Describe an image:
           <form
-            onSubmit={async (e) => {
+            onSubmit={async e => {
               e.preventDefault();
               setSubmissionId(await startSubmission({ gameId, prompt }));
             }}
@@ -119,7 +119,7 @@ const Game: React.FC<{
             <input
               type="text"
               value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
+              onChange={e => setPrompt(e.target.value)}
             />
             <input type="submit" value="Preview" />
           </form>
@@ -128,7 +128,7 @@ const Game: React.FC<{
               <Submission submissionId={submissionId} />
               <button
                 type="submit"
-                onClick={(e) => addRound({ submissionId, gameId })}
+                onClick={e => addRound({ submissionId, gameId })}
               >
                 Submit
               </button>
@@ -147,7 +147,7 @@ const Game: React.FC<{
       return (
         <>
           <ul>
-            {game.players.map((player) => (
+            {game.players.map(player => (
               <li key={player.pictureUrl}>
                 <img src={player.pictureUrl} />
                 {player.name} Score: {player.score} Likes: {player.likes}
@@ -155,12 +155,12 @@ const Game: React.FC<{
             ))}
           </ul>
           Done!
-          <button type="submit" onClick={(e) => done(null)}>
+          <button type="submit" onClick={e => done(null)}>
             Home
           </button>
           <button
             type="submit"
-            onClick={async (e) => {
+            onClick={async e => {
               const nextGameId = await playAgain(gameId);
               done(nextGameId);
             }}

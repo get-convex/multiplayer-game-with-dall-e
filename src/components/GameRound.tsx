@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Id } from "../convex/_generated/dataModel";
-import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
+import { Id } from "../../convex/_generated/dataModel";
+import { useSessionMutation, useSessionQuery } from "../hooks/sessionsClient";
 
 const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
   const round = useSessionQuery("round:getRound", roundId);
@@ -23,11 +23,11 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
           <img src={round.imageUrl} />
           {round.mine ? (
             "This was your image"
-          ) : round.submitted.find((submission) => submission.me) ? (
+          ) : round.submitted.find(submission => submission.me) ? (
             <section>
               Prompt submitted
               <ul>
-                {round.submitted.map((player) => (
+                {round.submitted.map(player => (
                   <li key={player.pictureUrl}>
                     <img src={player.pictureUrl} />
                     {player.name} ✅
@@ -37,7 +37,7 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
             </section>
           ) : (
             <form
-              onSubmit={async (e) => {
+              onSubmit={async e => {
                 e.preventDefault();
                 const result = await addPrompt({ roundId, prompt });
                 if (!result.success) setError(result.reason);
@@ -46,7 +46,7 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
               <input
                 type="text"
                 value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
+                onChange={e => setPrompt(e.target.value)}
               />
               <label>
                 {error}
@@ -66,11 +66,11 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
           <img src={round.imageUrl} />
           {round.mine ? (
             "This was your image"
-          ) : round.submitted.find((submission) => submission.me) ? (
+          ) : round.submitted.find(submission => submission.me) ? (
             <section>
               You submitted!
               <ul>
-                {round.submitted.map((player) => (
+                {round.submitted.map(player => (
                   <li key={player.pictureUrl}>
                     <img src={player.pictureUrl} />
                     {player.name} ✅
@@ -80,7 +80,7 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
             </section>
           ) : (
             <form
-              onSubmit={async (e) => {
+              onSubmit={async e => {
                 e.preventDefault();
                 const result = await submitGuess({ roundId, prompt: guess });
                 if (!result.success) setError(result.reason);
@@ -88,7 +88,7 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
             >
               <fieldset>
                 <legend>Guess the prompt!</legend>
-                {round.options.map((option) => (
+                {round.options.map(option => (
                   <label key={option}>
                     <input
                       type="radio"
@@ -119,7 +119,7 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
         <>
           Reveal!
           <ul>
-            {round.results.map((option) => (
+            {round.results.map(option => (
               <li key={option.authorId}>
                 {/*<img src={users.get(option.authorId)!.pictureUrl} />*/}
                 <span>
@@ -133,7 +133,7 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
                   <label>
                     Votes:
                     <ol>
-                      {option.votes.map((userId) => (
+                      {option.votes.map(userId => (
                         <li key={userId}>
                           {users.get(userId)!.name}
                           {option.scoreDeltas.has(userId)
@@ -148,7 +148,7 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
                   <label>
                     {option.likes.length} Likes
                     <ol>
-                      {option.votes.map((userId) => (
+                      {option.votes.map(userId => (
                         <li key={userId}>{users.get(userId)!.name}</li>
                       ))}
                     </ol>
