@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Id } from "../convex/_generated/dataModel";
 import { useQuery } from "../convex/_generated/react";
-import "./App.css";
 import Game from "./Game";
 import GameRound from "./GameRound";
 import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
@@ -39,7 +38,7 @@ function App() {
             name="name"
             defaultValue={name}
             type="text"
-            onChange={(e) => setName(e.target.value)}
+            onChange={e => setName(e.target.value)}
             placeholder="Type Name"
           />
         )}
@@ -60,7 +59,7 @@ function App() {
           </section>
           <section>
             <form
-              onSubmit={async (e) => {
+              onSubmit={async e => {
                 e.preventDefault();
                 setGameId(await joinGame(gameCode));
               }}
@@ -69,7 +68,7 @@ function App() {
                 type="text"
                 value={gameCode}
                 placeholder="Game Code"
-                onChange={(e) => setGameCode(e.target.value.substring(0, 4))}
+                onChange={e => setGameCode(e.target.value.substring(0, 4))}
               />
               <button type="submit">Join Game</button>
             </form>
