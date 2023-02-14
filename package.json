@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@types/node": "^18.11.18",
-    "convex": "^0.8.0",
+    "convex": "^0.9.1",
     "md5": "^2.3.0",
     "node-fetch": "^3.3.0",
     "openai": "^3.1.0",

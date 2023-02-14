@@ -42,6 +42,7 @@ export const getRound = queryWithSession(
       if (!round) throw new Error("Round not found");
       const { stage, stageEnd } = round;
       const imageUrl = await storage.getUrl(round.imageStorageId);
+      if (!imageUrl) throw new Error("Image not found");
 
       const userInfo = async (userId: Id<"users">) => {
         const user = (await db.get(userId))!;

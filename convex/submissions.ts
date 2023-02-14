@@ -70,6 +70,7 @@ export const get = query(
         if (submission.result.status === "saved") {
           const { imageStorageId, ...rest } = submission.result;
           const url = await storage.getUrl(imageStorageId);
+          if (!url) throw new Error("Image not found");
           return { url, ...rest };
         }
         return submission.result;

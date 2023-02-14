@@ -6,7 +6,7 @@ specifiers:
   '@types/react': ^18.0.26
   '@types/react-dom': ^18.0.9
   '@vitejs/plugin-react': ^3.0.0
-  convex: ^0.8.0
+  convex: ^0.9.1
   md5: ^2.3.0
   node-fetch: ^3.3.0
   openai: ^3.1.0
@@ -18,7 +18,7 @@ specifiers:
 
 dependencies:
   '@types/node': 18.11.18
-  convex: 0.8.0_biqbaboplfbrettd7655fr4n2y
+  convex: 0.9.1_biqbaboplfbrettd7655fr4n2y
   md5: 2.3.0
   node-fetch: 3.3.0
   openai: 3.1.0
@@ -634,8 +634,8 @@ packages:
     resolution: {integrity: sha512-ASFBup0Mz1uyiIjANan1jzLQami9z1PoYSZCiiYW2FczPbenXc45FZdBZLzOT+r6+iciuEModtmCti+hjaAk0A==}
     dev: true
 
-  /convex/0.8.0_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-uvSIt0wk426MpawCzyEQD/G8Ovj57fPxJR+2ROEWrI2DEq5n9B1L35+9rPbksbXa2TD+RFJDWINSlRAcaU5jew==}
+  /convex/0.9.1_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-smz6JeXpZbkfkjq3xa7g73Z8YnGKDCNW44XYKPf434SqidHvtcb/JoJ2BbG5ArhTxnsOjkVZswztSOchQvLB4w==}
     engines: {node: '>=14.17.0', npm: '>=7.0.0'}
     hasBin: true
     peerDependencies:

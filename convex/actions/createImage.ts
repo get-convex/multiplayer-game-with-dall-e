@@ -4,7 +4,7 @@ import { Id } from "../_generated/dataModel";
 import { action } from "../_generated/server";
 
 export default action(
-  async ({ mutation }, prompt: string, submissionId: Id<"submissions">) => {
+  async ({ runMutation }, prompt: string, submissionId: Id<"submissions">) => {
     const start = Date.now();
     const elapsedMs = () => Date.now() - start;
     const apiKey = process.env.OPENAI_API_KEY;
@@ -16,7 +16,7 @@ export default action(
     }
     const configuration = new Configuration({ apiKey });
     const fail = (reason: string): Promise<never> =>
-      mutation("submissions:update", submissionId, {
+      runMutation("submissions:update", submissionId, {
         status: "failed",
         elapsedMs: elapsedMs(),
         reason,
@@ -26,7 +26,7 @@ export default action(
 
     const openai = new OpenAIApi(configuration);
 
-    mutation("submissions:update", submissionId, {
+    runMutation("submissions:update", submissionId, {
       status: "generating",
       details: "Moderating prompt...",
     });
@@ -41,7 +41,7 @@ export default action(
       );
     }
 
-    mutation("submissions:update", submissionId, {
+    runMutation("submissions:update", submissionId, {
       status: "generating",
       details: "Generating image...",
     });
@@ -53,7 +53,7 @@ export default action(
     const dallEImageUrl = opanaiResponse.data.data[0]["url"];
     if (!dallEImageUrl) return await fail("No image URL returned from OpenAI");
 
-    mutation("submissions:update", submissionId, {
+    runMutation("submissions:update", submissionId, {
       status: "generating",
       details: "Storing image...",
     });
@@ -65,7 +65,7 @@ export default action(
     const image = Buffer.from(await imageResponse.arrayBuffer());
 
     // Create a Convex url to upload the image to.
-    const postUrl = await mutation("submissions:generateUploadUrl");
+    const postUrl = await runMutation("submissions:generateUploadUrl");
 
     // Upload the image to Convex storage.
     const postImageResponse = await fetch(postUrl, {
@@ -80,7 +80,7 @@ export default action(
     };
 
     // Write storageId as the body of the message to the Convex database.
-    await mutation("submissions:update", submissionId, {
+    await runMutation("submissions:update", submissionId, {
       status: "saved",
       imageStorageId: storageId,
       elapsedMs: elapsedMs(),
