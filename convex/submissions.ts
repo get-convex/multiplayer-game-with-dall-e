@@ -105,7 +105,7 @@ export const health = query(async ({ db }) => {
     if (submission.result.status === "saved") successes += 1;
   }
   const n = latestSubmissions.length;
-  return [totalTime / n, successes / n];
+  return n ? [totalTime / n, successes / n] : [5000, 1.0];
 });
 
 // TODO: limit to only accessible from the dall-e action
