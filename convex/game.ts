@@ -1,5 +1,5 @@
 import { z } from "zod";
-import withZodArgs, { withZodObjectArg } from "./lib/withZod";
+import { withZodArgs, withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
 import { calculateScoreDeltas, MaxOptions, newRound } from "./round";
 import { withSession } from "./lib/withSession";
