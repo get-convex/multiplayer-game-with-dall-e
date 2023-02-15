@@ -173,7 +173,7 @@ export const progress = mutation(
           );
         }
         await db.patch(game._id, { state });
-        if (state.stage === "generate") {
+        if (state.stage !== "generate") {
           scheduler.runAfter(
             GenerateDurationMs,
             "game:progress",
