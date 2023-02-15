@@ -2,7 +2,16 @@
 module.exports = {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
-    extend: {},
+    fontFamily: {
+      display: ["Roboto Flex", "sans-serif"],
+      sans: ["Inter", "sans-serif"],
+    },
+    extend: {
+      colors: {
+        "neutral-white": "#ffffff",
+        "neutral-black": "#000000",
+      },
+    },
   },
   plugins: [],
 };

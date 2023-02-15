@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Id } from "../convex/_generated/dataModel";
 import { useQuery } from "../convex/_generated/react";
-import styles from "./App.module.scss";
 import Game from "./Game";
 import GameRound from "./GameRound";
 import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
@@ -32,22 +31,23 @@ function App() {
   }, []);
 
   return (
-    <div className={styles.root}>
+    <div className="flex flex-col p-5 pt-20 lg:flex-row lg:gap-28">
       <div>
-        <header className={styles.header}>
-          <img className={styles.faces} src="/faces.svg" alt="Cartoon faces" />
-          <h1 className={styles.title}>Whose Prompt is it Anyways?</h1>
-          <span className={styles.convex}>
+        <header>
+          <img src="/faces.svg" alt="Cartoon faces" />
+          <h1 className="font-display uppercase">
+            Whose Prompt is it Anyways?
+          </h1>
+          <span>
             by <img src="/convex.svg" width="28" height="28" />{" "}
             <a href="https://convex.dev">Convex</a>
           </span>
         </header>
         {!gameId && (
-          <div className={styles.startGame}>
-            <div className={styles.subtitle}>Play with friends!</div>
-            <div className={styles.actions}>
+          <div>
+            <div>Play with friends!</div>
+            <div>
               <form
-                className={styles.gameCodeForm}
                 onSubmit={async (e) => {
                   e.preventDefault();
                   setGameId(await joinGame(gameCode));
@@ -61,9 +61,8 @@ function App() {
                 />
                 <button type="submit">Join</button>
               </form>
-              <div className={styles.or}>or</div>
+              <div>or</div>
               <button
-                className={styles.hostButton}
                 onClick={async () => {
                   setGameId(await hostGame());
                 }}
@@ -77,7 +76,7 @@ function App() {
       <div>
         {profile && (
           <input
-            className={styles.username}
+            className="fixed left-0 top-0 right-0 h-16 border-b border-b-neutral-400 bg-neutral-900 px-5 focus:outline-none"
             name="name"
             defaultValue={profile.name}
             type="text"
