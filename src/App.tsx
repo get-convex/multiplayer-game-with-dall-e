@@ -49,18 +49,11 @@ function App() {
         </h1>
       </header>
       {!gameId && (
-        <>
-          <section>
-            <button
-              onClick={async () => {
-                setGameId(await hostGame());
-              }}
-            >
-              Host Game
-            </button>
-          </section>
-          <section>
+        <div className={styles.startGame}>
+          <div className={styles.title}>Play with friends!</div>
+          <div className={styles.actions}>
             <form
+              className={styles.gameCodeForm}
               onSubmit={async (e) => {
                 e.preventDefault();
                 setGameId(await joinGame(gameCode));
@@ -69,13 +62,22 @@ function App() {
               <input
                 type="text"
                 value={gameCode}
-                placeholder="Game Code"
+                placeholder="Game code"
                 onChange={(e) => setGameCode(e.target.value.substring(0, 4))}
               />
-              <button type="submit">Join Game</button>
+              <button type="submit">Join</button>
             </form>
-          </section>
-        </>
+            <div className={styles.or}>or</div>
+            <button
+              className={styles.hostButton}
+              onClick={async () => {
+                setGameId(await hostGame());
+              }}
+            >
+              Host a game
+            </button>
+          </div>
+        </div>
       )}
       <section>
         {gameId ? (

@@ -1,14 +1,16 @@
 .root {
   padding: var(--size-xl);
-  padding-top: var(--size-8xl);
+  padding-top: var(--size-9xl);
+  padding-bottom: 11.5rem;
 
   @media (min-width: 1024px) {
     padding-top: var(--size-xl);
+    padding-bottom: var(--size-xl);
   }
 }
 
 .username {
-  background: none;
+  background: var(--color-dark);
   border: none;
   border-bottom: 1px solid var(--color-light);
   color: var(--color-white);
@@ -35,4 +37,107 @@
       border: 1px solid var(--color-white);
     }
   }
+}
+
+.startGame {
+  padding: var(--size-lg);
+  border-top: 1px solid var(--color-light);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--color-dark);
+  height: 10.75rem;
+
+  @media (min-width: 1024px) {
+    position: static;
+    border: none;
+    height: auto;
+    padding: 0;
+  }
+}
+
+.actions {
+  display: flex;
+  gap: var(--size-xs);
+  height: 4.5rem;
+  align-items: center;
+
+  @media (min-width: 1024px) {
+    flex-direction: column;
+    align-items: flex-start;
+    height: auto;
+  }
+}
+
+.title {
+  font-size: var(--size-2xl);
+  font-family: var(--font-family-display);
+  font-variation-settings: "wdth" 25;
+  font-weight: bold;
+  letter-spacing: var(--letter-spacing-tight);
+  margin-bottom: var(--size-md);
+}
+
+.gameCodeForm {
+  flex-basis: 0;
+  flex-grow: 1;
+  display: flex;
+  height: 4rem;
+
+  input {
+    background: none;
+    border: 1px solid var(--color-primary);
+    padding: var(--size-xs);
+    font-size: var(--size-md);
+    flex-grow: 1;
+    flex-basis: 0;
+    width: 100px;
+    color: var(--color-light);
+
+    &:focus {
+      outline: none;
+      color: var(--color-white);
+    }
+  }
+
+  button {
+    background: var(--color-primary);
+    color: var(--color-black);
+    border: none;
+    padding: var(--size-2xs);
+    font-size: var(--size-md);
+  }
+
+  @media (min-width: 1024px) {
+    min-width: 25rem;
+  }
+}
+
+.hostButton {
+  background: var(--color-primary);
+  color: var(--color-black);
+  flex-basis: 0;
+  flex-grow: 1;
+  font-size: var(--size-lg);
+  height: 4rem;
+  border: none;
+
+  @media (min-width: 1024px) {
+    padding: var(--size-xl);
+    min-width: 25rem;
+  }
+}
+
+.or {
+  border: 1px solid var(--color-light);
+  border-radius: 50%;
+  width: var(--size-2xl);
+  height: var(--size-2xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--size-sm);
+  background: var(--color-dark);
+  flex-shrink: 0;
 }
