@@ -1,14 +1,38 @@
 .root {
-  // background: white;
+  padding: var(--size-xl);
+  padding-top: var(--size-8xl);
+
+  @media (min-width: 1024px) {
+    padding-top: var(--size-xl);
+  }
 }
 
 .username {
-  position: absolute;
-  top: 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--color-light);
+  color: var(--color-white);
+  flex-grow: 1;
+  font-size: var(--size-xl);
+  height: var(--size-8xl);
   left: 0;
+  padding: var(--size-xs);
+  position: absolute;
   right: 0;
+  top: 0;
+
+  &:focus {
+    outline: none;
+    border-bottom: 1px solid var(--color-white);
+  }
 
   @media (min-width: 1024px) {
     position: static;
+    border: 1px solid var(--color-light);
+    width: 100%;
+
+    &:focus {
+      border: 1px solid var(--color-white);
+    }
   }
 }
