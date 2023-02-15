@@ -220,7 +220,7 @@ export const progress = mutation(
 );
 
 // Modifies parameter to progress to guessing
-export const beginGuessPatch = (
+const beginGuessPatch = (
   round: Document<"rounds">
 ): Partial<Document<"rounds">> => ({
   options: round.options.sort(() => Math.random() - 0.5),
@@ -293,10 +293,8 @@ export const guess = mutation(
 );
 
 // Modifies parameter to progress to guessing
-const revealPatch = (
-  round: Document<"rounds">
-): Partial<Document<"rounds">> => ({
-  stage: "reveal",
+const revealPatch = (round: Document<"rounds">) => ({
+  stage: "reveal" as const,
   maxOptions: round.options.length,
   stageStart: Date.now(),
   stageEnd: Date.now() + RevealDurationMs,

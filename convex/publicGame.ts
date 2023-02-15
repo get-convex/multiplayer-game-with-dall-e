@@ -1,4 +1,4 @@
-import { beginGuessPatch, MaxOptions, newRound } from "./round";
+import { MaxOptions, newRound } from "./round";
 import { mutation, query } from "./_generated/server";
 
 export const get = query(async ({ db }) => {
@@ -36,7 +36,11 @@ export const progress = mutation(
         scheduler.runAfter(PublicGuessMs, "publicGame:progress", "guess");
         return "guess again";
       }
-      await db.patch(currentRound._id, { stage: "reveal" });
+      await db.patch(currentRound._id, {
+        stage: "reveal",
+        stageStart: Date.now(),
+        stageEnd: Date.now() + PublicRevealMs,
+      });
       scheduler.runAfter(PublicRevealMs, "publicGame:progress", "reveal");
       return "->reveal";
     }
