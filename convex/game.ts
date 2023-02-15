@@ -1,7 +1,7 @@
 import { z } from "zod";
-import withZodArgs from "./lib/withZod";
+import withZodArgs, { withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
-import { calculateScoreDeltas, MaxOptions } from "./round";
+import { calculateScoreDeltas, MaxOptions, newRound } from "./round";
 import { withSession } from "./lib/withSession";
 import { ClientGameStateZ } from "./shared";
 import { getUserById } from "./users";
@@ -138,6 +138,53 @@ export const join = mutation(
         }
 
         return game._id;
+      }
+    )
+  )
+);
+
+export const submit = mutation(
+  withSession(
+    withZodObjectArg(
+      { submissionId: zId("submissions"), gameId: zId("games") },
+      async ({ db, session }, { submissionId, gameId }) => {
+        const game = await db.get(gameId);
+        if (!game) throw new Error("Game not found");
+        const submission = await db.get(submissionId);
+        if (submission?.result.status !== "saved") {
+          throw new Error(
+            `Can't add ${submission?.result.status} submissions.`
+          );
+        }
+        if (!submission.authorId.equals(session.userId)) {
+          throw new Error("This is not your submission.");
+        }
+        const { authorId, prompt, result } = submission;
+        for (const roundId of game.roundIds) {
+          const round = (await db.get(roundId))!;
+          if (round.authorId.equals(authorId)) {
+            throw new Error("You already submitted.");
+          }
+        }
+        const roundIds = game.roundIds;
+        roundIds.push(
+          await db.insert(
+            "rounds",
+            newRound(
+              authorId,
+              result.imageStorageId,
+              prompt,
+              game.playerIds.length
+            )
+          )
+        );
+        await db.patch(game._id, { roundIds });
+        // Start the game, everyone's submitted.
+        if (roundIds.length === game.playerIds.length) {
+          await db.patch(game._id, {
+            state: { stage: "rounds", roundId: game.roundIds[0] },
+          });
+        }
       }
     )
   )

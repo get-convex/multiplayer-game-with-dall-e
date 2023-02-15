@@ -62,7 +62,7 @@ const Game: React.FC<{
   const [prompt, setPrompt] = useState("");
   const startSubmission = useSessionMutation("submissions:start");
   const [submissionId, setSubmissionId] = useState<Id<"submissions">>();
-  const addRound = useSessionMutation("submissions:addToGame");
+  const addRound = useSessionMutation("game:submit");
   const playAgain = useSessionMutation("game:playAgain");
   if (!game) return <article aria-busy="true"></article>;
   if (game.nextGameId) done(game.nextGameId);
