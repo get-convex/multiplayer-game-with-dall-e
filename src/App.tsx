@@ -32,16 +32,22 @@ function App() {
 
   return (
     <div className="flex flex-col p-5 pt-20 lg:flex-row lg:gap-28">
-      <div>
-        <header>
-          <img src="/faces.svg" alt="Cartoon faces" />
-          <h1 className="font-display uppercase">
+      <div className="grow basis-0">
+        <header className="mb-12">
+          <img className="w-full" src="/faces.svg" alt="Cartoon faces" />
+          <h1 className="stretch-min my-4 font-display text-7xl font-extrabold uppercase tracking-tighter md:text-8xl">
             Whose Prompt is it Anyways?
           </h1>
-          <span>
-            by <img src="/convex.svg" width="28" height="28" />{" "}
-            <a href="https://convex.dev">Convex</a>
-          </span>
+          <div className="flex items-center gap-2 text-lg">
+            by{" "}
+            <a
+              href="https://convex.dev"
+              className="flex items-center gap-2 hover:underline"
+            >
+              <img src="/convex.svg" width="28" height="28" alt="Convex logo" />
+              Convex
+            </a>
+          </div>
         </header>
         {!gameId && (
           <div>
@@ -73,7 +79,7 @@ function App() {
           </div>
         )}
       </div>
-      <div>
+      <div className="grow basis-0">
         {profile && (
           <input
             className="fixed left-0 top-0 right-0 h-16 border-b border-b-neutral-400 bg-neutral-900 px-5 focus:outline-none"

@@ -3,3 +3,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* These utilities are intended for use with the Roboto Flex variable font. */
+.stretch-min {
+  font-stretch: 25%;
+}
+.stretch-thin {
+  font-stretch: 75%;
+}
+.stretch-wide {
+  font-stretch: 125%;
+}
+.stretch-max {
+  font-stretch: 151%;
+}
