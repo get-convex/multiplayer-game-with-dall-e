@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Id } from "../convex/_generated/dataModel";
 import { useQuery } from "../convex/_generated/react";
-import "./App.css";
+import styles from "./App.module.scss";
 import Game from "./Game";
 import GameRound from "./GameRound";
 import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
@@ -32,10 +32,11 @@ function App() {
   }, []);
 
   return (
-    <>
+    <div className={styles.root}>
       <header>
         {profile && (
           <input
+            className={styles.username}
             name="name"
             defaultValue={profile.name}
             type="text"
@@ -90,7 +91,7 @@ function App() {
           </>
         )}
       </section>
-    </>
+    </div>
   );
 }
 
