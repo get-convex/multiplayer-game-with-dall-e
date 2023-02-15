@@ -14,7 +14,8 @@ export default action(
           "[dashboard](https://dasboard.convex.dev)"
       );
     }
-    const configuration = new Configuration({ apiKey });
+    const openai = new OpenAIApi(new Configuration({ apiKey }));
+
     const fail = (reason: string): Promise<never> =>
       runMutation("submissions:update", submissionId, {
         status: "failed",
@@ -23,8 +24,6 @@ export default action(
       }).then(() => {
         throw new Error(reason);
       });
-
-    const openai = new OpenAIApi(configuration);
 
     runMutation("submissions:update", submissionId, {
       status: "generating",
