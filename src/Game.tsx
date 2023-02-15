@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ClientGameState } from "../convex/shared";
+import { ClientGameState, MaxPromptLength } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
 import { useQuery } from "../convex/_generated/react";
 import GameRound from "./GameRound";
@@ -113,13 +113,15 @@ const Game: React.FC<{
           <form
             onSubmit={async (e) => {
               e.preventDefault();
-              setSubmissionId(await startSubmission({ gameId, prompt }));
+              setSubmissionId(await startSubmission(prompt));
             }}
           >
             <input
               type="text"
               value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
+              onChange={(e) =>
+                setPrompt(e.target.value.substring(0, MaxPromptLength))
+              }
             />
             <input type="submit" value="Preview" />
           </form>

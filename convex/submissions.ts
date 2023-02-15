@@ -5,22 +5,15 @@ import { newRound } from "./round";
 import { withSession } from "./lib/withSession";
 import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { MaxPromptLength } from "./shared";
 
 const ImageTimeoutMs = 30000;
 
 export const start = mutation(
   withSession(
-    withZodObjectArg(
-      { gameId: zId("games"), prompt: z.string() },
-      async ({ db, session, scheduler }, { gameId, prompt }) => {
-        const game = await db.get(gameId);
-        if (!game) throw new Error("Game not found");
-        for (const roundId of game.roundIds) {
-          const round = (await db.get(roundId))!;
-          if (round.authorId.equals(session.userId)) {
-            throw new Error("You already submitted.");
-          }
-        }
+    withZodArgs(
+      [z.string().max(MaxPromptLength)],
+      async ({ db, session, scheduler }, prompt) => {
         const submissionId = await db.insert("submissions", {
           prompt,
           authorId: session.userId,

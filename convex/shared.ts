@@ -97,3 +97,5 @@ export const RevealStateZ = z.object({
 });
 
 export type RevealState = z.infer<typeof RevealStateZ>;
+
+export const MaxPromptLength = 100;
