@@ -48,7 +48,7 @@ export default action(
     // Query OpenAI for the image.
     const opanaiResponse = await openai.createImage({
       prompt,
-      size: "256x256",
+      size: "512x512",
     });
     const dallEImageUrl = opanaiResponse.data.data[0]["url"];
     if (!dallEImageUrl) return await fail("No image URL returned from OpenAI");
