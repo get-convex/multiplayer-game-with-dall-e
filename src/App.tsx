@@ -33,24 +33,32 @@ function App() {
 
   return (
     <div className={styles.root}>
-      <header>
-        {profile && (
-          <input
-            className={styles.username}
-            name="name"
-            defaultValue={profile.name}
-            type="text"
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Type Name"
-          />
-        )}
+      {profile && (
+        <input
+          className={styles.username}
+          name="name"
+          defaultValue={profile.name}
+          type="text"
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Type Name"
+        />
+      )}
+      {/* <header>
         <h1>
           Whose Prompt is it Anyways? by <a href="https://convex.dev">Convex</a>
         </h1>
+      </header> */}
+      <header className={styles.header}>
+        <img className={styles.faces} src="/faces.svg" alt="Cartoon faces" />
+        <h1 className={styles.title}>Whose Prompt is it Anyways?</h1>
+        <span className={styles.convex}>
+          by <img src="/convex.svg" width="28" height="28" />{" "}
+          <a href="https://convex.dev">Convex</a>
+        </span>
       </header>
       {!gameId && (
         <div className={styles.startGame}>
-          <div className={styles.title}>Play with friends!</div>
+          <div className={styles.subtitle}>Play with friends!</div>
           <div className={styles.actions}>
             <form
               className={styles.gameCodeForm}
