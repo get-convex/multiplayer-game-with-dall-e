@@ -66,9 +66,10 @@ async function claimSessionUser(
 /**
  * Gets the name from the current session.
  */
-export const getName = queryWithSession(async ({ db, session }) => {
+export const getMyProfile = queryWithSession(async ({ db, session }) => {
   if (!session) return null;
-  return (await getUserById(db, session.userId)).name;
+  const { name, pictureUrl } = await getUserById(db, session.userId);
+  return { name, pictureUrl };
 });
 
 /**

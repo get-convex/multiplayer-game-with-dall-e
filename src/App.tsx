@@ -17,7 +17,7 @@ function App() {
     if (!id || id.length !== ConvexIdLength) return null;
     return new Id("games", id);
   });
-  const name = useSessionQuery("users:getName");
+  const profile = useSessionQuery("users:getMyProfile");
   const setName = useSingleFlight(useSessionMutation("users:setName"));
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -34,10 +34,10 @@ function App() {
   return (
     <>
       <header>
-        {typeof name === "string" && (
+        {profile && (
           <input
             name="name"
-            defaultValue={name}
+            defaultValue={profile.name}
             type="text"
             onChange={(e) => setName(e.target.value)}
             placeholder="Type Name"
