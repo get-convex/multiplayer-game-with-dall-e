@@ -33,61 +33,58 @@ function App() {
 
   return (
     <div className={styles.root}>
-      {profile && (
-        <input
-          className={styles.username}
-          name="name"
-          defaultValue={profile.name}
-          type="text"
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Type Name"
-        />
-      )}
-      {/* <header>
-        <h1>
-          Whose Prompt is it Anyways? by <a href="https://convex.dev">Convex</a>
-        </h1>
-      </header> */}
-      <header className={styles.header}>
-        <img className={styles.faces} src="/faces.svg" alt="Cartoon faces" />
-        <h1 className={styles.title}>Whose Prompt is it Anyways?</h1>
-        <span className={styles.convex}>
-          by <img src="/convex.svg" width="28" height="28" />{" "}
-          <a href="https://convex.dev">Convex</a>
-        </span>
-      </header>
-      {!gameId && (
-        <div className={styles.startGame}>
-          <div className={styles.subtitle}>Play with friends!</div>
-          <div className={styles.actions}>
-            <form
-              className={styles.gameCodeForm}
-              onSubmit={async (e) => {
-                e.preventDefault();
-                setGameId(await joinGame(gameCode));
-              }}
-            >
-              <input
-                type="text"
-                value={gameCode}
-                placeholder="Game code"
-                onChange={(e) => setGameCode(e.target.value.substring(0, 4))}
-              />
-              <button type="submit">Join</button>
-            </form>
-            <div className={styles.or}>or</div>
-            <button
-              className={styles.hostButton}
-              onClick={async () => {
-                setGameId(await hostGame());
-              }}
-            >
-              Host a game
-            </button>
+      <div>
+        <header className={styles.header}>
+          <img className={styles.faces} src="/faces.svg" alt="Cartoon faces" />
+          <h1 className={styles.title}>Whose Prompt is it Anyways?</h1>
+          <span className={styles.convex}>
+            by <img src="/convex.svg" width="28" height="28" />{" "}
+            <a href="https://convex.dev">Convex</a>
+          </span>
+        </header>
+        {!gameId && (
+          <div className={styles.startGame}>
+            <div className={styles.subtitle}>Play with friends!</div>
+            <div className={styles.actions}>
+              <form
+                className={styles.gameCodeForm}
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setGameId(await joinGame(gameCode));
+                }}
+              >
+                <input
+                  type="text"
+                  value={gameCode}
+                  placeholder="Game code"
+                  onChange={(e) => setGameCode(e.target.value.substring(0, 4))}
+                />
+                <button type="submit">Join</button>
+              </form>
+              <div className={styles.or}>or</div>
+              <button
+                className={styles.hostButton}
+                onClick={async () => {
+                  setGameId(await hostGame());
+                }}
+              >
+                Host a game
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-      <section>
+        )}
+      </div>
+      <div>
+        {profile && (
+          <input
+            className={styles.username}
+            name="name"
+            defaultValue={profile.name}
+            type="text"
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Type Name"
+          />
+        )}
         {gameId ? (
           <Game gameId={gameId} done={done} />
         ) : (
@@ -100,7 +97,7 @@ function App() {
             )}
           </>
         )}
-      </section>
+      </div>
     </div>
   );
 }

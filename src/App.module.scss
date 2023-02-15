@@ -2,10 +2,19 @@
   padding: var(--size-xl);
   padding-top: var(--size-9xl);
   padding-bottom: 11.5rem;
+  max-width: 1600px;
+  margin: 0 auto;
+
+  > div {
+    flex-basis: 0;
+    flex-grow: 1;
+  }
 
   @media (min-width: 1024px) {
     padding-top: var(--size-xl);
     padding-bottom: var(--size-xl);
+    display: flex;
+    gap: var(--size-10xl);
   }
 }
 
