@@ -32,10 +32,11 @@ function App() {
   }, []);
 
   return (
-    <div className={styles.app}>
+    <div className={styles.root}>
       <header>
         {profile && (
           <input
+            className={styles.username}
             name="name"
             defaultValue={profile.name}
             type="text"

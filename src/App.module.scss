@@ -1,3 +1,14 @@
-.app {
-  // background: yellow;
+.root {
+  // background: white;
+}
+
+.username {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  @media (min-width: 1024px) {
+    position: static;
+  }
 }
