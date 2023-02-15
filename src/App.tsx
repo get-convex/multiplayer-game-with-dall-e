@@ -31,11 +31,11 @@ function App() {
   }, []);
 
   return (
-    <div className="flex flex-col p-5 pt-20 lg:flex-row lg:gap-28">
+    <div className="flex flex-col p-5 pt-20 pb-48 lg:flex-row lg:gap-28">
       <div className="grow basis-0">
         <header className="mb-12">
           <img className="w-full" src="/faces.svg" alt="Cartoon faces" />
-          <h1 className="stretch-min my-4 font-display text-7xl font-extrabold uppercase tracking-tighter md:text-8xl">
+          <h1 className="stretch-min my-4 font-display text-6xl font-extrabold uppercase tracking-tighter md:text-8xl">
             Whose Prompt is it Anyways?
           </h1>
           <div className="flex items-center gap-2 text-lg">
@@ -50,7 +50,7 @@ function App() {
           </div>
         </header>
         {!gameId && (
-          <div className="fixed bottom-0 left-0 right-0 flex flex-col gap-4 border-t border-t-neutral-400 p-5 lg:static lg:border-t-0 lg:p-0">
+          <div className="fixed bottom-0 left-0 right-0 flex flex-col gap-4 border-t border-t-neutral-400 bg-neutral-900 p-5 lg:static lg:border-t-0 lg:p-0">
             <div className="stretch-min font-display text-4xl font-extrabold tracking-tight">
               Play with friends!
             </div>
