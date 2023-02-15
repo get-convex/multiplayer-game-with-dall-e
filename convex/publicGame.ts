@@ -7,7 +7,6 @@ export const get = query(async ({ db }) => {
     console.warn("No public game currently.");
     return null;
   }
-  // TODO: return round info
   return publicGame.roundId;
 });
 
