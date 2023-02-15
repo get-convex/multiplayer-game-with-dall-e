@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Id } from "../convex/_generated/dataModel";
 import { useQuery } from "../convex/_generated/react";
-import styles from "./App.module.scss";
 import Game from "./Game";
 import GameRound from "./GameRound";
 import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
@@ -32,41 +31,59 @@ function App() {
   }, []);
 
   return (
-    <div className={styles.root}>
-      <div>
-        <header className={styles.header}>
-          <img className={styles.faces} src="/faces.svg" alt="Cartoon faces" />
-          <h1 className={styles.title}>Whose Prompt is it Anyways?</h1>
-          <span className={styles.convex}>
-            by <img src="/convex.svg" width="28" height="28" />{" "}
-            <a href="https://convex.dev">Convex</a>
-          </span>
+    <div className="flex flex-col p-5 pt-20 pb-48 lg:flex-row lg:gap-28">
+      <div className="grow basis-0">
+        <header className="mb-12">
+          <img className="w-full" src="/faces.svg" alt="Cartoon faces" />
+          <h1 className="stretch-min my-4 font-display text-6xl font-extrabold uppercase tracking-tighter md:text-8xl">
+            Whose Prompt is it Anyways?
+          </h1>
+          <div className="flex items-center gap-2 text-lg">
+            by{" "}
+            <a
+              href="https://convex.dev"
+              className="flex items-center gap-2 hover:underline"
+            >
+              <img src="/convex.svg" width="28" height="28" alt="Convex logo" />
+              Convex
+            </a>
+          </div>
         </header>
         {!gameId && (
-          <div className={styles.startGame}>
-            <div className={styles.subtitle}>Play with friends!</div>
-            <div className={styles.actions}>
+          <div className="fixed bottom-0 left-0 right-0 flex flex-col gap-4 border-t border-t-neutral-400 bg-neutral-900 p-5 lg:static lg:border-t-0 lg:p-0">
+            <div className="stretch-min font-display text-4xl font-extrabold tracking-tight">
+              Play with friends!
+            </div>
+            <div className="flex items-center lg:flex-col">
               <form
-                className={styles.gameCodeForm}
                 onSubmit={async (e) => {
                   e.preventDefault();
                   setGameId(await joinGame(gameCode));
                 }}
+                className="flex grow basis-0 lg:w-full"
               >
                 <input
                   type="text"
                   value={gameCode}
                   placeholder="Game code"
                   onChange={(e) => setGameCode(e.target.value.substring(0, 4))}
+                  className="h-12 w-0 grow border border-blue-200 bg-transparent p-2 text-blue-200 placeholder:text-blue-200"
                 />
-                <button type="submit">Join</button>
+                <button
+                  type="submit"
+                  className="h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400"
+                >
+                  Join
+                </button>
               </form>
-              <div className={styles.or}>or</div>
+              <span className="z-10 -m-2 flex h-8 w-8 items-center justify-center rounded-full border border-neutral-300 bg-neutral-900 text-sm">
+                or
+              </span>
               <button
-                className={styles.hostButton}
                 onClick={async () => {
                   setGameId(await hostGame());
                 }}
+                className="h-12 grow basis-0 bg-blue-200 text-neutral-black hover:bg-blue-400 lg:w-full lg:py-3"
               >
                 Host a game
               </button>
@@ -74,15 +91,15 @@ function App() {
           </div>
         )}
       </div>
-      <div>
+      <div className="grow basis-0">
         {profile && (
           <input
-            className={styles.username}
+            className="fixed left-0 top-0 right-0 h-16 border-b border-b-neutral-400 bg-neutral-900 px-5 focus:outline-none lg:static lg:mb-12 lg:w-full lg:border lg:border-neutral-400"
             name="name"
             defaultValue={profile.name}
             type="text"
             onChange={(e) => setName(e.target.value)}
-            placeholder="Type Name"
+            placeholder="Type name"
           />
         )}
         {gameId ? (
