@@ -76,6 +76,19 @@ export const setName = mutationWithSession(async ({ db, session }, name) => {
   db.patch(user._id, { name });
 });
 
+export const setPicture = mutationWithSession(
+  async ({ db, session, storage }, submissionId: Id<"submissions">) => {
+    const submission = await db.get(submissionId);
+    if (!submission) throw new Error("No submission found");
+    if (!submission.authorId.equals(session.userId))
+      throw new Error("Not yours");
+    if (submission.result.status !== "saved") throw new Error("Bad submission");
+    const pictureUrl = await storage.getUrl(submission.result.imageStorageId);
+    if (!pictureUrl) throw new Error("Picture is missing");
+    db.patch(session.userId, { pictureUrl });
+  }
+);
+
 export const getUserById = async (db: DatabaseReader, userId: Id<"users">) => {
   let user = (await db.get(userId))!;
   while (user.claimedByUserId) {
