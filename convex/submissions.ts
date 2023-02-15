@@ -36,7 +36,8 @@ export const start = mutation(
         scheduler.runAfter(0, "actions/createImage", prompt, submissionId);
         scheduler.runAfter(ImageTimeoutMs, "submissions:timeout", submissionId);
         return submissionId;
-      }
+      },
+      zId("submissions")
     )
   )
 );
