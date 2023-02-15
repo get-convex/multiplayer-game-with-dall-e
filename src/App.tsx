@@ -40,7 +40,7 @@ function App() {
             name="name"
             defaultValue={profile.name}
             type="text"
-            onChange={e => setName(e.target.value)}
+            onChange={(e) => setName(e.target.value)}
             placeholder="Type Name"
           />
         )}
@@ -61,7 +61,7 @@ function App() {
           </section>
           <section>
             <form
-              onSubmit={async e => {
+              onSubmit={async (e) => {
                 e.preventDefault();
                 setGameId(await joinGame(gameCode));
               }}
@@ -70,7 +70,7 @@ function App() {
                 type="text"
                 value={gameCode}
                 placeholder="Game Code"
-                onChange={e => setGameCode(e.target.value.substring(0, 4))}
+                onChange={(e) => setGameCode(e.target.value.substring(0, 4))}
               />
               <button type="submit">Join Game</button>
             </form>
