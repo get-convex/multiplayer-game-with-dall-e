@@ -31,7 +31,7 @@ function App() {
   }, []);
 
   return (
-    <div className="flex flex-col p-5 pt-20 pb-64 lg:flex-row lg:gap-28 max-w-7xl mx-auto">
+    <div className="flex flex-col p-5 pt-20 pb-64 lg:flex-row lg:gap-28 max-w-7xl mx-auto lg:pt-5 lg:pb-5">
       <div className="grow basis-0">
         <header className="mb-20">
           <img className="w-full" src="/faces.svg" alt="Cartoon faces" />
