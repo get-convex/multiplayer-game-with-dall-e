@@ -20,9 +20,13 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
     case "label":
       return (
         <div>
-          <img src={round.imageUrl} alt="" />
+          <img
+            src={round.imageUrl}
+            alt=""
+            className="w-full max-w-xl border border-neutral-600 rounded overflow-hidden my-4"
+          />
           {round.mine ? (
-            "This was your image"
+            "This was your image."
           ) : round.submitted.find((submission) => submission.me) ? (
             <section>
               Prompt submitted
