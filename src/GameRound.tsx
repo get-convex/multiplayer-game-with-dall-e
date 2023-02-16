@@ -46,18 +46,21 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
                 const result = await addPrompt({ roundId, prompt });
                 if (!result.success) setError(result.reason);
               }}
+              className="flex"
             >
               <input
                 type="text"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
+                className="bg-transparent border border-neutral-400 p-2 focus:outline-none placeholder:text-neutral-400 text-blue-400 focus:border-blue-400 h-12 basis-0 grow"
               />
-              <label>
+              <label className="basis-0">
                 {error}
                 <input
                   type="submit"
                   value="Submit prompt"
                   aria-invalid={!!error}
+                  className="h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400"
                 />
               </label>
             </form>

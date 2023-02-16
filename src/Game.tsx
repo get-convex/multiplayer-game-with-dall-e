@@ -38,7 +38,7 @@ const Game: React.FC<{
   const footer = (
     <>
       {game.hosting && (
-        <section>
+        <section className="mt-4">
           <p className="mb-4">You are the host of this game.</p>
           <NextButton gameId={gameId} stage={game.state.stage} />
         </section>
