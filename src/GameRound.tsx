@@ -71,13 +71,24 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
           {round.mine ? (
             "This was your image"
           ) : round.submitted.find((submission) => submission.me) ? (
-            <section>
-              You submitted!
+            <section className="flex flex-col">
+              <span className="mb-2">Revealing answers...</span>
+              <span className="text-xl mb-4">You submitted!</span>
               <ul>
                 {round.submitted.map((player) => (
-                  <li key={player.pictureUrl}>
-                    <img src={player.pictureUrl} />
-                    {player.name} ✅
+                  <li
+                    key={player.pictureUrl}
+                    className="flex items-center gap-3"
+                  >
+                    <img
+                      src={player.pictureUrl}
+                      width="48"
+                      height="48"
+                      className="rounded"
+                    />
+                    <span className="text-lg">{player.name}</span>
+                    {/* TODO: Replace emoji with icon. */}
+                    <span className="text-2xl">✅</span>
                   </li>
                 ))}
               </ul>
@@ -126,33 +137,46 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
     case "reveal":
       const users = round.users;
       return (
-        <>
-          Reveal!
-          <ul>
+        <div className="flex flex-col">
+          <span className="my-4">Loading next prompt...</span>
+          <span className="text-xl mb-4">Reveal</span>
+          <ul className="border-t border-t-neutral-500">
             {round.results.map((option) => (
-              <li key={option.authorId}>
-                {/*<img src={users.get(option.authorId)!.pictureUrl} />*/}
-                <span>
-                  {option.prompt}:{" "}
-                  {round.authorId === option.authorId && "👈 Actual: "}
-                  {users.get(option.authorId)!.name +
-                    ": +" +
-                    option.scoreDeltas.get(option.authorId)}
-                </span>
+              <li
+                key={option.authorId}
+                className="border-b border-b-neutral-500 py-4 flex flex-col items-start gap-2"
+              >
+                {round.authorId === option.authorId && (
+                  <span className="bg-green-300 rounded-full px-2 text-neutral-black">
+                    Actual answer
+                  </span>
+                )}
+                <span className="text-xl font-bold">{option.prompt}</span>
+                <div className="flex gap-2">
+                  by {users.get(option.authorId)!.name}
+                  <span className="rounded-full px-2 bg-orange-400 text-neutral-black">
+                    +{option.scoreDeltas.get(option.authorId)}
+                  </span>
+                </div>
                 {option.votes.length ? (
-                  <label>
-                    Votes:
+                  <div className="pl-6">
+                    <span className="text-sm font-bold">
+                      {option.votes.length} Votes
+                    </span>
                     <ol>
                       {option.votes.map((userId) => (
                         <li key={userId}>
                           {users.get(userId)!.name}
-                          {option.scoreDeltas.has(userId)
-                            ? ": +" + option.scoreDeltas.get(userId)
-                            : null}
+
+                          {option.scoreDeltas.has(userId) ? (
+                            <span className="px-2 rounded-full bg-purple-400 text-neutral-black">
+                              {option.scoreDeltas.get(userId)}
+                            </span>
+                          ) : null}
                         </li>
                       ))}
                     </ol>
-                  </label>
+                  </div>
                 ) : null}
                 {option.likes.length ? (
                   <label>
@@ -167,7 +191,7 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
               </li>
             ))}
           </ul>
-        </>
+        </div>
       );
   }
 };
