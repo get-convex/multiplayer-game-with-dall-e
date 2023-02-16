@@ -20,7 +20,7 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
     case "label":
       return (
         <div>
-          <img src={round.imageUrl} />
+          <img src={round.imageUrl} alt="" />
           {round.mine ? (
             "This was your image"
           ) : round.submitted.find((submission) => submission.me) ? (
@@ -63,7 +63,11 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
     case "guess":
       return (
         <div>
-          <img src={round.imageUrl} />
+          <img
+            src={round.imageUrl}
+            alt=""
+            className="w-full max-w-xl border border-neutral-600 rounded overflow-hidden my-4"
+          />
           {round.mine ? (
             "This was your image"
           ) : round.submitted.find((submission) => submission.me) ? (
@@ -87,18 +91,23 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
               }}
             >
               <fieldset>
-                <legend>Guess the prompt!</legend>
-                {round.options.map((option) => (
-                  <label key={option}>
-                    <input
-                      type="radio"
-                      disabled={option === prompt}
-                      checked={option === guess}
-                      onChange={() => setGuess(option)}
-                    />
-                    {option}
-                  </label>
-                ))}
+                <legend className="text-2xl mb-2">Guess the prompt</legend>
+                <ul className="mb-6">
+                  {round.options.map((option) => (
+                    <li key={option} className="mb-2">
+                      <label className="flex gap-2 items-center text-lg">
+                        <input
+                          type="radio"
+                          disabled={option === prompt}
+                          checked={option === guess}
+                          onChange={() => setGuess(option)}
+                          className="w-5 h-5"
+                        />
+                        {option}
+                      </label>
+                    </li>
+                  ))}
+                </ul>
               </fieldset>
               <label>
                 {error}
@@ -107,6 +116,7 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
                   value="Submit guess"
                   disabled={!guess}
                   aria-invalid={!!error}
+                  className="border border-blue-200 text-lg py-2 px-4 disabled:border-neutral-400 disabled:text-neutral-400 disabled:cursor-not-allowed cursor-pointer text-blue-200 hover:text-blue-400 hover:border-blue-400 transition-colors"
                 />
               </label>
             </form>

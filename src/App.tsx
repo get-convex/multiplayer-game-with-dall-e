@@ -31,9 +31,9 @@ function App() {
   }, []);
 
   return (
-    <div className="flex flex-col p-5 pt-20 pb-48 lg:flex-row lg:gap-28">
+    <div className="flex flex-col p-5 pt-20 pb-64 lg:flex-row lg:gap-28 max-w-7xl mx-auto">
       <div className="grow basis-0">
-        <header className="mb-12">
+        <header className="mb-20">
           <img className="w-full" src="/faces.svg" alt="Cartoon faces" />
           <h1 className="stretch-min my-4 font-display text-6xl font-extrabold uppercase tracking-tighter md:text-8xl">
             Whose Prompt is it Anyways?
@@ -106,7 +106,9 @@ function App() {
           <Game gameId={gameId} done={done} />
         ) : (
           <>
-            <h2>Public Game</h2>
+            <h2 className="text-4xl font-display stretch-min tracking-tight font-extrabold">
+              Public game
+            </h2>
             {publicRoundId ? (
               <GameRound roundId={publicRoundId} />
             ) : (
