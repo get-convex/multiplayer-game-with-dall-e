@@ -13,7 +13,12 @@ const NextButton = (props: {
 }) => {
   const progress = useSessionMutation("game:progress");
   return (
-    <button onClick={(e) => progress(props.gameId, props.stage)}>Next</button>
+    <button
+      onClick={(e) => progress(props.gameId, props.stage)}
+      className="h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400"
+    >
+      Next
+    </button>
   );
 };
 
@@ -33,8 +38,8 @@ const Game: React.FC<{
   const footer = (
     <>
       {game.hosting && (
-        <section>
-          <p>You are the host of this game.</p>
+        <section className="mt-4">
+          <p className="mb-4">You are the host of this game.</p>
           <NextButton gameId={gameId} stage={game.state.stage} />
         </section>
       )}
@@ -59,10 +64,14 @@ const Game: React.FC<{
       );
     case "recap":
       return (
-        <>
+        <div className="flex flex-col gap-2">
           <Recap game={game} />
-          Done!
-          <button type="submit" onClick={(e) => done(null)}>
+          <p>Done!</p>
+          <button
+            type="submit"
+            onClick={(e) => done(null)}
+            className="h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400"
+          >
             Home
           </button>
           <button
@@ -71,10 +80,11 @@ const Game: React.FC<{
               const nextGameId = await playAgain(gameId);
               done(nextGameId);
             }}
+            className="h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400"
           >
             Play again
           </button>
-        </>
+        </div>
       );
   }
 };

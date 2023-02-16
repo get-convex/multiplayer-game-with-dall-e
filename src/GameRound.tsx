@@ -20,9 +20,13 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
     case "label":
       return (
         <div>
-          <img src={round.imageUrl} />
+          <img
+            src={round.imageUrl}
+            alt=""
+            className="w-full max-w-xl border border-neutral-600 rounded overflow-hidden my-4"
+          />
           {round.mine ? (
-            "This was your image"
+            "This was your image."
           ) : round.submitted.find((submission) => submission.me) ? (
             <section>
               Prompt submitted
@@ -42,18 +46,21 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
                 const result = await addPrompt({ roundId, prompt });
                 if (!result.success) setError(result.reason);
               }}
+              className="flex"
             >
               <input
                 type="text"
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
+                className="bg-transparent border border-neutral-400 p-2 focus:outline-none placeholder:text-neutral-400 text-blue-400 focus:border-blue-400 h-12 basis-0 grow"
               />
-              <label>
+              <label className="basis-0">
                 {error}
                 <input
                   type="submit"
                   value="Submit prompt"
                   aria-invalid={!!error}
+                  className="h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400"
                 />
               </label>
             </form>
@@ -63,17 +70,32 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
     case "guess":
       return (
         <div>
-          <img src={round.imageUrl} />
+          <img
+            src={round.imageUrl}
+            alt=""
+            className="w-full max-w-xl border border-neutral-600 rounded overflow-hidden my-4"
+          />
           {round.mine ? (
             "This was your image"
           ) : round.submitted.find((submission) => submission.me) ? (
-            <section>
-              You submitted!
+            <section className="flex flex-col">
+              <span className="mb-2">Revealing answers...</span>
+              <span className="text-xl mb-4">You submitted!</span>
               <ul>
                 {round.submitted.map((player) => (
-                  <li key={player.pictureUrl}>
-                    <img src={player.pictureUrl} />
-                    {player.name} ✅
+                  <li
+                    key={player.pictureUrl}
+                    className="flex items-center gap-3"
+                  >
+                    <img
+                      src={player.pictureUrl}
+                      width="48"
+                      height="48"
+                      className="rounded"
+                    />
+                    <span className="text-lg">{player.name}</span>
+                    {/* TODO: Replace emoji with icon. */}
+                    <span className="text-2xl">✅</span>
                   </li>
                 ))}
               </ul>
@@ -87,18 +109,23 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
               }}
             >
               <fieldset>
-                <legend>Guess the prompt!</legend>
-                {round.options.map((option) => (
-                  <label key={option}>
-                    <input
-                      type="radio"
-                      disabled={option === prompt}
-                      checked={option === guess}
-                      onChange={() => setGuess(option)}
-                    />
-                    {option}
-                  </label>
-                ))}
+                <legend className="text-2xl mb-2">Guess the prompt</legend>
+                <ul className="mb-6">
+                  {round.options.map((option) => (
+                    <li key={option} className="mb-2">
+                      <label className="flex gap-2 items-center text-lg">
+                        <input
+                          type="radio"
+                          disabled={option === prompt}
+                          checked={option === guess}
+                          onChange={() => setGuess(option)}
+                          className="w-5 h-5"
+                        />
+                        {option}
+                      </label>
+                    </li>
+                  ))}
+                </ul>
               </fieldset>
               <label>
                 {error}
@@ -107,6 +134,7 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
                   value="Submit guess"
                   disabled={!guess}
                   aria-invalid={!!error}
+                  className="border border-blue-200 text-lg py-2 px-4 disabled:border-neutral-400 disabled:text-neutral-400 disabled:cursor-not-allowed cursor-pointer text-blue-200 hover:text-blue-400 hover:border-blue-400 transition-colors"
                 />
               </label>
             </form>
@@ -116,33 +144,46 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
     case "reveal":
       const users = round.users;
       return (
-        <>
-          Reveal!
-          <ul>
+        <div className="flex flex-col">
+          <span className="my-4">Loading next prompt...</span>
+          <span className="text-xl mb-4">Reveal</span>
+          <ul className="border-t border-t-neutral-500">
             {round.results.map((option) => (
-              <li key={option.authorId}>
-                {/*<img src={users.get(option.authorId)!.pictureUrl} />*/}
-                <span>
-                  {option.prompt}:{" "}
-                  {round.authorId === option.authorId && "👈 Actual: "}
-                  {users.get(option.authorId)!.name +
-                    ": +" +
-                    option.scoreDeltas.get(option.authorId)}
-                </span>
+              <li
+                key={option.authorId}
+                className="border-b border-b-neutral-500 py-4 flex flex-col items-start gap-2"
+              >
+                {round.authorId === option.authorId && (
+                  <span className="bg-green-300 rounded-full px-2 text-neutral-black">
+                    Actual answer
+                  </span>
+                )}
+                <span className="text-xl font-bold">{option.prompt}</span>
+                <div className="flex gap-2">
+                  by {users.get(option.authorId)!.name}
+                  <span className="rounded-full px-2 bg-orange-400 text-neutral-black">
+                    +{option.scoreDeltas.get(option.authorId)}
+                  </span>
+                </div>
                 {option.votes.length ? (
-                  <label>
-                    Votes:
+                  <div className="pl-6">
+                    <span className="text-sm font-bold">
+                      {option.votes.length} Votes
+                    </span>
                     <ol>
                       {option.votes.map((userId) => (
                         <li key={userId}>
                           {users.get(userId)!.name}
-                          {option.scoreDeltas.has(userId)
-                            ? ": +" + option.scoreDeltas.get(userId)
-                            : null}
+
+                          {option.scoreDeltas.has(userId) ? (
+                            <span className="px-2 rounded-full bg-purple-400 text-neutral-black">
+                              {option.scoreDeltas.get(userId)}
+                            </span>
+                          ) : null}
                         </li>
                       ))}
                     </ol>
-                  </label>
+                  </div>
                 ) : null}
                 {option.likes.length ? (
                   <label>
@@ -157,7 +198,7 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
               </li>
             ))}
           </ul>
-        </>
+        </div>
       );
   }
 };

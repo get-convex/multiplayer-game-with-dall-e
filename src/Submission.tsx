@@ -8,10 +8,11 @@ export const Health = () => {
   const health = useQuery("submissions:health") ?? null;
   return (
     health && (
-      <section>
-        <strong>
-          Dall-E status {health[1] > 0.8 ? "✅" : health[1] > 0.5 ? "⚠️" : "❌"}
-        </strong>
+      <section className="flex flex-col gap-1 w-full text-neutral-400">
+        <span>
+          Dall-E status:{" "}
+          {health[1] > 0.8 ? "✅" : health[1] > 0.5 ? "⚠️" : "❌"}
+        </span>
         <span>
           Image generation time: {(health[0] / 1000).toFixed(1)} seconds
         </span>
@@ -34,9 +35,14 @@ const Submission = (props: { submissionId: Id<"submissions"> }) => {
       return <p>❗️{result.reason}</p>;
     case "saved":
       return (
-        <figure>
-          <img src={result.url} />
-          Generated in {result.elapsedMs / 1000} seconds.
+        <figure className="flex flex-col">
+          <img
+            src={result.url}
+            className="w-full max-w-xl border border-neutral-600 rounded overflow-hidden my-4"
+          />
+          <span className="text-sm text-neutral-400">
+            Generated in {result.elapsedMs / 1000} seconds.
+          </span>
         </figure>
       );
   }
@@ -52,32 +58,48 @@ export const CreateImage = ({
   const startSubmission = useSessionMutation("submissions:start");
   const [submissionId, setSubmissionId] = useState<Id<"submissions">>();
   return (
-    <>
-      <Health />
-      Describe an image:
+    <div className="flex flex-col gap-4">
+      <div className="text-5xl font-display stretch-min font-bold">
+        Create a prompt
+      </div>
       <form
         onSubmit={async (e) => {
           e.preventDefault();
           setSubmissionId(await startSubmission(prompt));
         }}
+        className="flex flex-col gap-4"
       >
+        <label className="flex flex-col gap-2">
+          Describe an image{" "}
+          <input
+            type="text"
+            value={prompt}
+            onChange={(e) =>
+              setPrompt(e.target.value.substring(0, MaxPromptLength))
+            }
+            placeholder="Provide image description"
+            className="bg-transparent border border-neutral-400 p-2 focus:outline-none placeholder:text-neutral-400 text-blue-400 focus:border-blue-400"
+          />
+        </label>
         <input
-          type="text"
-          value={prompt}
-          onChange={(e) =>
-            setPrompt(e.target.value.substring(0, MaxPromptLength))
-          }
+          type="submit"
+          value="Preview"
+          className="h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400"
         />
-        <input type="submit" value="Preview" />
       </form>
       {submissionId && (
         <>
           <Submission submissionId={submissionId} />
-          <button type="submit" onClick={(e) => onSubmit(submissionId)}>
+          <button
+            type="submit"
+            onClick={(e) => onSubmit(submissionId)}
+            className="h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400"
+          >
             Submit
           </button>
         </>
       )}
-    </>
+      <Health />
+    </div>
   );
 };
