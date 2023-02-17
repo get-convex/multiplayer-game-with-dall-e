@@ -12,7 +12,7 @@ export default defineSchema({
 
   // For presence:
   presence: defineTable({
-    userId: s.id("users"),
+    sessionId: s.id("sessions"),
     game: s.string(),
     updated: s.number(),
     data: s.any(),
@@ -20,7 +20,7 @@ export default defineSchema({
     // Index for fetching presence data
     .index("by_game_updated", ["game", "updated"])
     // Index for updating presence data
-    .index("by_user_game", ["userId", "game"]),
+    .index("by_session_game", ["sessionId", "game"]),
   // End presence
 
   // For sessions:

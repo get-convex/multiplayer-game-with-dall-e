@@ -1,12 +1,14 @@
 import { Value } from "convex/values";
 import { useCallback, useEffect, useState } from "react";
-import { useQuery, useMutation } from "../../convex/_generated/react";
+import { Id } from "../../convex/_generated/dataModel";
+import { useQuery } from "../../convex/_generated/react";
+import { useSessionMutation, useSessionQuery } from "./sessionsClient";
 import useSingleFlight from "./useSingleFlight";
 
 export type PresenceData<D> = {
   created: number;
   updated: number;
-  user: string;
+  userId: Id<"users">;
   data: D;
 };
 
@@ -43,26 +45,26 @@ const OLD_MS = 10000;
  */
 export const usePresence = <T extends { [key: string]: Value }>(
   room: string,
-  user: string,
   initialData: T,
   heartbeatPeriod = HEARTBEAT_PERIOD
 ) => {
+  const userId = useSessionQuery("presence:myUserId");
   const [data, setData] = useState(initialData);
   let presence: PresenceData<T>[] | undefined = useQuery("presence:list", room);
-  if (presence) {
-    presence = presence.filter((p) => p.user !== user);
+  if (presence && userId) {
+    presence = presence.filter((p) => !userId.equals(p.userId));
   }
-  const updatePresence = useSingleFlight(useMutation("presence:update"));
-  const heartbeat = useSingleFlight(useMutation("presence:heartbeat"));
+  const updatePresence = useSingleFlight(useSessionMutation("presence:update"));
+  const heartbeat = useSingleFlight(useSessionMutation("presence:heartbeat"));
 
   useEffect(() => {
-    void updatePresence(room, user, data);
+    void updatePresence(room, data);
     const intervalId = setInterval(() => {
-      void heartbeat(room, user);
+      void heartbeat(room);
     }, heartbeatPeriod);
     // Whenever we have any data change, it will get cleared.
     return () => clearInterval(intervalId);
-  }, [updatePresence, heartbeat, room, user, data, heartbeatPeriod]);
+  }, [updatePresence, heartbeat, room, data, heartbeatPeriod]);
 
   // Updates the data, merged with previous data state.
   const updateData = useCallback((patch: Partial<T>) => {

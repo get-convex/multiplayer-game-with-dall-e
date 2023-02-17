@@ -7,7 +7,7 @@
  * - Use Convex `auth` to authenticate users rather than passing up a "user"
  * - Check that the user is allowed to be in a given game.
  */
-import { withSession } from "./lib/withSession";
+import { queryWithSession, withSession } from "./lib/withSession";
 import { query, mutation } from "./_generated/server";
 
 const LIST_LIMIT = 20;
@@ -31,15 +31,15 @@ export const update = mutation(
       }
       const existing = await db
         .query("presence")
-        .withIndex("by_user_game", (q) =>
-          q.eq("userId", session.userId).eq("game", game)
+        .withIndex("by_session_game", (q) =>
+          q.eq("sessionId", session._id).eq("game", game)
         )
         .unique();
       if (existing) {
         await db.patch(existing._id, { data, updated: Date.now() });
       } else {
         await db.insert("presence", {
-          userId: session.userId,
+          sessionId: session._id,
           data,
           game,
           updated: Date.now(),
@@ -66,8 +66,8 @@ export const heartbeat = mutation(
       }
       const existing = await db
         .query("presence")
-        .withIndex("by_user_game", (q) =>
-          q.eq("userId", session.userId).eq("game", game)
+        .withIndex("by_session_game", (q) =>
+          q.eq("sessionId", session._id).eq("game", game)
         )
         .unique();
       if (existing) {
@@ -92,10 +92,16 @@ export const list = query(async ({ db }, game: string) => {
     .withIndex("by_game_updated", (q) => q.eq("game", game))
     .order("desc")
     .take(LIST_LIMIT);
-  return presence.map(({ _creationTime, updated, userId, data }) => ({
-    created: _creationTime,
-    updated,
-    userId,
-    data,
-  }));
+  return Promise.all(
+    presence.map(async ({ _creationTime, updated, sessionId, data }) => ({
+      created: _creationTime,
+      updated,
+      userId: (await db.get(sessionId))!.userId,
+      data,
+    }))
+  );
 });
+
+export const myUserId = queryWithSession(
+  async ({ session }) => session?.userId
+);
