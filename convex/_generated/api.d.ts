@@ -10,6 +10,7 @@
  */
 
 import type { ApiFromModules } from "convex/api";
+import type * as actions_checkPrompt from "../actions/checkPrompt";
 import type * as actions_createImage from "../actions/createImage";
 import type * as game from "../game";
 import type * as lib_withSession from "../lib/withSession";
@@ -33,6 +34,7 @@ import type * as users from "../users";
  * `ConvexReactClient` to create app-specific types.
  */
 export type API = ApiFromModules<{
+  "actions/checkPrompt": typeof actions_checkPrompt;
   "actions/createImage": typeof actions_createImage;
   game: typeof game;
   "lib/withSession": typeof lib_withSession;
