@@ -1,10 +1,6 @@
 import { UserIdentity } from "convex/server";
 import { getUser } from "./lib/withUser";
-import {
-  mutationWithSession,
-  queryWithSession,
-  withSession,
-} from "./lib/withSession";
+import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import md5 from "md5";
 import { DatabaseReader, DatabaseWriter, mutation } from "./_generated/server";
 import { Document, Id } from "./_generated/dataModel";
@@ -109,16 +105,14 @@ export const createAnonymousUser = (db: DatabaseWriter) => {
   });
 };
 
-export const loggedOut = mutation(
-  withSession(async ({ db, session }) => {
-    // Wipe the slate clean
-    await db.replace(session._id, {
-      userId: await createAnonymousUser(db),
-      gameIds: [],
-      submissionIds: [],
-    });
-  })
-);
+export const loggedOut = mutationWithSession(async ({ db, session }) => {
+  // Wipe the slate clean
+  await db.replace(session._id, {
+    userId: await createAnonymousUser(db),
+    gameIds: [],
+    submissionIds: [],
+  });
+});
 
 function createGravatarUrl(key: string): string {
   key = key.trim().toLocaleLowerCase();

@@ -1,8 +1,8 @@
 import { WithoutSystemFields } from "convex/server";
-import { optional, z } from "zod";
+import { z } from "zod";
 import withZodArgs, { withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
-import { queryWithSession, withSession } from "./lib/withSession";
+import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import { Document, Id } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
 import {
@@ -145,62 +145,60 @@ export function calculateScoreDeltas(
   return scoreDeltas;
 }
 
-export const addOption = mutation(
-  withSession(
-    withZodObjectArg(
-      { roundId: zId("rounds"), prompt: z.string() },
-      async ({ db, scheduler, session }, { roundId, prompt }) => {
-        const round = await db.get(roundId);
-        if (!round) throw new Error("Round not found");
-        if (round.stage !== "label") {
-          return { success: false, reason: "Too late to add a prompt." };
-        }
-        if (round.authorId.equals(session.userId)) {
-          throw new Error("You can't submit a prompt for your own image.");
-        }
-        if (
-          round.options.findIndex((option) =>
-            option.authorId.equals(session.userId)
-          ) !== -1
-        ) {
-          return { success: false, reason: "You already added a prompt." };
-        }
-        if (round.options.length === round.maxOptions) {
-          return { success: false, reason: "This round is full." };
-        }
-        if (
-          round.options.findIndex(
-            (option) =>
-              // TODO: do fuzzy matching
-              option.prompt.toLocaleLowerCase() === prompt.toLocaleLowerCase()
-          ) !== -1
-        ) {
-          return {
-            success: false,
-            retry: true,
-            reason: "This prompt is too similar to existing prompt(s).",
-          };
-        }
-
-        round.options.push({
-          authorId: session.userId,
-          prompt,
-          votes: [],
-          likes: [],
-        });
-        await db.patch(round._id, { options: round.options });
-        if (round.options.length === round.maxOptions) {
-          await db.patch(round._id, beginGuessPatch(round));
-          scheduler.runAfter(
-            GuessDurationMs,
-            "round:progress",
-            round._id,
-            "guess"
-          );
-        }
-        return { success: true };
+export const addOption = mutationWithSession(
+  withZodObjectArg(
+    { roundId: zId("rounds"), prompt: z.string() },
+    async ({ db, scheduler, session }, { roundId, prompt }) => {
+      const round = await db.get(roundId);
+      if (!round) throw new Error("Round not found");
+      if (round.stage !== "label") {
+        return { success: false, reason: "Too late to add a prompt." };
       }
-    )
+      if (round.authorId.equals(session.userId)) {
+        throw new Error("You can't submit a prompt for your own image.");
+      }
+      if (
+        round.options.findIndex((option) =>
+          option.authorId.equals(session.userId)
+        ) !== -1
+      ) {
+        return { success: false, reason: "You already added a prompt." };
+      }
+      if (round.options.length === round.maxOptions) {
+        return { success: false, reason: "This round is full." };
+      }
+      if (
+        round.options.findIndex(
+          (option) =>
+            // TODO: do fuzzy matching
+            option.prompt.toLocaleLowerCase() === prompt.toLocaleLowerCase()
+        ) !== -1
+      ) {
+        return {
+          success: false,
+          retry: true,
+          reason: "This prompt is too similar to existing prompt(s).",
+        };
+      }
+
+      round.options.push({
+        authorId: session.userId,
+        prompt,
+        votes: [],
+        likes: [],
+      });
+      await db.patch(round._id, { options: round.options });
+      if (round.options.length === round.maxOptions) {
+        await db.patch(round._id, beginGuessPatch(round));
+        scheduler.runAfter(
+          GuessDurationMs,
+          "round:progress",
+          round._id,
+          "guess"
+        );
+      }
+      return { success: true };
+    }
   )
 );
 
@@ -230,65 +228,63 @@ const beginGuessPatch = (
   stageEnd: Date.now() + GuessDurationMs,
 });
 
-export const guess = mutation(
-  withSession(
-    withZodObjectArg(
-      { roundId: zId("rounds"), prompt: z.string() },
-      async ({ db, session }, { roundId, prompt }) => {
-        const round = await db.get(roundId);
-        if (!round) throw new Error("Round not found");
-        if (round.stage !== "guess") {
-          return { success: false, reason: "Too late to vote." };
-        }
-        const optionVotedFor = round.options.find(
-          (option) => option.prompt === prompt
-        );
-        if (!optionVotedFor) {
-          return {
-            success: false,
-            retry: true,
-            reason: "This prompt does not exist.",
-          };
-        }
-        if (optionVotedFor.authorId.equals(session.userId)) {
-          return {
-            success: false,
-            retry: true,
-            reason: "You can't vote for your own prompt.",
-          };
-        }
-        const existingVote = round.options.find(
-          (option) =>
-            option.votes.findIndex((vote) => vote.equals(session.userId)) !== -1
-        );
-        if (prompt === existingVote?.prompt) {
-          return {
-            success: false,
-            retry: true,
-            reason: "You already voted for this option.",
-          };
-        }
-        if (existingVote) {
-          // Remove existing vote
-          const voteIndex = existingVote.votes.findIndex((vote) =>
-            vote.equals(session.userId)
-          );
-          round.options = round.options
-            .slice(0, voteIndex)
-            .concat(...round.options.slice(voteIndex + 1));
-        }
-        optionVotedFor.votes.push(session.userId);
-        await db.patch(round._id, { options: round.options });
-
-        const totalVotes = round.options
-          .map((option) => option.votes.length)
-          .reduce((total, votes) => total + votes, 0);
-        if (totalVotes === round.maxOptions - 1) {
-          await db.patch(round._id, revealPatch(round));
-        }
-        return { success: true, retry: true };
+export const guess = mutationWithSession(
+  withZodObjectArg(
+    { roundId: zId("rounds"), prompt: z.string() },
+    async ({ db, session }, { roundId, prompt }) => {
+      const round = await db.get(roundId);
+      if (!round) throw new Error("Round not found");
+      if (round.stage !== "guess") {
+        return { success: false, reason: "Too late to vote." };
       }
-    )
+      const optionVotedFor = round.options.find(
+        (option) => option.prompt === prompt
+      );
+      if (!optionVotedFor) {
+        return {
+          success: false,
+          retry: true,
+          reason: "This prompt does not exist.",
+        };
+      }
+      if (optionVotedFor.authorId.equals(session.userId)) {
+        return {
+          success: false,
+          retry: true,
+          reason: "You can't vote for your own prompt.",
+        };
+      }
+      const existingVote = round.options.find(
+        (option) =>
+          option.votes.findIndex((vote) => vote.equals(session.userId)) !== -1
+      );
+      if (prompt === existingVote?.prompt) {
+        return {
+          success: false,
+          retry: true,
+          reason: "You already voted for this option.",
+        };
+      }
+      if (existingVote) {
+        // Remove existing vote
+        const voteIndex = existingVote.votes.findIndex((vote) =>
+          vote.equals(session.userId)
+        );
+        round.options = round.options
+          .slice(0, voteIndex)
+          .concat(...round.options.slice(voteIndex + 1));
+      }
+      optionVotedFor.votes.push(session.userId);
+      await db.patch(round._id, { options: round.options });
+
+      const totalVotes = round.options
+        .map((option) => option.votes.length)
+        .reduce((total, votes) => total + votes, 0);
+      if (totalVotes === round.maxOptions - 1) {
+        await db.patch(round._id, revealPatch(round));
+      }
+      return { success: true, retry: true };
+    }
   )
 );
 
