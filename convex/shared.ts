@@ -19,6 +19,7 @@ export const ClientGameStateZ = z.object({
       likes: z.number(),
     })
   ),
+  playing: z.boolean(),
   state: z.union([
     z.object({
       stage: z.union([z.literal("lobby"), z.literal("generate")]),

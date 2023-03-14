@@ -2,11 +2,11 @@ import { z } from "zod";
 import { withZodArgs, withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
 import { calculateScoreDeltas, MaxOptions, newRound } from "./round";
-import { withSession } from "./lib/withSession";
+import { queryWithSession, withSession } from "./lib/withSession";
 import { ClientGameStateZ } from "./shared";
 import { getUserById } from "./users";
 import { Document, Id } from "./_generated/dataModel";
-import { mutation, query } from "./_generated/server";
+import { mutation } from "./_generated/server";
 
 const GenerateDurationMs = 120000;
 
@@ -48,63 +48,59 @@ export const playAgain = mutation(
   )
 );
 
-export const get = query(
-  withSession(
-    withZodArgs(
-      [zId("games")],
-      async ({ db, session }, gameId) => {
-        // Grab the most recent game with this code.
-        const game = await db.get(gameId);
-        if (!game) throw new Error("Game not found");
-        if (!game.playerIds.find((id) => id.equals(session.userId))) {
-          throw new Error("Player not part of this game");
-        }
-        const rounds = await Promise.all(
-          game.roundIds.map(async (roundId) => (await db.get(roundId))!)
-        );
-        const playerLikes = new Map<string, number>();
-        const playerScore = new Map<string, number>();
-        for (const round of rounds) {
-          if (round.stage === "reveal") {
-            for (const option of round.options) {
-              playerLikes.set(
-                option.authorId.id,
-                option.likes.length + (playerLikes.get(option.authorId.id) ?? 0)
-              );
-              for (const [userId, delta] of calculateScoreDeltas(
-                option.authorId.equals(round.authorId),
-                option
-              )) {
-                playerScore.set(userId, delta + (playerScore.get(userId) ?? 0));
-              }
+export const get = queryWithSession(
+  withZodArgs(
+    [zId("games")],
+    async ({ db, session }, gameId) => {
+      // Grab the most recent game with this code.
+      const game = await db.get(gameId);
+      if (!game) throw new Error("Game not found");
+      const rounds = await Promise.all(
+        game.roundIds.map(async (roundId) => (await db.get(roundId))!)
+      );
+      const playerLikes = new Map<string, number>();
+      const playerScore = new Map<string, number>();
+      for (const round of rounds) {
+        if (round.stage === "reveal") {
+          for (const option of round.options) {
+            playerLikes.set(
+              option.authorId.id,
+              option.likes.length + (playerLikes.get(option.authorId.id) ?? 0)
+            );
+            for (const [userId, delta] of calculateScoreDeltas(
+              option.authorId.equals(round.authorId),
+              option
+            )) {
+              playerScore.set(userId, delta + (playerScore.get(userId) ?? 0));
             }
           }
         }
-        const roundPlayerIds = rounds.map((round) => round.authorId);
-        const players = await Promise.all(
-          game.playerIds.map(async (playerId) => {
-            const player = (await getUserById(db, playerId))!;
-            const { name, pictureUrl } = player;
-            return {
-              me: player._id.equals(session.userId),
-              name,
-              pictureUrl,
-              score: playerScore.get(player._id.id) ?? 0,
-              likes: playerLikes.get(player._id.id) ?? 0,
-              submitted: !!roundPlayerIds.find((id) => id.equals(playerId)),
-            };
-          })
-        );
-        return {
-          gameCode: game.slug,
-          hosting: game.hostId.equals(session.userId),
-          players,
-          state: game.state,
-          nextGameId: game.nextGameId ?? null,
-        };
-      },
-      ClientGameStateZ
-    )
+      }
+      const roundPlayerIds = rounds.map((round) => round.authorId);
+      const players = await Promise.all(
+        game.playerIds.map(async (playerId) => {
+          const player = (await getUserById(db, playerId))!;
+          const { name, pictureUrl } = player;
+          return {
+            me: player._id.equals(session?.userId),
+            name,
+            pictureUrl,
+            score: playerScore.get(player._id.id) ?? 0,
+            likes: playerLikes.get(player._id.id) ?? 0,
+            submitted: !!roundPlayerIds.find((id) => id.equals(playerId)),
+          };
+        })
+      );
+      return {
+        gameCode: game.slug,
+        hosting: game.hostId.equals(session?.userId),
+        playing: !!game.playerIds.find((id) => id.equals(session?.userId)),
+        players,
+        state: game.state,
+        nextGameId: game.nextGameId ?? null,
+      };
+    },
+    ClientGameStateZ
   )
 );
 
