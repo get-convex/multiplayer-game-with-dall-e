@@ -3,7 +3,7 @@ import { z } from "zod";
 import withZodArgs, { withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
-import { Document, Id } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
 import {
   GuessState,
@@ -24,7 +24,7 @@ export const newRound = (
   imageStorageId: string,
   prompt: string,
   maxOptions: number
-): WithoutSystemFields<Document<"rounds">> => ({
+): WithoutSystemFields<Doc<"rounds">> => ({
   authorId,
   imageStorageId,
   stage: "label",
@@ -128,7 +128,7 @@ const CorrectGuesserScore = 200;
 
 export function calculateScoreDeltas(
   isCorrect: boolean,
-  option: Document<"rounds">["options"][0]
+  option: Doc<"rounds">["options"][0]
 ) {
   const scoreDeltas = new Map([
     [
@@ -203,11 +203,7 @@ export const addOption = mutationWithSession(
 );
 
 export const progress = mutation(
-  async (
-    { db },
-    roundId: Id<"rounds">,
-    fromStage: Document<"rounds">["stage"]
-  ) => {
+  async ({ db }, roundId: Id<"rounds">, fromStage: Doc<"rounds">["stage"]) => {
     const round = await db.get(roundId);
     if (!round) throw new Error("Round not found: " + roundId.id);
     if (round.stage === fromStage) {
@@ -218,9 +214,7 @@ export const progress = mutation(
 );
 
 // Modifies parameter to progress to guessing
-const beginGuessPatch = (
-  round: Document<"rounds">
-): Partial<Document<"rounds">> => ({
+const beginGuessPatch = (round: Doc<"rounds">): Partial<Doc<"rounds">> => ({
   options: round.options.sort(() => Math.random() - 0.5),
   stage: "guess",
   maxOptions: round.options.length,
@@ -289,7 +283,7 @@ export const guess = mutationWithSession(
 );
 
 // Modifies parameter to progress to guessing
-const revealPatch = (round: Document<"rounds">) => ({
+const revealPatch = (round: Doc<"rounds">) => ({
   stage: "reveal" as const,
   maxOptions: round.options.length,
   stageStart: Date.now(),

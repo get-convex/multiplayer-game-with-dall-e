@@ -24,7 +24,7 @@ export type TableNames = TableNamesInDataModel<DataModel>;
  *
  * @typeParam TableName - A string literal type of the table name (like "users").
  */
-export type Document<TableName extends TableNames> = DocumentByName<
+export type Doc<TableName extends TableNames> = DocumentByName<
   DataModel,
   TableName
 >;

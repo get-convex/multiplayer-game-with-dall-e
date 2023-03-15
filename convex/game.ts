@@ -5,7 +5,7 @@ import { calculateScoreDeltas, MaxOptions, newRound } from "./round";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import { ClientGameStateZ } from "./shared";
 import { getUserById } from "./users";
-import { Document, Id } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 
 const GenerateDurationMs = 120000;
 
@@ -212,9 +212,9 @@ export const progress = mutationWithSession(
 );
 
 const nextState = (
-  fromState: Document<"games">["state"],
+  fromState: Doc<"games">["state"],
   roundIds: Id<"rounds">[]
-): Document<"games">["state"] => {
+): Doc<"games">["state"] => {
   let state = { ...fromState };
   switch (state.stage) {
     case "lobby":

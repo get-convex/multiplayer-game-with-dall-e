@@ -3,7 +3,7 @@ import { getUser } from "./lib/withUser";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import md5 from "md5";
 import { DatabaseReader, DatabaseWriter, mutation } from "./_generated/server";
-import { Document, Id } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 import { randomSlug } from "./game";
 
 export const loggedIn = mutationWithSession(async ({ auth, db, session }) => {
@@ -19,7 +19,7 @@ export const loggedIn = mutationWithSession(async ({ auth, db, session }) => {
 
 async function claimSessionUser(
   db: DatabaseWriter,
-  session: Document<"sessions">,
+  session: Doc<"sessions">,
   newUserId: Id<"users">
 ) {
   const userToClaim = (await db.get(session.userId))!;

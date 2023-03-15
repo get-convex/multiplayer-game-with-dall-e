@@ -5,7 +5,7 @@ import {
   query,
   DatabaseReader,
 } from "../_generated/server";
-import { Document } from "../_generated/dataModel";
+import { Doc } from "../_generated/dataModel";
 import { Auth } from "convex/server";
 
 /**
@@ -18,10 +18,7 @@ import { Auth } from "convex/server";
  * @returns A function to be passed to `query` or `mutation`.
  */
 export const withUser = <Ctx extends QueryCtx, Args extends any[], Output>(
-  func: (
-    ctx: Ctx & { user: Document<"users"> },
-    ...args: Args
-  ) => Promise<Output>
+  func: (ctx: Ctx & { user: Doc<"users"> }, ...args: Args) => Promise<Output>
 ): ((ctx: Ctx, ...args: Args) => Promise<Output>) => {
   return async (ctx: Ctx, ...args: Args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -39,7 +36,7 @@ export const withUser = <Ctx extends QueryCtx, Args extends any[], Output>(
 export const getUser = (
   db: DatabaseReader,
   tokenIdentifier: string
-): Promise<Document<"users"> | null> => {
+): Promise<Doc<"users"> | null> => {
   // Note: If you don't want to define an index right away, you can use
   // db.query("users")
   //  .filter(q => q.eq(q.field("tokenIdentifier"), identity.tokenIdentifier))
@@ -62,7 +59,7 @@ export const getUser = (
 export const mutationWithUser = <Args extends any[], Output>(
   func: (
     ctx: MutationCtx & {
-      user: Document<"users">;
+      user: Doc<"users">;
     },
     ...args: Args
   ) => Promise<Output>
@@ -81,7 +78,7 @@ export const mutationWithUser = <Args extends any[], Output>(
  */
 export const queryWithUser = <Args extends any[], Output>(
   func: (
-    ctx: QueryCtx & { user: Document<"users"> },
+    ctx: QueryCtx & { user: Doc<"users"> },
     ...args: Args
   ) => Promise<Output>
 ) => {
