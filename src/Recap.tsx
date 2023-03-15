@@ -2,13 +2,27 @@ import { ClientGameState } from "../convex/shared";
 
 export function Recap({ game }: { game: ClientGameState }) {
   return (
-    <ul>
-      {game.players.map((player) => (
-        <li key={player.pictureUrl}>
-          <img src={player.pictureUrl} />
-          {player.name} Score: {player.score} Likes: {player.likes}
-        </li>
-      ))}
-    </ul>
+    <table>
+      <tr>
+        <th></th>
+        <th>Player</th>
+        <th>Score</th>
+        <th>Likes</th>
+      </tr>
+      {game.players
+        .slice()
+        .sort((a, b) => b.score - a.score)
+        .map((player, index) => (
+          <tr key={player.pictureUrl}>
+            <td>{index}</td>
+            <td>
+              <img src={player.pictureUrl} />
+              {player.name}
+            </td>
+            <td>{player.score}</td>
+            <td>{player.likes}</td>
+          </tr>
+        ))}
+    </table>
   );
 }
