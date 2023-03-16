@@ -3,8 +3,7 @@ import { Id } from "../convex/_generated/dataModel";
 import { useQuery } from "../convex/_generated/react";
 import Game from "./Game";
 import GameRound from "./GameRound";
-import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
-import useSingleFlight from "./hooks/useSingleFlight";
+import { useSessionMutation } from "./hooks/sessionsClient";
 
 const ConvexIdLength = 22;
 
@@ -16,8 +15,6 @@ function App() {
     if (!id || id.length !== ConvexIdLength) return null;
     return new Id("games", id);
   });
-  const profile = useSessionQuery("users:getMyProfile");
-  const setName = useSingleFlight(useSessionMutation("users:setName"));
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (gameId) window.location.hash = gameId.id;
@@ -96,16 +93,6 @@ function App() {
         )}
       </div>
       <div className="grow basis-0">
-        {profile && (
-          <input
-            className="fixed left-0 top-0 right-0 h-16 border-b border-b-neutral-400 bg-neutral-900 px-5 focus:outline-none lg:static lg:mb-12 lg:w-full lg:border lg:border-neutral-400"
-            name="name"
-            defaultValue={profile.name}
-            type="text"
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Type name"
-          />
-        )}
         {gameId ? (
           <Game gameId={gameId} done={done} />
         ) : (

@@ -1,7 +1,11 @@
 import { ClientGameState } from "../convex/shared";
+import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
+import useSingleFlight from "./hooks/useSingleFlight";
 import { Health } from "./Submission";
 
 export function Lobby({ game }: { game: ClientGameState }) {
+  const profile = useSessionQuery("users:getMyProfile");
+  const setName = useSingleFlight(useSessionMutation("users:setName"));
   return (
     <div className="border border-neutral-400 rounded p-4 lg:p-8 flex flex-col items-center gap-4">
       <span className="font-display stretch-min text-6xl mb-4">
@@ -19,14 +23,25 @@ export function Lobby({ game }: { game: ClientGameState }) {
               key={player.pictureUrl}
               className="flex gap-2 items-center mb-2"
             >
+              {player.me && "👉"}
               <img
                 src={player.pictureUrl}
                 width="48"
                 height="48"
                 className="rounded"
               />
-              {player.name}
-              {player.me && " (you)"}
+              {player.me && profile ? (
+                <input
+                  className="bg-neutral-900 focus:outline-none"
+                  name="name"
+                  defaultValue={profile.name}
+                  type="text"
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter a name"
+                />
+              ) : (
+                player.name
+              )}
             </li>
           ))}
         </ol>
