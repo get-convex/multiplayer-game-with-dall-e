@@ -60,7 +60,7 @@ export const CreateImage = ({
   return (
     <div className="flex flex-col gap-4">
       <div className="text-5xl font-display stretch-min font-bold">
-        Create a prompt
+        Create an image
       </div>
       <form
         onSubmit={async (e) => {

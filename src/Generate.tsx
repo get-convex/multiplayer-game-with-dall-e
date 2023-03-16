@@ -26,9 +26,15 @@ export function Generate({
     <>
       <ul>
         {game.players.map((player) => (
-          <li key={player.pictureUrl}>
-            <img src={player.pictureUrl} />
-            {player.name} {player.submitted && "✅"}
+          <li key={player.pictureUrl} className="flex gap-2 items-center mb-2">
+            {player.me ? "👉" : player.submitted && "✅"}
+            <img
+              src={player.pictureUrl}
+              width="48"
+              height="48"
+              className="rounded"
+            />
+            {player.me ? <InputName /> : player.name}
           </li>
         ))}
       </ul>

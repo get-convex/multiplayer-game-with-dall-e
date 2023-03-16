@@ -1,10 +1,9 @@
 import { ClientGameState } from "../convex/shared";
+import { InputName } from "./InputName";
 import { JoinGame } from "./JoinGame";
 import { Health } from "./Submission";
 
 export function Lobby({ game }: { game: ClientGameState }) {
-  const profile = useSessionQuery("users:getMyProfile");
-  const setName = useSingleFlight(useSessionMutation("users:setName"));
   return (
     <div className="border border-neutral-400 rounded p-4 lg:p-8 flex flex-col items-center gap-4">
       <span className="font-display stretch-min text-6xl mb-4">
@@ -30,18 +29,7 @@ export function Lobby({ game }: { game: ClientGameState }) {
                 height="48"
                 className="rounded"
               />
-              {player.me && profile ? (
-                <input
-                  className="bg-neutral-900 focus:outline-none"
-                  name="name"
-                  defaultValue={profile.name}
-                  type="text"
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter a name"
-                />
-              ) : (
-                player.name
-              )}
+              {player.me ? <InputName /> : player.name}
             </li>
           ))}
         </ol>
