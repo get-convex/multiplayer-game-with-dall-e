@@ -7,7 +7,7 @@ specifiers:
   '@types/react-dom': ^18.0.9
   '@vitejs/plugin-react': ^3.0.0
   autoprefixer: ^10.4.13
-  convex: ^0.9.1
+  convex: ^0.11.0
   md5: ^2.3.0
   node-fetch: ^3.3.0
   openai: ^3.1.0
@@ -24,7 +24,7 @@ specifiers:
 
 dependencies:
   '@types/node': 18.11.18
-  convex: 0.9.1_biqbaboplfbrettd7655fr4n2y
+  convex: 0.11.0_biqbaboplfbrettd7655fr4n2y
   md5: 2.3.0
   node-fetch: 3.3.0
   openai: 3.1.0
@@ -750,12 +750,12 @@ packages:
     resolution: {integrity: sha512-ASFBup0Mz1uyiIjANan1jzLQami9z1PoYSZCiiYW2FczPbenXc45FZdBZLzOT+r6+iciuEModtmCti+hjaAk0A==}
     dev: true
 
-  /convex/0.9.1_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-smz6JeXpZbkfkjq3xa7g73Z8YnGKDCNW44XYKPf434SqidHvtcb/JoJ2BbG5ArhTxnsOjkVZswztSOchQvLB4w==}
-    engines: {node: '>=14.17.0', npm: '>=7.0.0'}
+  /convex/0.11.0_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-PlGFqIlihglUvVVGPCd0uAAqjjygZ/FAQ37/eLc6WnNZVeHeA+7UZUugi5rygbPIfLmUo6nrCNKOWevBfPsy5A==}
+    engines: {node: '>=16.15.1', npm: '>=7.0.0'}
     hasBin: true
     peerDependencies:
-      '@auth0/auth0-react': ^1.9.0
+      '@auth0/auth0-react': ^2.0.1
       react: ^17.0.2 || ^18.0.0
       react-dom: ^17.0.2 || ^18.0.0
     peerDependenciesMeta:
@@ -769,10 +769,9 @@ packages:
       base64-js: 1.5.1
       encoding: 0.1.13
       esbuild: 0.15.18
-      node-fetch: 2.6.8_encoding@0.1.13
+      node-fetch: 2.6.9_encoding@0.1.13
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      uuid: 9.0.0
     dev: false
 
   /crypt/0.0.2:
@@ -1340,8 +1339,8 @@ packages:
     engines: {node: '>=10.5.0'}
     dev: false
 
-  /node-fetch/2.6.8_encoding@0.1.13:
-    resolution: {integrity: sha512-RZ6dBYuj8dRSfxpUSu+NsdF1dpPpluJxwOp+6IoDp/sH2QNDSvurYsAa+F1WxY2RjA1iP93xhcsUoYbF2XBqVg==}
+  /node-fetch/2.6.9_encoding@0.1.13:
+    resolution: {integrity: sha512-DJm/CJkZkRjKKj4Zi4BsKVZh3ValV5IR5s7LVZnW+6YMh0W1BfNA8XSs6DLMGYlId5F3KnA70uu2qepcR08Qqg==}
     engines: {node: 4.x || >=6.0.0}
     peerDependencies:
       encoding: ^0.1.0
@@ -1723,11 +1722,6 @@ packages:
   /util-deprecate/1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
     dev: true
-
-  /uuid/9.0.0:
-    resolution: {integrity: sha512-MXcSTerfPa4uqyzStbRoTgt5XIe3x5+42+q1sDuy3R5MDk66URdLMOZe5aPX/SQd+kuYAh0FdP/pO28IkQyTeg==}
-    hasBin: true
-    dev: false
 
   /vite/4.0.4_i6sg7ufwag4u2fxqefdnehf2pe:
     resolution: {integrity: sha512-xevPU7M8FU0i/80DMR+YhgrzR5KS2ORy1B4xcX/cXLsvnUWvfHuqMmVU6N0YiJ4JWGRJJsLCgjEzKjG9/GKoSw==}
