@@ -1,6 +1,5 @@
 import { ClientGameState } from "../convex/shared";
-import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
-import useSingleFlight from "./hooks/useSingleFlight";
+import { JoinGame } from "./JoinGame";
 import { Health } from "./Submission";
 
 export function Lobby({ game }: { game: ClientGameState }) {
@@ -9,12 +8,13 @@ export function Lobby({ game }: { game: ClientGameState }) {
   return (
     <div className="border border-neutral-400 rounded p-4 lg:p-8 flex flex-col items-center gap-4">
       <span className="font-display stretch-min text-6xl mb-4">
-        Invite players
+        Invite your friends!
       </span>
-      <p>Share this code with other players to join this room:</p>
+      <p>Share this code for others to join:</p>
       <div className="font-display stretch-min text-4xl font-extrabold mb-8">
         {game.gameCode}
       </div>
+      {!game.playing && <JoinGame gameCode={game.gameCode} />}
       <div className="w-full mb-8">
         <div className="text-2xl mb-4">Players</div>
         <ol>

@@ -1,5 +1,7 @@
 import { ClientGameState } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
+import { InputName } from "./InputName";
+import { JoinGame } from "./JoinGame";
 import { CreateImage } from "./Submission";
 
 export function Generate({
@@ -9,7 +11,18 @@ export function Generate({
   game: ClientGameState;
   addRound: (submissionId: Id<"submissions">) => any;
 }) {
-  return game.players.find((player) => player.me && player.submitted) ? (
+  return !game.playing ? (
+    <section>
+      <div className="text-5xl font-display stretch-min font-bold">
+        Create an image
+      </div>
+      <p>
+        The game has started. Other players are entering their prompts to
+        generate images. Want to join?
+      </p>
+      <JoinGame gameCode={game.gameCode} />
+    </section>
+  ) : game.players.find((player) => player.me && player.submitted) ? (
     <>
       <ul>
         {game.players.map((player) => (
