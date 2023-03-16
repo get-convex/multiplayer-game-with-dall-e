@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Id } from "../convex/_generated/dataModel";
 import { useSessionMutation } from "./hooks/sessionsClient";
+import { Submissions } from "./Submissions";
 
 export function LabelStage({
   round,
@@ -25,45 +26,53 @@ export function LabelStage({
         alt=""
         className="w-full max-w-xl border border-neutral-600 rounded overflow-hidden my-4"
       />
-      {round.mine ? (
-        "This was your image."
-      ) : round.submitted.find((submission) => submission.me) ? (
-        <section>
-          Submitted. Waiting for everyone to finish...
-          <ul>
-            {round.submitted.map((player) => (
-              <li key={player.pictureUrl}>
-                <img src={player.pictureUrl} />
-                {player.name} ✅
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : (
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const result = await addPrompt({ roundId, prompt });
-            if (!result.success) setError(result.reason);
-          }}
-          className="flex"
-        >
-          <input
-            type="text"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            className="bg-transparent border border-neutral-400 p-2 focus:outline-none placeholder:text-neutral-400 text-blue-400 focus:border-blue-400 h-12 basis-0 grow"
+      {round.mine || round.submitted.find((submission) => submission.me) ? (
+        <>
+          <Submissions
+            submitted={round.submitted}
+            title={
+              round.mine
+                ? "This was your image. Submissions:"
+                : "Waiting for everyone to finish..."
+            }
           />
-          <label className="basis-0">
-            {error}
+        </>
+      ) : (
+        <fieldset>
+          <legend className="text-2xl mb-2">
+            {round.mine
+              ? "This was your image. Just relax 🏝️"
+              : "What prompt was responsible for this image?"}
+          </legend>
+          <span className="text-orange-300">{error}</span>
+          <form
+            aria-disabled={
+              !!round.submitted.find((submission) => submission.me)
+            }
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const result = await addPrompt({ roundId, prompt });
+              if (!result.success) setError(result.reason);
+            }}
+            className="flex"
+            aria-errormessage={error}
+          >
             <input
-              type="submit"
-              value="Submit prompt"
-              aria-invalid={!!error}
-              className="h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400"
+              type="text"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              className="bg-transparent border border-neutral-400 p-2 focus:outline-none placeholder:text-neutral-400 text-blue-400 focus:border-blue-400 h-12 basis-0 grow"
             />
-          </label>
-        </form>
+            <label className="basis-0">
+              <input
+                type="submit"
+                value="Submit prompt"
+                aria-invalid={!!error}
+                className="h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400"
+              />
+            </label>
+          </form>
+        </fieldset>
       )}
     </div>
   );
