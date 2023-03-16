@@ -70,14 +70,15 @@ export const CreateImage = ({
         className="flex flex-col gap-4"
       >
         <label className="flex flex-col gap-2">
-          Describe an image{" "}
+          Describe an image. This text will be used to generate an image using
+          OpenAI's Dall-E. For example, "A cat in space"
           <input
             type="text"
             value={prompt}
             onChange={(e) =>
               setPrompt(e.target.value.substring(0, MaxPromptLength))
             }
-            placeholder="Provide image description"
+            placeholder="Image description"
             className="bg-transparent border border-neutral-400 p-2 focus:outline-none placeholder:text-neutral-400 text-blue-400 focus:border-blue-400"
           />
         </label>
