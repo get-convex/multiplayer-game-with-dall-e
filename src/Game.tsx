@@ -71,7 +71,6 @@ const Game: React.FC<{
       return (
         <>
           <GameRound roundId={game.state.roundId} />
-          <NextButton gameId={gameId} stage={game.state.stage} />
           {footer}
         </>
       );
