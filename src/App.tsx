@@ -45,15 +45,15 @@ function App() {
               Convex
             </a>
           </div>
-          <section className="mt-10">
-            Try to guess what text prompt generated the image. Fool your friends
-            to score points!
-          </section>
         </header>
         {!gameId && (
           <div className="fixed bottom-0 left-0 right-0 flex flex-col gap-4 border-t border-t-neutral-400 bg-neutral-900 p-5 lg:static lg:border-t-0 lg:p-0">
             <div className="stretch-min font-display text-4xl font-extrabold tracking-tight">
               Play with friends!
+            </div>
+            <div className="my-2">
+              Try to guess what text prompt generated the image. Fool your
+              friends to score points!
             </div>
             <div className="flex items-center lg:flex-col">
               <form
