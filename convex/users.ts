@@ -100,7 +100,7 @@ export const getOrCreateUser = async (
 export const createAnonymousUser = (db: DatabaseWriter) => {
   return db.insert("users", {
     // TODO: make this name fun & random
-    name: "Anonymous",
+    name: "",
     pictureUrl: createGravatarUrl(randomSlug()),
   });
 };
