@@ -272,9 +272,9 @@ export const guess = mutationWithSession(
         const voteIndex = existingVote.votes.findIndex((vote) =>
           vote.equals(session.userId)
         );
-        round.options = round.options
+        existingVote.votes = existingVote.votes
           .slice(0, voteIndex)
-          .concat(...round.options.slice(voteIndex + 1));
+          .concat(...existingVote.votes.slice(voteIndex + 1));
       }
       optionVotedFor.votes.push(session.userId);
       await db.patch(round._id, { options: round.options });
