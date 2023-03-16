@@ -23,7 +23,11 @@ export function Generate({
       <JoinGame gameCode={game.gameCode} />
     </section>
   ) : game.players.find((player) => player.me && player.submitted) ? (
-    <>
+    <section>
+      <div className="text-5xl font-display stretch-min font-bold">
+        Waiting for everyone to make an image...
+      </div>
+      <div className="text-2xl my-4">Players</div>
       <ul>
         {game.players.map((player) => (
           <li key={player.pictureUrl} className="flex gap-2 items-center mb-2">
@@ -38,7 +42,7 @@ export function Generate({
           </li>
         ))}
       </ul>
-    </>
+    </section>
   ) : (
     <CreateImage onSubmit={addRound} />
   );
