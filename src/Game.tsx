@@ -10,14 +10,16 @@ import { Recap } from "./Recap";
 const NextButton = (props: {
   gameId: Id<"games">;
   stage: ClientGameState["state"]["stage"];
+  disabled?: boolean;
 }) => {
   const progress = useSessionMutation("game:progress");
   return (
     <button
       onClick={(e) => progress(props.gameId, props.stage)}
-      className="h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400"
+      className="h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400 disabled:border-neutral-400 disabled:text-neutral-400 disabled:cursor-not-allowed"
+      disabled={!!props.disabled}
     >
-      Next
+      {props.stage === "lobby" ? "Start" : "Next"}
     </button>
   );
 };
@@ -36,14 +38,24 @@ const Game: React.FC<{
   if (!game) return <article aria-busy="true"></article>;
   if (game.nextGameId) done(game.nextGameId);
   const footer = (
-    <>
-      {game.hosting && (
-        <section className="mt-4">
-          <p className="mb-4">You are the host of this game.</p>
-          <NextButton gameId={gameId} stage={game.state.stage} />
-        </section>
-      )}
-    </>
+    <section className="mt-4">
+      <p className="mb-4">
+        {game.players.length > 2 || (
+          <p className="mb-4">You need at least 3 players to start.</p>
+        )}
+        <NextButton
+          gameId={gameId}
+          stage={game.state.stage}
+          disabled={!game.hosting || game.players.length <= 2}
+        />
+        <span className="ml-4">
+          {game.state.stage === "lobby" &&
+            (game.hosting
+              ? "You are the host of this game."
+              : "Only the host can start the game.")}
+        </span>
+      </p>
+    </section>
   );
   switch (game.state.stage) {
     case "lobby":
@@ -59,6 +71,7 @@ const Game: React.FC<{
       return (
         <>
           <GameRound roundId={game.state.roundId} />
+          <NextButton gameId={gameId} stage={game.state.stage} />
           {footer}
         </>
       );
