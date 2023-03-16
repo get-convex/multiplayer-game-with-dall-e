@@ -6,12 +6,10 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
   const round = useSessionQuery("round:getRound", roundId);
   const [prompt, setPrompt] = useState("");
   const addPrompt = useSessionMutation("round:addOption");
-  const [guess, setGuess] = useState("");
   const submitGuess = useSessionMutation("round:guess");
   const [error, setError] = useState<string>();
   useEffect(() => {
     setPrompt("");
-    setGuess("");
     setError("");
   }, [roundId]);
   if (!round) return <article aria-busy="true"></article>;
@@ -95,49 +93,37 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
                     />
                     <span className="text-lg">{player.name}</span>
                     {/* TODO: Replace emoji with icon. */}
-                    <span className="text-2xl">✅</span>
                   </li>
                 ))}
               </ul>
             </section>
           ) : (
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                const result = await submitGuess({ roundId, prompt: guess });
-                if (!result.success) setError(result.reason);
-              }}
-            >
-              <fieldset>
-                <legend className="text-2xl mb-2">Guess the prompt</legend>
-                <ul className="mb-6">
-                  {round.options.map((option) => (
-                    <li key={option} className="mb-2">
-                      <label className="flex gap-2 items-center text-lg">
-                        <input
-                          type="radio"
-                          disabled={option === prompt}
-                          checked={option === guess}
-                          onChange={() => setGuess(option)}
-                          className="w-5 h-5"
-                        />
+            <fieldset>
+              <legend className="text-2xl mb-2">Guess the prompt</legend>
+              <ul className="mb-6">
+                {round.options.map((option) => (
+                  <li key={option} className="mb-2">
+                    <label className="flex gap-2 items-center text-lg">
+                      {error}
+                      <button
+                        onClick={async () => {
+                          const result = await submitGuess({
+                            roundId,
+                            prompt: option,
+                          });
+                          if (!result.success) setError(result.reason);
+                        }}
+                        disabled={option === round.myPrompt}
+                        className="border border-blue-200 text-lg py-2 px-4 disabled:border-neutral-400 disabled:text-neutral-400 disabled:cursor-not-allowed cursor-pointer text-blue-200 hover:text-blue-400 hover:border-blue-400 transition-colors"
+                        aria-invalid={option === round.myGuess && !!error}
+                      >
                         {option}
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              </fieldset>
-              <label>
-                {error}
-                <input
-                  type="submit"
-                  value="Submit guess"
-                  disabled={!guess}
-                  aria-invalid={!!error}
-                  className="border border-blue-200 text-lg py-2 px-4 disabled:border-neutral-400 disabled:text-neutral-400 disabled:cursor-not-allowed cursor-pointer text-blue-200 hover:text-blue-400 hover:border-blue-400 transition-colors"
-                />
-              </label>
-            </form>
+                      </button>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </fieldset>
           )}
         </div>
       );

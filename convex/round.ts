@@ -70,12 +70,20 @@ export const getRound = queryWithSession(
             (all, { votes }) => all.concat(votes),
             [] as Id<"users">[]
           );
+          const myGuess = round.options.find(
+            (o) => !!o.votes.find((voteId) => voteId.equals(session?.userId))
+          )?.prompt;
+          const myPrompt = round.options.find((o) =>
+            o.authorId.equals(session?.userId)
+          )?.prompt;
           const guessState: GuessState = {
             options: round.options.map((option) => option.prompt),
             stage,
             mine: round.authorId.equals(session?.userId),
             imageUrl,
             stageEnd,
+            myPrompt,
+            myGuess,
             submitted: await Promise.all(allGuesses.map(userInfo)),
           };
           return guessState;

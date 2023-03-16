@@ -58,6 +58,8 @@ export const GuessStateZ = z.object({
   mine: z.boolean(),
   imageUrl: z.string(),
   stageEnd: z.number(),
+  myPrompt: z.optional(z.string()),
+  myGuess: z.optional(z.string()),
   submitted: z.array(
     z.object({
       me: z.boolean(),
