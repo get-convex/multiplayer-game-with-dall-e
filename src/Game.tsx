@@ -81,7 +81,6 @@ const Game: React.FC<{
       return (
         <>
           <GameRound roundId={game.state.roundId} />
-          {footer}
         </>
       );
     case "recap":
