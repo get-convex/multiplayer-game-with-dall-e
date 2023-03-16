@@ -21,8 +21,12 @@ import {
   DatabaseReader as GenericDatabaseReader,
   DatabaseWriter as GenericDatabaseWriter,
 } from "convex/server";
+
+import { CronJobsForAPI } from "convex/server-internal";
 import type { DataModel } from "./dataModel.js";
 import type { API } from "./api.js";
+
+export declare const cronJobs: CronJobsForAPI<API>;
 
 /**
  * Define a query in this Convex app's public API.

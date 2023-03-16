@@ -41,7 +41,6 @@ export const progress = mutation(
         stageStart: Date.now(),
         stageEnd: Date.now() + PublicRevealMs,
       });
-      scheduler.runAfter(PublicRevealMs, "publicGame:progress", "reveal");
       return "->reveal";
     }
     if (currentRound.stage !== "reveal") {

@@ -12,6 +12,8 @@
 import type { ApiFromModules } from "convex/api";
 import type * as actions_checkPrompt from "../actions/checkPrompt";
 import type * as actions_createImage from "../actions/createImage";
+import type * as crons from "../crons";
+import type * as enable_crons_6556645ceab7a0f85a6002eb4731cc01 from "../enable_crons_6556645ceab7a0f85a6002eb4731cc01";
 import type * as game from "../game";
 import type * as lib_withSession from "../lib/withSession";
 import type * as lib_withUser from "../lib/withUser";
@@ -36,6 +38,8 @@ import type * as users from "../users";
 export type API = ApiFromModules<{
   "actions/checkPrompt": typeof actions_checkPrompt;
   "actions/createImage": typeof actions_createImage;
+  crons: typeof crons;
+  enable_crons_6556645ceab7a0f85a6002eb4731cc01: typeof enable_crons_6556645ceab7a0f85a6002eb4731cc01;
   game: typeof game;
   "lib/withSession": typeof lib_withSession;
   "lib/withUser": typeof lib_withUser;

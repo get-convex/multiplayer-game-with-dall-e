@@ -16,6 +16,10 @@ import {
   mutationGeneric,
 } from "convex/server";
 
+import { cronJobsGeneric } from "convex/server-internal";
+
+export const cronJobs = cronJobsGeneric;
+
 /**
  * Define a query in this Convex app's public API.
  *
