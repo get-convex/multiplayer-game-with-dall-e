@@ -39,7 +39,14 @@ export function RevealStage({
               )}
             </span>
             <div className="flex gap-2">
-              by {round.users.get(option.authorId)!.name}
+              by
+              <img
+                src={round.users.get(option.authorId)!.pictureUrl}
+                width="24"
+                height="24"
+                className="rounded"
+              />
+              {round.users.get(option.authorId)!.name}
               {!!option.scoreDeltas.get(option.authorId) && (
                 <span className="rounded-full px-2 bg-orange-400 text-neutral-black">
                   +{option.scoreDeltas.get(option.authorId)}

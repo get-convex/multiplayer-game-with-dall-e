@@ -282,7 +282,7 @@ export const guess = mutationWithSession(
       const totalVotes = round.options
         .map((option) => option.votes.length)
         .reduce((total, votes) => total + votes, 0);
-      if (totalVotes === round.maxOptions - 1) {
+      if (totalVotes >= round.maxOptions - 1) {
         await db.patch(round._id, revealPatch(round));
       }
       return { success: true, retry: true };

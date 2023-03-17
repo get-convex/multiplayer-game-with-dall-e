@@ -14,7 +14,7 @@ export function Recap({ game }: { game: ClientGameState }) {
         .sort((a, b) => b.score - a.score)
         .map((player, index) => (
           <tr key={player.pictureUrl}>
-            <td>{index}</td>
+            <td>#{index + 1}</td>
             <td>
               <img src={player.pictureUrl} />
               {player.name}

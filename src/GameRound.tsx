@@ -5,7 +5,11 @@ import { LabelStage } from "./LabelStage";
 import { Loading } from "./Loading";
 import { RevealStage } from "./RevealStage";
 
-const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
+const GameRound: React.FC<{
+  roundId: Id<"rounds">;
+  gameId?: Id<"games">;
+  nextButton?: React.ReactElement;
+}> = ({ nextButton, roundId }) => {
   const round = useSessionQuery("round:getRound", roundId);
   if (!round) return <Loading />;
 
@@ -15,7 +19,12 @@ const GameRound: React.FC<{ roundId: Id<"rounds"> }> = ({ roundId }) => {
     case "guess":
       return <GuessStage round={round} roundId={roundId} />;
     case "reveal":
-      return <RevealStage round={round} />;
+      return (
+        <>
+          <RevealStage round={round} />
+          {nextButton}
+        </>
+      );
   }
 };
 export default GameRound;

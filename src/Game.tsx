@@ -5,29 +5,8 @@ import GameRound from "./GameRound";
 import { Generate } from "./Generate";
 import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
 import { Lobby } from "./Lobby";
+import { NextButton } from "./NextButton";
 import { Recap } from "./Recap";
-
-const NextButton = (props: {
-  gameId: Id<"games">;
-  stage: ClientGameState["state"]["stage"];
-  disabled?: boolean;
-}) => {
-  const progress = useSessionMutation("game:progress");
-  return (
-    <button
-      onClick={(e) => progress(props.gameId, props.stage)}
-      className="h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400 disabled:border-neutral-400 disabled:text-neutral-400 disabled:cursor-not-allowed"
-      disabled={!!props.disabled}
-      title={
-        props.disabled
-          ? "Only the host can skip"
-          : "Skip to the next part of the game without waiting for all players to finish"
-      }
-    >
-      {props.stage === "lobby" ? "Start" : "Skip"}
-    </button>
-  );
-};
 
 const Game: React.FC<{
   gameId: Id<"games">;
@@ -40,19 +19,29 @@ const Game: React.FC<{
     (submissionId: Id<"submissions">) => submit({ submissionId, gameId }),
     [submit, gameId]
   );
+  const progress = useSessionMutation("game:progress");
   if (!game) return <article aria-busy="true"></article>;
   if (game.nextGameId) done(game.nextGameId);
+  const next = (
+    <NextButton
+      onClick={() => progress(gameId, game.state.stage)}
+      title={
+        game.state.stage === "lobby"
+          ? "Start"
+          : game.state.stage === "rounds"
+          ? "Next"
+          : "Skip"
+      }
+      disabled={!game.hosting || game.players.length <= 2}
+    />
+  );
   const footer = (
     <section className="mt-4">
       <p className="mb-4">
         {game.players.length > 2 || (
           <p className="mb-4">You need at least 3 players to start.</p>
         )}
-        <NextButton
-          gameId={gameId}
-          stage={game.state.stage}
-          disabled={!game.hosting || game.players.length <= 2}
-        />
+        {next}
         <span className="ml-4">
           {game.state.stage === "lobby" &&
             (game.hosting
@@ -80,7 +69,11 @@ const Game: React.FC<{
     case "rounds":
       return (
         <>
-          <GameRound roundId={game.state.roundId} />
+          <GameRound
+            roundId={game.state.roundId}
+            gameId={gameId}
+            nextButton={next}
+          />
         </>
       );
     case "recap":

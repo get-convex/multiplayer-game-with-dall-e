@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Id } from "../convex/_generated/dataModel";
 import { useSessionMutation } from "./hooks/sessionsClient";
+import { Submissions } from "./Submissions";
 
 export function GuessStage({
   round,
@@ -31,15 +32,18 @@ export function GuessStage({
         <legend className="text-2xl mb-2">
           {round.mine
             ? "This was your image."
-            : "What text prompt was responsible for this image?"}
+            : "What prompt was responsible for this image?"}
         </legend>
         <ul className="mb-6">
           {round.options.map((option) => (
             <li key={option} className="mb-2">
+              <span className="text-orange-300">
+                {option === round.myGuess && error}
+              </span>
               <label className="flex gap-2 items-center text-lg">
-                {error}
                 <button
                   onClick={async () => {
+                    setError(undefined);
                     const result = await submitGuess({
                       roundId,
                       prompt: option,
@@ -47,10 +51,17 @@ export function GuessStage({
                     if (!result.success) setError(result.reason);
                   }}
                   disabled={round.mine || option === round.myPrompt}
+                  title={
+                    round.mine
+                      ? "You can't vote on your own image"
+                      : option === round.myPrompt
+                      ? "You can't vote for your own prompt"
+                      : ""
+                  }
                   className="border border-blue-200 text-lg py-2 px-4 disabled:border-neutral-400 disabled:text-neutral-400 disabled:cursor-not-allowed cursor-pointer text-blue-200 hover:text-blue-400 hover:border-blue-400 transition-colors"
                   aria-invalid={option === round.myGuess && !!error}
                 >
-                  {option}
+                  {option} {option === round.myGuess && "✅"}
                 </button>
               </label>
             </li>
@@ -58,23 +69,7 @@ export function GuessStage({
         </ul>
       </fieldset>
       {(round.mine || round.submitted.find((submission) => submission.me)) && (
-        <fieldset>
-          <legend className="text-2xl mb-2">Submissions</legend>
-          <ul>
-            {round.submitted.map((player) => (
-              <li key={player.pictureUrl} className="flex items-center gap-3">
-                <img
-                  src={player.pictureUrl}
-                  width="48"
-                  height="48"
-                  className="rounded"
-                />
-                <span className="text-lg">{player.name}</span>
-                {/* TODO: Replace emoji with icon. */}
-              </li>
-            ))}
-          </ul>
-        </fieldset>
+        <Submissions submitted={round.submitted} title="Submissions" />
       )}
     </div>
   );
