@@ -22,15 +22,13 @@ const RevealDurationMs = 30000;
 export const newRound = (
   authorId: Id<"users">,
   imageStorageId: string,
-  prompt: string,
-  maxOptions: number
+  prompt: string
 ): WithoutSystemFields<Doc<"rounds">> => ({
   authorId,
   imageStorageId,
   stage: "label",
   stageStart: Date.now(),
   stageEnd: Date.now() + LabelDurationMs,
-  maxOptions,
   options: [{ prompt, authorId, votes: [], likes: [] }],
 });
 
@@ -155,8 +153,12 @@ export function calculateScoreDeltas(
 
 export const addOption = mutationWithSession(
   withZodObjectArg(
-    { roundId: zId("rounds"), prompt: z.string() },
-    async ({ db, scheduler, session }, { roundId, prompt }) => {
+    {
+      gameId: z.optional(zId("games")),
+      roundId: zId("rounds"),
+      prompt: z.string(),
+    },
+    async ({ db, scheduler, session }, { gameId, roundId, prompt }) => {
       const round = await db.get(roundId);
       if (!round) throw new Error("Round not found");
       if (round.stage !== "label") {
@@ -172,7 +174,7 @@ export const addOption = mutationWithSession(
       ) {
         return { success: false, reason: "You already added a prompt." };
       }
-      if (round.options.length === round.maxOptions) {
+      if (round.options.length === MaxOptions) {
         return { success: false, reason: "This round is full." };
       }
       if (
@@ -196,7 +198,9 @@ export const addOption = mutationWithSession(
         likes: [],
       });
       await db.patch(round._id, { options: round.options });
-      if (round.options.length === round.maxOptions) {
+      const game = gameId && (await db.get(gameId));
+      if (round.options.length === game?.playerIds.length) {
+        // All players have added options
         await db.patch(round._id, beginGuessPatch(round));
         scheduler.runAfter(
           GuessDurationMs,
@@ -225,15 +229,18 @@ export const progress = mutation(
 const beginGuessPatch = (round: Doc<"rounds">): Partial<Doc<"rounds">> => ({
   options: round.options.sort(() => Math.random() - 0.5),
   stage: "guess",
-  maxOptions: round.options.length,
   stageStart: Date.now(),
   stageEnd: Date.now() + GuessDurationMs,
 });
 
 export const guess = mutationWithSession(
   withZodObjectArg(
-    { roundId: zId("rounds"), prompt: z.string() },
-    async ({ db, session }, { roundId, prompt }) => {
+    {
+      roundId: zId("rounds"),
+      prompt: z.string(),
+      gameId: z.optional(zId("games")),
+    },
+    async ({ db, session }, { roundId, prompt, gameId }) => {
       const round = await db.get(roundId);
       if (!round) throw new Error("Round not found");
       if (round.stage !== "guess") {
@@ -279,11 +286,18 @@ export const guess = mutationWithSession(
       optionVotedFor.votes.push(session.userId);
       await db.patch(round._id, { options: round.options });
 
-      const totalVotes = round.options
-        .map((option) => option.votes.length)
-        .reduce((total, votes) => total + votes, 0);
-      if (totalVotes >= round.maxOptions - 1) {
-        await db.patch(round._id, revealPatch(round));
+      if (gameId) {
+        const game = (await db.get(gameId))!;
+        const noGuess = new Set(game.playerIds.map((id) => id.toString()));
+        noGuess.delete(round.authorId.toString());
+        for (const option of round.options) {
+          for (const vote of option.votes) {
+            noGuess.delete(vote.toString());
+          }
+        }
+        if (noGuess.size === 0) {
+          await db.patch(round._id, revealPatch(round));
+        }
       }
       return { success: true, retry: true };
     }
@@ -293,7 +307,6 @@ export const guess = mutationWithSession(
 // Modifies parameter to progress to guessing
 const revealPatch = (round: Doc<"rounds">) => ({
   stage: "reveal" as const,
-  maxOptions: round.options.length,
   stageStart: Date.now(),
   stageEnd: Date.now() + RevealDurationMs,
 });

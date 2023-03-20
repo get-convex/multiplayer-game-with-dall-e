@@ -150,12 +150,7 @@ export const submit = mutationWithSession(
       roundIds.push(
         await db.insert(
           "rounds",
-          newRound(
-            authorId,
-            result.imageStorageId,
-            prompt,
-            game.playerIds.length
-          )
+          newRound(authorId, result.imageStorageId, prompt)
         )
       );
       await db.patch(game._id, { roundIds });

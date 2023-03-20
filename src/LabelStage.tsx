@@ -7,9 +7,11 @@ import { Submissions } from "./Submissions";
 export function LabelStage({
   round,
   roundId,
+  gameId,
 }: {
   round: LabelState;
   roundId: Id<"rounds">;
+  gameId?: Id<"games">;
 }) {
   const [error, setError] = useState<string>();
   const [prompt, setPrompt] = useState("");
@@ -46,7 +48,7 @@ export function LabelStage({
             }
             onSubmit={async (e) => {
               e.preventDefault();
-              const result = await addPrompt({ roundId, prompt });
+              const result = await addPrompt({ roundId, prompt, gameId });
               if (!result.success) setError(result.reason);
             }}
             className="flex"

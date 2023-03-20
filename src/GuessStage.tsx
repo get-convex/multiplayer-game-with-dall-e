@@ -8,9 +8,11 @@ import { Submissions } from "./Submissions";
 export function GuessStage({
   round,
   roundId,
+  gameId,
 }: {
   round: GuessState;
   roundId: Id<"rounds">;
+  gameId?: Id<"games">;
 }) {
   const submitGuess = useSessionMutation("round:guess");
   const [error, setError] = useState<string>();
@@ -39,6 +41,7 @@ export function GuessStage({
                     setError(undefined);
                     const result = await submitGuess({
                       roundId,
+                      gameId,
                       prompt: option,
                     });
                     if (!result.success) setError(result.reason);

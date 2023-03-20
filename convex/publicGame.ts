@@ -1,4 +1,4 @@
-import { MaxOptions, newRound } from "./round";
+import { MaxOptions } from "./round";
 import { mutation, query } from "./_generated/server";
 
 export const get = query(async ({ db }) => {
@@ -52,7 +52,6 @@ export const progress = mutation(
         q.eq("publicRound", false).eq("stage", "reveal")
       )
       .order("asc")
-      .filter((q) => q.gte(q.field("maxOptions"), 4))
       .first();
     if (!round) throw new Error("No public round.");
     await db.patch(round._id, { lastUsed: Date.now() });
@@ -63,7 +62,6 @@ export const progress = mutation(
     round.stage = "guess";
     round.stageStart = Date.now();
     round.stageEnd = Date.now() + PublicGuessMs;
-    round.maxOptions = MaxOptions;
     round.publicRound = true;
     const { _id, _creationTime, ...rest } = round;
     const roundId = await db.insert("rounds", rest);

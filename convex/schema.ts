@@ -83,7 +83,6 @@ export default defineSchema({
     stageStart: s.number(),
     stageEnd: s.number(),
     stage: s.union(s.literal("label"), s.literal("guess"), s.literal("reveal")),
-    maxOptions: s.number(),
     options: s.array(
       s.object({
         authorId: s.id("users"),

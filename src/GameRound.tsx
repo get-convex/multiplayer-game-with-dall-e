@@ -12,8 +12,9 @@ import { RevealStage } from "./RevealStage";
 const GameRound: React.FC<{
   roundId: Id<"rounds">;
   game?: ClientGameState;
+  gameId?: Id<"games">;
   nextButton?: React.ReactElement | false;
-}> = ({ game, nextButton, roundId }) => {
+}> = ({ nextButton, roundId, game, gameId }) => {
   const round = useSessionQuery("round:getRound", roundId);
   const progress = useMutation("round:progress");
   if (!round) return <Loading />;
@@ -29,14 +30,14 @@ const GameRound: React.FC<{
     case "label":
       return (
         <>
-          <LabelStage round={round} roundId={roundId} />
+          <LabelStage round={round} roundId={roundId} gameId={gameId} />
           {skipButton}
         </>
       );
     case "guess":
       return (
         <>
-          <GuessStage round={round} roundId={roundId} />
+          <GuessStage round={round} roundId={roundId} gameId={gameId} />
           {skipButton}
         </>
       );
