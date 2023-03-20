@@ -39,7 +39,7 @@ const Game: React.FC<{
     <section className="mt-4">
       <p className="mb-4">
         {game.players.length > 2 || (
-          <p className="mb-4">You need at least 3 players to start.</p>
+          <span className="mb-4">You need at least 3 players to start.</span>
         )}
         {next}
         <span className="ml-4">
