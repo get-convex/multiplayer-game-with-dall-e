@@ -4,7 +4,7 @@ import withZodArgs, { withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import { Doc, Id } from "./_generated/dataModel";
-import { mutation } from "./_generated/server";
+import { DatabaseWriter, mutation } from "./_generated/server";
 import {
   GuessState,
   GuessStateZ,
@@ -32,13 +32,20 @@ export const newRound = (
   options: [{ prompt, authorId, votes: [], likes: [] }],
 });
 
+export const startRound = async (db: DatabaseWriter, roundId: Id<"rounds">) => {
+  await db.patch(roundId, {
+    stageStart: Date.now(),
+    stageEnd: Date.now() + LabelDurationMs,
+  });
+};
+
 export const getRound = queryWithSession(
   withZodArgs(
     [zId("rounds")],
     async ({ db, session, storage }, roundId) => {
       const round = await db.get(roundId);
       if (!round) throw new Error("Round not found");
-      const { stage, stageEnd } = round;
+      const { stage, stageStart, stageEnd } = round;
       const imageUrl = await storage.getUrl(round.imageStorageId);
       if (!imageUrl) throw new Error("Image not found");
 
@@ -57,6 +64,7 @@ export const getRound = queryWithSession(
             stage,
             mine: round.authorId.equals(session?.userId),
             imageUrl,
+            stageStart,
             stageEnd,
             submitted: await Promise.all(
               round.options.map((option) => userInfo(option.authorId))
@@ -79,6 +87,7 @@ export const getRound = queryWithSession(
             stage,
             mine: round.authorId.equals(session?.userId),
             imageUrl,
+            stageStart,
             stageEnd,
             myPrompt,
             myGuess,
@@ -113,6 +122,7 @@ export const getRound = queryWithSession(
             me: session!.userId.id,
             authorId: round.authorId.id,
             imageUrl,
+            stageStart,
             stageEnd,
             users: new Map(
               await Promise.all(

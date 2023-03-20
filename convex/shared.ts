@@ -41,6 +41,7 @@ export const LabelStateZ = z.object({
   stage: z.literal("label"),
   mine: z.boolean(),
   imageUrl: z.string(),
+  stageStart: z.number(),
   stageEnd: z.number(),
   submitted: z.array(
     z.object({
@@ -57,6 +58,7 @@ export const GuessStateZ = z.object({
   stage: z.literal("guess"),
   mine: z.boolean(),
   imageUrl: z.string(),
+  stageStart: z.number(),
   stageEnd: z.number(),
   myPrompt: z.optional(z.string()),
   myGuess: z.optional(z.string()),
@@ -78,6 +80,7 @@ export const RevealStateZ = z.object({
   me: userIdString,
   authorId: userIdString,
   imageUrl: z.string(),
+  stageStart: z.number(),
   stageEnd: z.number(),
   users: z.map(
     z.string(),

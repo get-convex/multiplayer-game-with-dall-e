@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { withZodArgs, withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
-import { calculateScoreDeltas, MaxOptions, newRound } from "./round";
+import {
+  calculateScoreDeltas,
+  MaxOptions,
+  newRound,
+  startRound,
+} from "./round";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import { ClientGameStateZ } from "./shared";
 import { getUserById } from "./users";
@@ -159,6 +164,7 @@ export const submit = mutationWithSession(
         await db.patch(game._id, {
           state: { stage: "rounds", roundId: game.roundIds[0] },
         });
+        await startRound(db, game.roundIds[0]);
       }
     }
   )
@@ -192,8 +198,11 @@ export const progress = mutationWithSession(
           `Game ${gameId}(${game.state.stage}) is no longer in stage ${fromStage}`
         );
       }
+      if (state.stage === "rounds") {
+        await startRound(db, state.roundId);
+      }
       await db.patch(game._id, { state });
-      if (state.stage !== "generate") {
+      if (state.stage === "lobby") {
         scheduler.runAfter(
           GenerateDurationMs,
           "game:progress",
