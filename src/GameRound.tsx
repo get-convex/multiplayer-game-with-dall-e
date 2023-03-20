@@ -12,7 +12,7 @@ import { RevealStage } from "./RevealStage";
 const GameRound: React.FC<{
   roundId: Id<"rounds">;
   game?: ClientGameState;
-  nextButton?: React.ReactElement;
+  nextButton?: React.ReactElement | false;
 }> = ({ game, nextButton, roundId }) => {
   const round = useSessionQuery("round:getRound", roundId);
   const progress = useMutation("round:progress");

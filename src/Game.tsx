@@ -22,7 +22,7 @@ const Game: React.FC<{
   const progress = useSessionMutation("game:progress");
   if (!game) return <article aria-busy="true"></article>;
   if (game.nextGameId) done(game.nextGameId);
-  const next = (
+  const next = game.hosting && (
     <NextButton
       onClick={() => progress(gameId, game.state.stage)}
       title={
