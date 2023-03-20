@@ -57,12 +57,12 @@ export function GuessStage({
                   className={classNames(
                     "w-full h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400 hover:border-blue-400 disabled:border-neutral-400 disabled:text-neutral-500 disabled:cursor-not-allowed cursor-pointer",
                     {
-                      "bg-blue-400": option === round.myGuess,
+                      "bg-blue-500": option === round.myGuess,
                     }
                   )}
                   aria-invalid={option === round.myGuess && !!error}
                 >
-                  {option} {option === round.myGuess && "✅"}
+                  {option}
                 </button>
               </label>
             </li>
