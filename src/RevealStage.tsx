@@ -15,20 +15,22 @@ export function RevealStage({ round }: { round: RevealState }) {
             key={option.authorId}
             className={classNames(
               "border-b border-b-neutral-500 py-4 flex flex-col items-start gap-1",
-              "w-full border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400 hover:border-blue-400 disabled:border-neutral-400 disabled:text-neutral-500 disabled:cursor-not-allowed cursor-pointer",
+              "w-full border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black  disabled:border-neutral-400 disabled:text-neutral-500 ",
               {
                 "bg-blue-400": round.authorId === option.authorId,
               }
             )}
           >
-            <span className="text-lg">
-              {option.prompt}{" "}
-              {round.authorId === option.authorId && (
-                <span className="font-normal bg-blue-500 rounded-full px-2 text-neutral-black">
-                  Actual
-                </span>
-              )}
-            </span>
+            <label className="flex">
+              <span className="text-lg flex mr-2">{option.prompt} </span>
+              {option.likes.length
+                ? option.likes.map((userId) => (
+                    <label key={userId} className="flex">
+                      👍
+                    </label>
+                  ))
+                : null}
+            </label>
             <div className="pl-2 flex gap-1 text-sm items-center">
               by
               <img
@@ -51,7 +53,7 @@ export function RevealStage({ round }: { round: RevealState }) {
                 </span>
                 <ol>
                   {option.votes.map((userId) => (
-                    <li key={userId} className="flex">
+                    <li key={userId} className="flex py-1">
                       <img
                         src={round.users.get(userId)!.pictureUrl}
                         width="24"
@@ -69,16 +71,6 @@ export function RevealStage({ round }: { round: RevealState }) {
                   ))}
                 </ol>
               </div>
-            ) : null}
-            {option.likes.length ? (
-              <label>
-                {option.likes.length} Likes
-                <ol>
-                  {option.votes.map((userId) => (
-                    <li key={userId}>{round.users.get(userId)!.name}</li>
-                  ))}
-                </ol>
-              </label>
             ) : null}
           </li>
         ))}

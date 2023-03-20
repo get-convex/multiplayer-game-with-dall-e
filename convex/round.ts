@@ -304,6 +304,54 @@ export const guess = mutationWithSession(
   )
 );
 
+export const like = mutationWithSession(
+  withZodObjectArg(
+    {
+      roundId: zId("rounds"),
+      prompt: z.string(),
+      gameId: z.optional(zId("games")),
+    },
+    async ({ db, session }, { roundId, prompt, gameId }) => {
+      const round = await db.get(roundId);
+      if (!round) throw new Error("Round not found");
+      if (round.stage !== "guess") {
+        return { success: false, reason: "Too late to like." };
+      }
+      const optionVotedFor = round.options.find(
+        (option) => option.prompt === prompt
+      );
+      if (!optionVotedFor) {
+        return {
+          success: false,
+          retry: true,
+          reason: "This prompt does not exist.",
+        };
+      }
+      if (optionVotedFor.authorId.equals(session.userId)) {
+        return {
+          success: false,
+          retry: true,
+          reason: "You can't like your own prompt.",
+        };
+      }
+      const existingLike = round.options.find(
+        (option) =>
+          option.likes.findIndex((like) => like.equals(session.userId)) !== -1
+      );
+      if (prompt === existingLike?.prompt) {
+        return {
+          success: false,
+          retry: true,
+          reason: "You already voted for this option.",
+        };
+      }
+      optionVotedFor.likes.push(session.userId);
+      await db.patch(round._id, { options: round.options });
+      [];
+    }
+  )
+);
+
 // Modifies parameter to progress to guessing
 const revealPatch = (round: Doc<"rounds">) => ({
   stage: "reveal" as const,

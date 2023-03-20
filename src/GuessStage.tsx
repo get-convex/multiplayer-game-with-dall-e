@@ -15,7 +15,9 @@ export function GuessStage({
   gameId?: Id<"games">;
 }) {
   const submitGuess = useSessionMutation("round:guess");
+  const addLike = useSessionMutation("round:like");
   const [error, setError] = useState<string>();
+  const [likes, setLikes] = useState<Set<string>>(new Set());
   return (
     <div>
       <img
@@ -35,36 +37,75 @@ export function GuessStage({
               <span className="text-orange-300">
                 {option === round.myGuess && error}
               </span>
-              <label className="flex gap-2 items-center text-lg">
+              <div className="flex gap-2 items-center text-lg">
+                <label className="flex-grow ">
+                  <button
+                    onClick={async () => {
+                      setError(undefined);
+                      const result = await submitGuess({
+                        roundId,
+                        gameId,
+                        prompt: option,
+                      });
+                      if (!result.success) setError(result.reason);
+                    }}
+                    disabled={round.mine || option === round.myPrompt}
+                    title={
+                      round.mine
+                        ? "You can't vote on your own image"
+                        : option === round.myPrompt
+                        ? "You can't vote for your own prompt"
+                        : ""
+                    }
+                    className={classNames(
+                      "w-full text-left h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400 hover:border-blue-400 disabled:border-neutral-400 disabled:text-neutral-500 disabled:cursor-not-allowed cursor-pointer",
+                      {
+                        "bg-blue-500": option === round.myGuess,
+                      }
+                    )}
+                    aria-invalid={option === round.myGuess && !!error}
+                  >
+                    {option}
+                  </button>
+                </label>
                 <button
                   onClick={async () => {
-                    setError(undefined);
-                    const result = await submitGuess({
+                    console.log([...likes.keys()]);
+                    console.log({ option });
+                    setLikes((state) => new Set(state.keys()).add(option));
+                    console.log([...likes.keys()]);
+                    await addLike({
                       roundId,
                       gameId,
                       prompt: option,
                     });
-                    if (!result.success) setError(result.reason);
                   }}
-                  disabled={round.mine || option === round.myPrompt}
+                  disabled={option === round.myPrompt}
                   title={
-                    round.mine
-                      ? "You can't vote on your own image"
-                      : option === round.myPrompt
-                      ? "You can't vote for your own prompt"
+                    option === round.myPrompt
+                      ? "You can't like your own prompt"
                       : ""
                   }
                   className={classNames(
-                    "w-full h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400 hover:border-blue-400 disabled:border-neutral-400 disabled:text-neutral-500 disabled:cursor-not-allowed cursor-pointer",
+                    "w-12 h-12 text-3xl text-neutral-black rounded-full  hover:disabled:bg-none disabled:cursor-default cursor-pointer",
                     {
-                      "bg-blue-500": option === round.myGuess,
+                      "bg-blue-200": likes.has(option),
+                      "hover:bg-blue-400 hover:border-blue-400":
+                        option !== round.myPrompt,
                     }
                   )}
-                  aria-invalid={option === round.myGuess && !!error}
                 >
-                  {option}
+                  {option === round.myPrompt ? (
+                    <>
+                      👈 <span className="sr-only">Your prompt.</span>
+                    </>
+                  ) : (
+                    <>
+                      👍 <span className="sr-only">Like {option}.</span>
+                    </>
+                  )}
                 </button>
-              </label>
+              </div>
             </li>
           ))}
         </ul>
