@@ -1,3 +1,4 @@
+import classNames from "classnames";
 import { RevealState } from "../convex/shared";
 
 export function RevealStage({ round }: { round: RevealState }) {
@@ -12,17 +13,23 @@ export function RevealStage({ round }: { round: RevealState }) {
         {round.results.map((option) => (
           <li
             key={option.authorId}
-            className="border-b border-b-neutral-500 py-4 flex flex-col items-start gap-2"
+            className={classNames(
+              "border-b border-b-neutral-500 py-4 flex flex-col items-start gap-1",
+              "w-full border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400 hover:border-blue-400 disabled:border-neutral-400 disabled:text-neutral-500 disabled:cursor-not-allowed cursor-pointer",
+              {
+                "bg-blue-400": round.authorId === option.authorId,
+              }
+            )}
           >
-            <span className="text-xl font-bold">
+            <span className="text-lg">
               {option.prompt}{" "}
               {round.authorId === option.authorId && (
-                <span className="font-normal bg-green-300 rounded-full px-2 text-neutral-black">
-                  Actual answer
+                <span className="font-normal bg-blue-500 rounded-full px-2 text-neutral-black">
+                  Actual
                 </span>
               )}
             </span>
-            <div className="flex gap-2">
+            <div className="pl-2 flex gap-1 text-sm items-center">
               by
               <img
                 src={round.users.get(option.authorId)!.pictureUrl}
@@ -32,14 +39,14 @@ export function RevealStage({ round }: { round: RevealState }) {
               />
               {round.users.get(option.authorId)!.name}
               {!!option.scoreDeltas.get(option.authorId) && (
-                <span className="rounded-full px-2 bg-orange-400 text-neutral-black">
+                <span className="rounded-full px-2 bg-orange-400 text-neutral-black ">
                   +{option.scoreDeltas.get(option.authorId)}
                 </span>
               )}
             </div>
             {option.votes.length ? (
               <div className="pl-6">
-                <span className="text-sm font-bold">
+                <span className="text-sm font-semibold">
                   {option.votes.length} Vote{option.votes.length > 1 && "s"}{" "}
                 </span>
                 <ol>
