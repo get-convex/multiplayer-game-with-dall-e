@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { GuessState } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
 import { useSessionMutation } from "./hooks/sessionsClient";
 import { Submissions } from "./Submissions";
@@ -7,16 +8,7 @@ export function GuessStage({
   round,
   roundId,
 }: {
-  round: {
-    myPrompt?: string | undefined;
-    myGuess?: string | undefined;
-    stage: "guess";
-    stageEnd: number;
-    options: string[];
-    submitted: { name: string; pictureUrl: string; me: boolean }[];
-    mine: boolean;
-    imageUrl: string;
-  };
+  round: GuessState;
   roundId: Id<"rounds">;
 }) {
   const submitGuess = useSessionMutation("round:guess");

@@ -80,7 +80,6 @@ const Game: React.FC<{
       return (
         <div className="flex flex-col gap-2">
           <Recap game={game} />
-          <p>Done!</p>
           <button
             type="submit"
             onClick={(e) => done(null)}

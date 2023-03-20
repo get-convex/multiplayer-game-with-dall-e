@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LabelState } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
 import { useSessionMutation } from "./hooks/sessionsClient";
 import { Submissions } from "./Submissions";
@@ -7,13 +8,7 @@ export function LabelStage({
   round,
   roundId,
 }: {
-  round: {
-    stage: "label";
-    stageEnd: number;
-    submitted: { name: string; pictureUrl: string; me: boolean }[];
-    mine: boolean;
-    imageUrl: string;
-  };
+  round: LabelState;
   roundId: Id<"rounds">;
 }) {
   const [error, setError] = useState<string>();
@@ -72,6 +67,9 @@ export function LabelStage({
               />
             </label>
           </form>
+          <p className="text-lg m-2">
+            (You&rsquo;ll get points if someone thinks yours was the real one)
+          </p>
         </fieldset>
       )}
     </div>

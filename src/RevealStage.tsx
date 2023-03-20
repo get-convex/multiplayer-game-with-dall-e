@@ -1,22 +1,6 @@
-export function RevealStage({
-  round,
-}: {
-  round: {
-    users: Map<string, { name: string; pictureUrl: string; me: boolean }>;
-    stage: "reveal";
-    authorId: string;
-    stageEnd: number;
-    me: string;
-    imageUrl: string;
-    results: {
-      prompt: string;
-      authorId: string;
-      votes: string[];
-      likes: string[];
-      scoreDeltas: Map<string, number>;
-    }[];
-  };
-}) {
+import { RevealState } from "../convex/shared";
+
+export function RevealStage({ round }: { round: RevealState }) {
   return (
     <div className="flex flex-col">
       <img
