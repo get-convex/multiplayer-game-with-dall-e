@@ -98,7 +98,7 @@ function App() {
         ) : (
           <>
             <h2 className="text-4xl font-display stretch-min tracking-tight font-extrabold">
-              Public game
+              Try it out:
             </h2>
             {publicRoundId ? (
               <GameRound roundId={publicRoundId} />
