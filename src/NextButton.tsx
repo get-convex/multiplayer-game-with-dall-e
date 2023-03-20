@@ -6,7 +6,7 @@ export const NextButton = (props: {
   return (
     <button
       onClick={props.onClick}
-      className="h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400 disabled:border-neutral-400 disabled:text-neutral-400 disabled:cursor-not-allowed"
+      className="mt-8 w-full h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400 disabled:border-neutral-400 disabled:text-neutral-400 disabled:cursor-not-allowed"
       disabled={!!props.disabled}
       title={
         props.disabled

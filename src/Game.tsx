@@ -71,7 +71,7 @@ const Game: React.FC<{
         <>
           <GameRound
             roundId={game.state.roundId}
-            gameId={gameId}
+            game={game}
             nextButton={next}
           />
         </>
