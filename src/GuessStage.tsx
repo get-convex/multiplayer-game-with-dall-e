@@ -1,3 +1,4 @@
+import classNames from "classnames";
 import { useState } from "react";
 import { GuessState } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
@@ -50,7 +51,12 @@ export function GuessStage({
                       ? "You can't vote for your own prompt"
                       : ""
                   }
-                  className="border border-blue-200 text-lg py-2 px-4 disabled:border-neutral-400 disabled:text-neutral-400 disabled:cursor-not-allowed cursor-pointer text-blue-200 hover:text-blue-400 hover:border-blue-400 transition-colors"
+                  className={classNames(
+                    "w-full h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400 hover:border-blue-400 disabled:border-neutral-400 disabled:text-neutral-500 disabled:cursor-not-allowed cursor-pointer",
+                    {
+                      "bg-blue-400": option === round.myGuess,
+                    }
+                  )}
                   aria-invalid={option === round.myGuess && !!error}
                 >
                   {option} {option === round.myGuess && "✅"}
