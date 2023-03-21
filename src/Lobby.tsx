@@ -1,7 +1,7 @@
 import { ClientGameState } from "../convex/shared";
 import { InputName } from "./InputName";
 import { JoinGame } from "./JoinGame";
-import { Health } from "./Submission";
+import { Health } from "./CreateImage";
 
 export function Lobby({ game }: { game: ClientGameState }) {
   return (

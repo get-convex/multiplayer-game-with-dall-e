@@ -2,7 +2,7 @@ import { ClientGameState } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
 import { InputName } from "./InputName";
 import { JoinGame } from "./JoinGame";
-import { CreateImage } from "./Submission";
+import { CreateImage } from "./CreateImage";
 
 export function Generate({
   game,
