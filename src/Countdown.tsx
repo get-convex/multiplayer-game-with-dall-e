@@ -16,7 +16,7 @@ export const Countdown: React.FC<{ start: number; end: number }> = ({
     return () => clearInterval(intervalId);
   }, []);
   const percent = (100 * (Date.now() + skew - start)) / (end - start);
-  if (percent >= 100) return null;
+  if (percent >= 100) return <div className="mt-4 h-6 w-full "></div>;
   return (
     <div className="mt-4 h-6 w-full bg-blue-200 rounded-full">
       <div

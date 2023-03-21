@@ -3,8 +3,7 @@ import { Id } from "../convex/_generated/dataModel";
 import { useMutation } from "../convex/_generated/react";
 import { Countdown } from "./Countdown";
 import { GuessStage } from "./GuessStage";
-import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
-import { JoinGame } from "./JoinGame";
+import { useSessionQuery } from "./hooks/sessionsClient";
 import { LabelStage } from "./LabelStage";
 import { Loading } from "./Loading";
 import { NextButton } from "./NextButton";
@@ -21,6 +20,7 @@ const GameRound: React.FC<{
   if (!round) return <Loading />;
   const footer = (
     <>
+      <Countdown start={round.stageStart} end={round.stageEnd} />
       {
         game?.hosting && (
           //  !!game.players.find((p) => p.me) ? (
@@ -33,7 +33,6 @@ const GameRound: React.FC<{
         //   <JoinGame gameCode={game.gameCode} />
         // ));
       }
-      <Countdown start={round.stageStart} end={round.stageEnd} />
     </>
   );
 
@@ -56,8 +55,8 @@ const GameRound: React.FC<{
       return (
         <>
           <RevealStage round={round} />
-          {nextButton}
           <Countdown start={round.stageStart} end={round.stageEnd} />
+          {nextButton}
         </>
       );
   }
