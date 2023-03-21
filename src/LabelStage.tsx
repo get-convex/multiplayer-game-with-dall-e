@@ -17,7 +17,7 @@ export function LabelStage({
   const [prompt, setPrompt] = useState("");
   const addPrompt = useSessionMutation("round:addOption");
   return (
-    <div>
+    <div className="max-w-xl">
       <img
         src={round.imageUrl}
         alt=""

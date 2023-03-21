@@ -60,7 +60,7 @@ export const CreateImage = ({
   const startSubmission = useSessionMutation("submissions:start");
   const [submissionId, setSubmissionId] = useState<Id<"submissions">>();
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 max-w-xl">
       <div className="text-5xl font-display stretch-min font-bold">
         {title ?? "Create an image"}
       </div>

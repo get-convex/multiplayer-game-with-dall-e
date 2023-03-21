@@ -10,7 +10,7 @@ export function RevealStage({ round }: { round: RevealState }) {
         alt=""
         className="w-full max-w-xl border border-neutral-600 rounded overflow-hidden my-4"
       />
-      <ul className="">
+      <ul className="max-w-xl">
         {round.results.map((option) => (
           <li
             key={option.authorId}
@@ -24,13 +24,6 @@ export function RevealStage({ round }: { round: RevealState }) {
           >
             <label className="flex">
               <span className="text-lg flex mr-2">{option.prompt} </span>
-              {option.likes.length
-                ? option.likes.map((userId) => (
-                    <label key={userId} className="flex">
-                      👍
-                    </label>
-                  ))
-                : null}
             </label>
             <div className="pl-2 flex gap-1 text-sm items-center">
               by
@@ -45,6 +38,13 @@ export function RevealStage({ round }: { round: RevealState }) {
                   +{option.scoreDeltas.get(option.authorId)}
                 </span>
               )}
+              {option.likes.length
+                ? option.likes.map((userId) => (
+                    <label key={userId} className="flex">
+                      👍
+                    </label>
+                  ))
+                : null}
             </div>
             {option.votes.length ? (
               <div className="pl-6">

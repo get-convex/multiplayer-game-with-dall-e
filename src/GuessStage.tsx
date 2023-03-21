@@ -31,7 +31,7 @@ export function GuessStage({
             ? "This was your image."
             : "What prompt was responsible for this image?"}
         </legend>
-        <ul className="mb-6">
+        <ul className="mb-6 max-w-xl">
           {round.options.map((option) => (
             <li key={option} className="mb-2">
               <span className="text-orange-300">
