@@ -21,7 +21,6 @@ const GameRound: React.FC<{
   if (!round) return <Loading />;
   const footer = (
     <>
-      <Countdown start={round.stageStart} end={round.stageEnd} />
       {
         game?.hosting && (
           //  !!game.players.find((p) => p.me) ? (
@@ -34,6 +33,7 @@ const GameRound: React.FC<{
         //   <JoinGame gameCode={game.gameCode} />
         // ));
       }
+      <Countdown start={round.stageStart} end={round.stageEnd} />
     </>
   );
 
@@ -56,8 +56,8 @@ const GameRound: React.FC<{
       return (
         <>
           <RevealStage round={round} />
-          <Countdown start={round.stageStart} end={round.stageEnd} />
           {nextButton}
+          <Countdown start={round.stageStart} end={round.stageEnd} />
         </>
       );
   }
