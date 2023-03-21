@@ -18,7 +18,7 @@ export function RevealStage({ round }: { round: RevealState }) {
               "border-b border-b-neutral-500 py-4 flex flex-col items-start gap-1",
               "w-full border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black  disabled:border-neutral-400 disabled:text-neutral-500 ",
               {
-                "bg-blue-400": round.authorId === option.authorId,
+                "bg-green-400": round.authorId === option.authorId,
               }
             )}
           >
