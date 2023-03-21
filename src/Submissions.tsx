@@ -13,7 +13,7 @@ export function Submissions({
       <ul>
         {submitted.map((player) => (
           <li key={player.pictureUrl} className="py-1 flex items-center gap-3">
-            {player.me && !player.name ? "👉" : "✅"}
+            {player.me ? "👉" : "✅"}
             <img
               src={player.pictureUrl}
               width="48"
