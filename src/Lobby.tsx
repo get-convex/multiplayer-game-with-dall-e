@@ -2,6 +2,7 @@ import { ClientGameState, MaxPlayers } from "../convex/shared";
 import { InputName } from "./InputName";
 import { JoinGame } from "./JoinGame";
 import { Health } from "./CreateImage";
+import { ProfilePicture } from "./ProfilePicture";
 
 export function Lobby({ game }: { game: ClientGameState }) {
   return (
@@ -22,12 +23,7 @@ export function Lobby({ game }: { game: ClientGameState }) {
               className="flex gap-2 items-center mb-2"
             >
               {player.me && "👉"}
-              <img
-                src={player.pictureUrl}
-                width="48"
-                height="48"
-                className="rounded"
-              />
+              <ProfilePicture url={player.pictureUrl} />
               {player.me ? <InputName /> : player.name}
             </li>
           ))}

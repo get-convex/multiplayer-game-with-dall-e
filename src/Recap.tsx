@@ -1,4 +1,5 @@
 import { ClientGameState } from "../convex/shared";
+import { ProfilePicture } from "./ProfilePicture";
 
 export function Recap({ game }: { game: ClientGameState }) {
   return (
@@ -44,12 +45,7 @@ export function Recap({ game }: { game: ClientGameState }) {
                         <span className="sr-only">, {player.name}</span>
                       </td>
                       <td className="flex items-center whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-white sm:pl-0">
-                        <img
-                          src={player.pictureUrl}
-                          width="48"
-                          height="48"
-                          className="rounded"
-                        />
+                        <ProfilePicture url={player.pictureUrl} />
                         <span className="pl-2">{player.name}</span>
                       </td>
                       <td className="whitespace-nowrap py-4 px-3 text-sm text-gray-300">

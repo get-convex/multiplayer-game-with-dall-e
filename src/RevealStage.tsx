@@ -1,5 +1,6 @@
 import classNames from "classnames";
 import { RevealState } from "../convex/shared";
+import { ProfilePicture } from "./ProfilePicture";
 
 export function RevealStage({ round }: { round: RevealState }) {
   return (
@@ -33,11 +34,9 @@ export function RevealStage({ round }: { round: RevealState }) {
             </label>
             <div className="pl-2 flex gap-1 text-sm items-center">
               by
-              <img
-                src={round.users.get(option.authorId)!.pictureUrl}
-                width="24"
-                height="24"
-                className="rounded"
+              <ProfilePicture
+                url={round.users.get(option.authorId)!.pictureUrl}
+                small
               />
               {round.users.get(option.authorId)!.name}
               {!!option.scoreDeltas.get(option.authorId) && (
@@ -53,17 +52,15 @@ export function RevealStage({ round }: { round: RevealState }) {
                 </span>
                 <ol>
                   {option.votes.map((userId) => (
-                    <li key={userId} className="flex py-1">
-                      <img
-                        src={round.users.get(userId)!.pictureUrl}
-                        width="24"
-                        height="24"
-                        className="rounded mr-1"
+                    <li key={userId} className="flex py-1 gap-1">
+                      <ProfilePicture
+                        url={round.users.get(userId)!.pictureUrl}
+                        small
                       />
                       {round.users.get(userId)!.name || "(Anonymous)"}
 
                       {option.scoreDeltas.has(userId) ? (
-                        <span className="mx-1 px-2 rounded-full bg-purple-400 text-neutral-black">
+                        <span className="px-2 rounded-full bg-purple-400 text-neutral-black">
                           +{option.scoreDeltas.get(userId)}
                         </span>
                       ) : null}
