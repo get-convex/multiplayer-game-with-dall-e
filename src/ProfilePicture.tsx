@@ -1,4 +1,3 @@
-import classNames from "classnames";
 import { useState } from "react";
 import ProfilePicker from "./ProfilePicker";
 
@@ -12,26 +11,17 @@ export function ProfilePicture({
   small?: boolean;
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [showEdit, setShowEdit] = useState(false);
-  console.log({ pickerOpen, showEdit });
   const size = small ? "24px" : "48px";
   return (
     <>
-      <div
-        className="relative"
-        onMouseEnter={() => setShowEdit(true)}
-        onMouseLeave={() => setShowEdit(false)}
-      >
+      <div className="relative group">
         <img src={url} width={size} height={size} className="rounded" />
         {me && (
           <>
             <ProfilePicker open={pickerOpen} setOpen={setPickerOpen} />
             <button
               onClick={() => setPickerOpen(true)}
-              className={classNames(
-                "absolute inset-0 bg-gray-500 bg-opacity-75 rounded",
-                { invisible: !showEdit }
-              )}
+              className="hidden group-hover:block absolute inset-0 bg-gray-500 bg-opacity-75 rounded"
             >
               ✍️
             </button>
