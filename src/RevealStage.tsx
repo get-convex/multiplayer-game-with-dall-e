@@ -36,6 +36,7 @@ export function RevealStage({ round }: { round: RevealState }) {
               by
               <ProfilePicture
                 url={round.users.get(option.authorId)!.pictureUrl}
+                me={round.users.get(option.authorId)!.me}
                 small
               />
               {round.users.get(option.authorId)!.name}
@@ -55,6 +56,7 @@ export function RevealStage({ round }: { round: RevealState }) {
                     <li key={userId} className="flex py-1 gap-1">
                       <ProfilePicture
                         url={round.users.get(userId)!.pictureUrl}
+                        me={round.users.get(userId)!.me}
                         small
                       />
                       {round.users.get(userId)!.name || "(Anonymous)"}

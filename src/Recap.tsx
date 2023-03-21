@@ -45,7 +45,10 @@ export function Recap({ game }: { game: ClientGameState }) {
                         <span className="sr-only">, {player.name}</span>
                       </td>
                       <td className="flex items-center whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-white sm:pl-0">
-                        <ProfilePicture url={player.pictureUrl} />
+                        <ProfilePicture
+                          url={player.pictureUrl}
+                          me={player.me}
+                        />
                         <span className="pl-2">{player.name}</span>
                       </td>
                       <td className="whitespace-nowrap py-4 px-3 text-sm text-gray-300">

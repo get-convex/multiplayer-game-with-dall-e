@@ -23,7 +23,7 @@ export function Lobby({ game }: { game: ClientGameState }) {
               className="flex gap-2 items-center mb-2"
             >
               {player.me && "👉"}
-              <ProfilePicture url={player.pictureUrl} />
+              <ProfilePicture url={player.pictureUrl} me={player.me} />
               {player.me ? <InputName /> : player.name}
             </li>
           ))}

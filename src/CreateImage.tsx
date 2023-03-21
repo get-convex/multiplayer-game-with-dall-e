@@ -51,8 +51,10 @@ const Submission = (props: { submissionId: Id<"submissions"> }) => {
 
 export const CreateImage = ({
   onSubmit,
+  title,
 }: {
   onSubmit: (submissionId: Id<"submissions">) => any;
+  title?: string;
 }) => {
   const [prompt, setPrompt] = useState("");
   const startSubmission = useSessionMutation("submissions:start");
@@ -60,7 +62,7 @@ export const CreateImage = ({
   return (
     <div className="flex flex-col gap-4">
       <div className="text-5xl font-display stretch-min font-bold">
-        Create an image
+        {title ?? "Create an image"}
       </div>
       <form
         onSubmit={async (e) => {
