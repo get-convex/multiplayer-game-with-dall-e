@@ -95,11 +95,7 @@ export function GuessStage({
                     }
                   )}
                 >
-                  {option === round.myPrompt ? (
-                    <>
-                      👈 <span className="sr-only">Your prompt.</span>
-                    </>
-                  ) : (
+                  {option !== round.myPrompt && (
                     <>
                       👍 <span className="sr-only">Like {option}.</span>
                     </>
