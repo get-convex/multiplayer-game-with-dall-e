@@ -1,4 +1,4 @@
-import { ClientGameState } from "../convex/shared";
+import { ClientGameState, MaxPlayers } from "../convex/shared";
 import { InputName } from "./InputName";
 import { JoinGame } from "./JoinGame";
 import { Health } from "./CreateImage";
@@ -13,7 +13,6 @@ export function Lobby({ game }: { game: ClientGameState }) {
       <div className="font-display stretch-min text-4xl font-extrabold mb-8">
         {game.gameCode}
       </div>
-      {!game.playing && <JoinGame gameCode={game.gameCode} />}
       <div className="w-full mb-8">
         <div className="text-2xl mb-4">Players</div>
         <ol>
@@ -32,6 +31,9 @@ export function Lobby({ game }: { game: ClientGameState }) {
               {player.me ? <InputName /> : player.name}
             </li>
           ))}
+          {!game.playing && game.players.length < MaxPlayers && (
+            <JoinGame gameCode={game.gameCode} />
+          )}
         </ol>
       </div>
       <Health />

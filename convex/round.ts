@@ -10,11 +10,11 @@ import {
   GuessStateZ,
   LabelState,
   LabelStateZ,
+  MaxPlayers,
   RevealState,
   RevealStateZ,
 } from "./shared";
 
-export const MaxOptions = 8;
 const LabelDurationMs = 30000;
 const GuessDurationMs = 30000;
 const RevealDurationMs = 30000;
@@ -184,7 +184,7 @@ export const addOption = mutationWithSession(
       ) {
         return { success: false, reason: "You already added a prompt." };
       }
-      if (round.options.length === MaxOptions) {
+      if (round.options.length === MaxPlayers) {
         return { success: false, reason: "This round is full." };
       }
       if (

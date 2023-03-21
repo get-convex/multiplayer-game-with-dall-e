@@ -6,6 +6,8 @@
 import { z } from "zod";
 import { zId } from "./lib/zodUtils";
 
+export const MaxPlayers = 8;
+
 export const ClientGameStateZ = z.object({
   gameCode: z.string(),
   hosting: z.boolean(),

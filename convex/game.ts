@@ -1,14 +1,9 @@
 import { z } from "zod";
 import { withZodArgs, withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
-import {
-  calculateScoreDeltas,
-  MaxOptions,
-  newRound,
-  startRound,
-} from "./round";
+import { calculateScoreDeltas, newRound, startRound } from "./round";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
-import { ClientGameStateZ } from "./shared";
+import { ClientGameStateZ, MaxPlayers } from "./shared";
 import { getUserById } from "./users";
 import { Doc, Id } from "./_generated/dataModel";
 
@@ -113,7 +108,7 @@ export const join = mutationWithSession(
       .order("desc")
       .first();
     if (!game) throw new Error("Game not found");
-    if (game.playerIds.length >= MaxOptions) throw new Error("Game is full");
+    if (game.playerIds.length >= MaxPlayers) throw new Error("Game is full");
     if (game.state.stage !== "lobby") throw new Error("Game has started");
     // keep session up to date, so we know what game this session's in.
     session.gameIds.push(game._id);
