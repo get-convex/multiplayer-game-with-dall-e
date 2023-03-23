@@ -62,7 +62,7 @@ export const CreateImage = ({
   return (
     <div className="flex flex-col gap-4 max-w-xl">
       <div className="text-5xl font-display stretch-min font-bold">
-        {title ?? "Create an image"}
+        {title ?? "Submit an image"}
       </div>
       <form
         onSubmit={async (e) => {
