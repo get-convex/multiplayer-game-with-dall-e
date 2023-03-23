@@ -1,4 +1,5 @@
 import { InputName } from "./InputName";
+import { ProfilePicture } from "./ProfilePicture";
 
 export function Submissions({
   submitted,
@@ -14,12 +15,7 @@ export function Submissions({
         {submitted.map((player) => (
           <li key={player.pictureUrl} className="py-1 flex items-center gap-3">
             {player.me ? "👉" : "✅"}
-            <img
-              src={player.pictureUrl}
-              width="48"
-              height="48"
-              className="rounded"
-            />
+            <ProfilePicture url={player.pictureUrl} />
             <span className="text-lg">
               {player.me ? <InputName /> : player.name}
             </span>
