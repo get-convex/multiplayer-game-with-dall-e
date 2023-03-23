@@ -17,11 +17,11 @@ export function LabelStage({
   const [prompt, setPrompt] = useState("");
   const addPrompt = useSessionMutation("round:addOption");
   return (
-    <div className="max-w-xl">
+    <div className="max-w-lg">
       <img
         src={round.imageUrl}
         alt=""
-        className="w-full max-w-xl border border-neutral-600 rounded overflow-hidden my-4"
+        className="w-full max-w-lg border border-neutral-600 rounded overflow-hidden my-4"
       />
       {round.mine || round.submitted.find((submission) => submission.me) ? (
         <>

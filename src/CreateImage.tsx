@@ -38,7 +38,7 @@ const Submission = (props: { submissionId: Id<"submissions"> }) => {
         <figure className="flex flex-col">
           <img
             src={result.url}
-            className="w-full max-w-xl border border-neutral-600 rounded overflow-hidden my-4"
+            className="w-full max-w-lg border border-neutral-600 rounded overflow-hidden my-4"
           />
           <span className="text-sm text-neutral-400">
             Generated in {result.elapsedMs / 1000} seconds.
@@ -60,7 +60,7 @@ export const CreateImage = ({
   const startSubmission = useSessionMutation("submissions:start");
   const [submissionId, setSubmissionId] = useState<Id<"submissions">>();
   return (
-    <div className="flex flex-col gap-4 max-w-xl">
+    <div className="flex flex-col gap-4 max-w-lg">
       <div className="text-5xl font-display stretch-min font-bold">
         {title ?? "Submit an image"}
       </div>

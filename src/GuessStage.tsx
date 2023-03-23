@@ -23,7 +23,7 @@ export function GuessStage({
       <img
         src={round.imageUrl}
         alt=""
-        className="w-full max-w-xl border border-neutral-600 rounded overflow-hidden my-4"
+        className="w-full max-w-lg border border-neutral-600 rounded overflow-hidden my-4"
       />
       <fieldset>
         <legend className="text-2xl mb-2">
@@ -31,7 +31,7 @@ export function GuessStage({
             ? "This was your image."
             : "What prompt was responsible for this image?"}
         </legend>
-        <ul className="mb-6 max-w-xl">
+        <ul className="mb-6 max-w-lg">
           {round.options.map((option) => (
             <li key={option} className="mb-2">
               <span className="text-orange-300">
@@ -58,7 +58,7 @@ export function GuessStage({
                         : ""
                     }
                     className={classNames(
-                      "w-full text-left h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400 hover:border-blue-400 disabled:border-neutral-400 disabled:text-neutral-500 disabled:cursor-not-allowed cursor-pointer",
+                      "w-full text-left min-h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400 hover:border-blue-400 disabled:border-neutral-400 disabled:text-neutral-500 disabled:cursor-not-allowed cursor-pointer",
                       {
                         "bg-blue-500": option === round.myGuess,
                       }

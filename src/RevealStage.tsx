@@ -8,9 +8,9 @@ export function RevealStage({ round }: { round: RevealState }) {
       <img
         src={round.imageUrl}
         alt=""
-        className="w-full max-w-xl border border-neutral-600 rounded overflow-hidden my-4"
+        className="w-full max-w-lg border border-neutral-600 rounded overflow-hidden my-4"
       />
-      <ul className="max-w-xl">
+      <ul className="max-w-lg">
         {round.results.map((option) => (
           <li
             key={option.authorId}
