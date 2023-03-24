@@ -2,7 +2,7 @@ import { UserIdentity } from "convex/server";
 import { getUser } from "./lib/withUser";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import md5 from "md5";
-import { DatabaseReader, DatabaseWriter, mutation } from "./_generated/server";
+import { DatabaseReader, DatabaseWriter } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { randomSlug } from "./game";
 import withZodObjectArg from "./lib/withZod";

@@ -1,12 +1,5 @@
-import {
-  QueryCtx,
-  MutationCtx,
-  mutation,
-  query,
-  DatabaseReader,
-} from "../_generated/server";
+import { QueryCtx, DatabaseReader } from "../_generated/server";
 import { Doc } from "../_generated/dataModel";
-import { Auth } from "convex/server";
 
 /**
  * Wrapper for a Convex query or mutation function that provides a user in ctx.
@@ -45,44 +38,6 @@ export const getUser = (
     .query("users")
     .withIndex("by_token", (q) => q.eq("tokenIdentifier", tokenIdentifier))
     .unique();
-};
-
-/**
- * Wrapper for a Convex mutation function that provides a user in ctx.
- *
- * Throws an exception if there isn't a user logged in.
- * E.g.:
- * export default mutationWithUser(async ({ db, auth, user }, arg1) => {...}));
- * @param func - Your function that can now take in a `user` in the ctx param.
- * @returns A Convex serverless function.
- */
-export const mutationWithUser = <Args extends any[], Output>(
-  func: (
-    ctx: MutationCtx & {
-      user: Doc<"users">;
-    },
-    ...args: Args
-  ) => Promise<Output>
-) => {
-  return mutation(withUser(func));
-};
-
-/**
- * Wrapper for a Convex query function that provides a user in ctx.
- *
- * Throws an exception if there isn't a user logged in.
- * E.g.:
- * export default queryWithUser(async ({ db, auth, user }, arg1) => {...}));
- * @param func - Your function that can now take in a `user` in the ctx param.
- * @returns A Convex serverless function.
- */
-export const queryWithUser = <Args extends any[], Output>(
-  func: (
-    ctx: QueryCtx & { user: Doc<"users"> },
-    ...args: Args
-  ) => Promise<Output>
-) => {
-  return query(withUser(func));
 };
 
 export default withUser;

@@ -1,12 +1,4 @@
 import { z } from "zod";
-import {
-  action,
-  ActionCtx,
-  mutation,
-  MutationCtx,
-  query,
-  QueryCtx,
-} from "../_generated/server";
 
 /**
  * Wraps a convex function with input and (optional) output validation via zod.
@@ -84,44 +76,5 @@ export const withZodFunction = <
     );
   };
 };
-
-// See withZodObjectArg
-export const queryWithZodObjectArg = <
-  Arg extends { [key: string]: z.ZodTypeAny },
-  Returns extends z.ZodTypeAny
->(
-  zodArgs: Arg,
-  func: (
-    ctx: QueryCtx,
-    arg: z.output<z.ZodObject<Arg>>
-  ) => z.input<z.ZodPromise<Returns>>,
-  zodReturn?: Returns
-) => query(withZodObjectArg(zodArgs, func, zodReturn));
-
-// See withZodObjectArg
-export const mutationWithZodObjectArg = <
-  Arg extends { [key: string]: z.ZodTypeAny },
-  Returns extends z.ZodTypeAny
->(
-  zodArgs: Arg,
-  func: (
-    ctx: MutationCtx,
-    arg: z.output<z.ZodObject<Arg>>
-  ) => z.input<z.ZodPromise<Returns>>,
-  zodReturn?: Returns
-) => mutation(withZodObjectArg(zodArgs, func, zodReturn));
-
-// See withZodObjectArg
-export const actionWithZodObjectArg = <
-  Arg extends { [key: string]: z.ZodTypeAny },
-  Returns extends z.ZodTypeAny
->(
-  zodArgs: Arg,
-  func: (
-    ctx: ActionCtx,
-    arg: z.output<z.ZodObject<Arg>>
-  ) => z.input<z.ZodPromise<Returns>>,
-  zodReturn?: Returns
-) => action(withZodObjectArg(zodArgs, func, zodReturn));
 
 export default withZodObjectArg;
