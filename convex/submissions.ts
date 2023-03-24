@@ -107,7 +107,7 @@ export const health = query(async ({ db }) => {
 });
 
 // TODO: limit to only accessible from the dall-e action
-export const update = mutation(async ({ db }, submissionId, result) => {
+export const update = mutation(async ({ db }, { submissionId, result }) => {
   await db.patch(submissionId, { result });
 });
 

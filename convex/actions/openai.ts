@@ -72,17 +72,23 @@ export const createImage = action(
     const openai = makeOpenAIClient();
 
     const fail = (reason: string): Promise<never> =>
-      runMutation("submissions:update", submissionId, {
-        status: "failed",
-        elapsedMs: elapsedMs(),
-        reason,
+      runMutation("submissions:update", {
+        submissionId,
+        result: {
+          status: "failed",
+          elapsedMs: elapsedMs(),
+          reason,
+        },
       }).then(() => {
         throw new Error(reason);
       });
 
-    runMutation("submissions:update", submissionId, {
-      status: "generating",
-      details: "Moderating prompt...",
+    runMutation("submissions:update", {
+      submissionId,
+      result: {
+        status: "generating",
+        details: "Moderating prompt...",
+      },
     });
     // Check if the prompt is offensive.
     const modResponse = await openai.createModeration({
@@ -95,9 +101,12 @@ export const createImage = action(
       );
     }
 
-    runMutation("submissions:update", submissionId, {
-      status: "generating",
-      details: "Generating image...",
+    runMutation("submissions:update", {
+      submissionId,
+      result: {
+        status: "generating",
+        details: "Generating image...",
+      },
     });
     // Query OpenAI for the image.
     const opanaiResponse = await openai.createImage({
@@ -107,9 +116,12 @@ export const createImage = action(
     const dallEImageUrl = opanaiResponse.data.data[0]["url"];
     if (!dallEImageUrl) return await fail("No image URL returned from OpenAI");
 
-    runMutation("submissions:update", submissionId, {
-      status: "generating",
-      details: "Storing image...",
+    runMutation("submissions:update", {
+      submissionId,
+      result: {
+        status: "generating",
+        details: "Storing image...",
+      },
     });
     // Download the image
     const imageResponse = await fetch(dallEImageUrl);
@@ -134,10 +146,13 @@ export const createImage = action(
     };
 
     // Write storageId as the body of the message to the Convex database.
-    await runMutation("submissions:update", submissionId, {
-      status: "saved",
-      imageStorageId: storageId,
-      elapsedMs: elapsedMs(),
+    await runMutation("submissions:update", {
+      submissionId,
+      result: {
+        status: "saved",
+        imageStorageId: storageId,
+        elapsedMs: elapsedMs(),
+      },
     });
   }
 );
