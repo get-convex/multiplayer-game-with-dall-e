@@ -1,5 +1,9 @@
 import fetch from "node-fetch";
-import { Configuration, OpenAIApi } from "openai";
+import {
+  Configuration,
+  CreateModerationResponseResultsInner,
+  OpenAIApi,
+} from "openai";
 import { z } from "zod";
 import { withZodObjectArg } from "../lib/withZod";
 import { zId } from "../lib/zodUtils";
@@ -25,8 +29,8 @@ export const addOption = action(
         return {
           success: false,
           retry: false,
-          reason: `Your prompt was flagged: ${JSON.stringify(
-            modResult.categories
+          reason: `Your prompt was flagged: ${flaggedCategories(modResult).join(
+            ", "
           )}`,
         } as const;
       }
@@ -57,6 +61,14 @@ const makeOpenAIClient = () => {
     );
   }
   return new OpenAIApi(new Configuration({ apiKey }));
+};
+
+const flaggedCategories = (
+  modResult: CreateModerationResponseResultsInner
+): string[] => {
+  return Object.entries(modResult.categories)
+    .filter(([, flagged]) => flagged)
+    .map(([category]) => category);
 };
 
 export const createImage = action(
@@ -97,7 +109,7 @@ export const createImage = action(
     const modResult = modResponse.data.results[0];
     if (modResult.flagged) {
       await fail(
-        `Your prompt was flagged: ${JSON.stringify(modResult.categories)}`
+        `Your prompt was flagged: ${flaggedCategories(modResult).join(", ")}`
       );
     }
 
