@@ -32,8 +32,7 @@ const OLD_MS = 10000;
  * `mug` and `typing` fields set, and will be immediately reflected in the data
  * returned as the first parameter.
  *
- * @param room - The location associated with the presence data. Examples:
- * page, chat channel, game instance.
+ * @param game - The game associated with the presence data.
  * @param user - The user associated with the presence data.
  * @param initialData - The initial data to associate with the user.
  * @param heartbeatPeriod? - If specified, the interval between heartbeats, in
@@ -44,13 +43,15 @@ const OLD_MS = 10000;
  * 3. function to update this user's data. It will do a shallow merge.
  */
 export const usePresence = <T extends { [key: string]: Value }>(
-  room: string,
+  game: string,
   initialData: T,
   heartbeatPeriod = HEARTBEAT_PERIOD
 ) => {
   const userId = useSessionQuery("presence:myUserId");
   const [data, setData] = useState(initialData);
-  let presence: PresenceData<T>[] | undefined = useQuery("presence:list", room);
+  let presence: PresenceData<T>[] | undefined = useQuery("presence:list", {
+    game,
+  });
   if (presence && userId) {
     presence = presence.filter((p) => !userId.equals(p.userId));
   }
@@ -58,13 +59,13 @@ export const usePresence = <T extends { [key: string]: Value }>(
   const heartbeat = useSingleFlight(useSessionMutation("presence:heartbeat"));
 
   useEffect(() => {
-    void updatePresence(room, data);
+    void updatePresence({ game, data });
     const intervalId = setInterval(() => {
-      void heartbeat(room);
+      void heartbeat({ game });
     }, heartbeatPeriod);
     // Whenever we have any data change, it will get cleared.
     return () => clearInterval(intervalId);
-  }, [updatePresence, heartbeat, room, data, heartbeatPeriod]);
+  }, [updatePresence, heartbeat, game, data, heartbeatPeriod]);
 
   // Updates the data, merged with previous data state.
   const updateData = useCallback((patch: Partial<T>) => {

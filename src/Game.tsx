@@ -12,7 +12,7 @@ const Game: React.FC<{
   gameId: Id<"games">;
   done: (nextGameId: Id<"games"> | null) => void;
 }> = ({ gameId, done }) => {
-  const game = useSessionQuery("game:get", gameId);
+  const game = useSessionQuery("game:get", { gameId });
   const submit = useSessionMutation("game:submit");
   const playAgain = useSessionMutation("game:playAgain");
   const addRound = useCallback(
@@ -24,7 +24,7 @@ const Game: React.FC<{
   if (game.nextGameId) done(game.nextGameId);
   const next = game.hosting && (
     <NextButton
-      onClick={() => progress(gameId, game.state.stage)}
+      onClick={() => progress({ gameId, fromStage: game.state.stage })}
       title={
         game.state.stage === "lobby"
           ? "Start"
@@ -91,7 +91,7 @@ const Game: React.FC<{
           <button
             type="submit"
             onClick={async (e) => {
-              const nextGameId = await playAgain(gameId);
+              const nextGameId = await playAgain({ oldGameId: gameId });
               done(nextGameId);
             }}
             className="h-12 border border-blue-200 bg-blue-200 py-2 px-4 text-neutral-black hover:bg-blue-400"

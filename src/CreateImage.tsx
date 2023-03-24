@@ -22,7 +22,7 @@ export const Health = () => {
 };
 
 const Submission = (props: { submissionId: Id<"submissions"> }) => {
-  const result = useSessionQuery("submissions:get", props.submissionId);
+  const result = useSessionQuery("submissions:get", props);
   switch (result?.status) {
     case "generating":
       return (
@@ -67,7 +67,7 @@ export const CreateImage = ({
       <form
         onSubmit={async (e) => {
           e.preventDefault();
-          setSubmissionId(await startSubmission(prompt));
+          setSubmissionId(await startSubmission({ prompt }));
         }}
         className="flex flex-col gap-4"
       >

@@ -24,7 +24,7 @@ const LIST_LIMIT = 20;
  */
 export const update = mutation(
   withSession(
-    async ({ db, session }, game: string, data: any) => {
+    async ({ db, session }, { game, data }: { game: string; data: any }) => {
       if (!session) {
         console.error("Session not initalized in presence:update");
         return;
@@ -59,7 +59,7 @@ export const update = mutation(
  */
 export const heartbeat = mutation(
   withSession(
-    async ({ db, session }, game: string) => {
+    async ({ db, session }, { game }: { game: string }) => {
       if (!session) {
         console.warn("Session not initalized in presence:heartbeat");
         return;
@@ -86,7 +86,7 @@ export const heartbeat = mutation(
  * @returns A list of presence objects, ordered by recent update, limited to
  * the most recent N.
  */
-export const list = query(async ({ db }, game: string) => {
+export const list = query(async ({ db }, { game }: { game: string }) => {
   const presence = await db
     .query("presence")
     .withIndex("by_game_updated", (q) => q.eq("game", game))

@@ -1,6 +1,6 @@
 import { WithoutSystemFields } from "convex/server";
 import { z } from "zod";
-import withZodArgs, { withZodObjectArg } from "./lib/withZod";
+import { withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import { Doc, Id } from "./_generated/dataModel";
@@ -40,9 +40,9 @@ export const startRound = async (db: DatabaseWriter, roundId: Id<"rounds">) => {
 };
 
 export const getRound = queryWithSession(
-  withZodArgs(
-    [zId("rounds")],
-    async ({ db, session, storage }, roundId) => {
+  withZodObjectArg(
+    { roundId: zId("rounds") },
+    async ({ db, session, storage }, { roundId }) => {
       const round = await db.get(roundId);
       if (!round) throw new Error("Round not found");
       const { stage, stageStart, stageEnd } = round;
@@ -196,73 +196,77 @@ function levenshteinDistance(a: string, b: string) {
 }
 
 export const addOption = mutationWithSession(
-  withZodObjectArg(
+  async (
+    { db, scheduler, session },
     {
-      gameId: z.optional(zId("games")),
-      roundId: zId("rounds"),
-      prompt: z.string(),
-    },
-    async ({ db, scheduler, session }, { gameId, roundId, prompt }) => {
-      const round = await db.get(roundId);
-      if (!round) throw new Error("Round not found");
-      if (round.stage !== "label") {
-        return { success: false, reason: "Too late to add a prompt." };
-      }
-      if (round.authorId.equals(session.userId)) {
-        throw new Error("You can't submit a prompt for your own image.");
-      }
-      if (
-        round.options.findIndex((option) =>
-          option.authorId.equals(session.userId)
-        ) !== -1
-      ) {
-        return { success: false, reason: "You already added a prompt." };
-      }
-      if (round.options.length === MaxPlayers) {
-        return { success: false, reason: "This round is full." };
-      }
-      if (
-        round.options.findIndex(
-          (option) =>
-            levenshteinDistance(
-              option.prompt.toLocaleLowerCase(),
-              prompt.toLocaleLowerCase()
-            ) >
-            prompt.length / 2
-        ) !== -1
-      ) {
-        return {
-          success: false,
-          retry: true,
-          reason: "This prompt is too similar to existing prompt(s).",
-        };
-      }
-
-      round.options.push({
-        authorId: session.userId,
-        prompt,
-        votes: [],
-        likes: [],
-      });
-      await db.patch(round._id, { options: round.options });
-      const game = gameId && (await db.get(gameId));
-      if (round.options.length === game?.playerIds.length) {
-        // All players have added options
-        await db.patch(round._id, beginGuessPatch(round));
-        scheduler.runAfter(
-          GuessDurationMs,
-          "round:progress",
-          round._id,
-          "guess"
-        );
-      }
-      return { success: true };
+      gameId,
+      roundId,
+      prompt,
+    }: { gameId?: Id<"games">; roundId: Id<"rounds">; prompt: string }
+  ) => {
+    const round = await db.get(roundId);
+    if (!round) throw new Error("Round not found");
+    if (round.stage !== "label") {
+      return { success: false, reason: "Too late to add a prompt." };
     }
-  )
+    if (round.authorId.equals(session.userId)) {
+      throw new Error("You can't submit a prompt for your own image.");
+    }
+    if (
+      round.options.findIndex((option) =>
+        option.authorId.equals(session.userId)
+      ) !== -1
+    ) {
+      return { success: false, reason: "You already added a prompt." };
+    }
+    if (round.options.length === MaxPlayers) {
+      return { success: false, reason: "This round is full." };
+    }
+    if (
+      round.options.findIndex(
+        (option) =>
+          levenshteinDistance(
+            option.prompt.toLocaleLowerCase(),
+            prompt.toLocaleLowerCase()
+          ) >
+          prompt.length / 2
+      ) !== -1
+    ) {
+      return {
+        success: false,
+        retry: true,
+        reason: "This prompt is too similar to existing prompt(s).",
+      };
+    }
+
+    round.options.push({
+      authorId: session.userId,
+      prompt,
+      votes: [],
+      likes: [],
+    });
+    await db.patch(round._id, { options: round.options });
+    const game = gameId && (await db.get(gameId));
+    if (round.options.length === game?.playerIds.length) {
+      // All players have added options
+      await db.patch(round._id, beginGuessPatch(round));
+      scheduler.runAfter(GuessDurationMs, "round:progress", {
+        roundId: round._id,
+        fromStage: "guess",
+      });
+    }
+    return { success: true };
+  }
 );
 
 export const progress = mutation(
-  async ({ db }, roundId: Id<"rounds">, fromStage: Doc<"rounds">["stage"]) => {
+  async (
+    { db },
+    {
+      roundId,
+      fromStage,
+    }: { roundId: Id<"rounds">; fromStage: Doc<"rounds">["stage"] }
+  ) => {
     const round = await db.get(roundId);
     if (!round) throw new Error("Round not found: " + roundId.id);
     if (round.stage === fromStage) {

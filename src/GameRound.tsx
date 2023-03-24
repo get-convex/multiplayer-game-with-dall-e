@@ -15,7 +15,7 @@ const GameRound: React.FC<{
   gameId?: Id<"games">;
   nextButton?: React.ReactElement | false;
 }> = ({ nextButton, roundId, game, gameId }) => {
-  const round = useSessionQuery("round:getRound", roundId);
+  const round = useSessionQuery("round:getRound", { roundId });
   const progress = useMutation("round:progress");
   if (!round) return <Loading />;
   const footer = (
@@ -25,7 +25,7 @@ const GameRound: React.FC<{
         game?.hosting && (
           //  !!game.players.find((p) => p.me) ? (
           <NextButton
-            onClick={() => progress(roundId, round.stage)}
+            onClick={() => progress({ roundId, fromStage: round.stage })}
             title="Next"
           />
         )

@@ -59,7 +59,7 @@ function App() {
               <form
                 onSubmit={async (e) => {
                   e.preventDefault();
-                  setGameId(await joinGame(gameCode));
+                  setGameId(await joinGame({ gameCode }));
                 }}
                 className="flex grow basis-0 lg:w-full"
               >

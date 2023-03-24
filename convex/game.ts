@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { withZodArgs, withZodObjectArg } from "./lib/withZod";
+import { withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
 import { calculateScoreDeltas, newRound, startRound } from "./round";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
@@ -23,30 +23,33 @@ export const create = mutationWithSession(async ({ db, session }) => {
 });
 
 export const playAgain = mutationWithSession(
-  withZodArgs([zId("games")], async ({ db, session }, oldGameId) => {
-    const oldGame = await db.get(oldGameId);
-    if (!oldGame) throw new Error("Old game doesn't exist");
-    if (!oldGame.playerIds.find((id) => id.equals(session.userId))) {
-      throw new Error("You weren't part of that game");
+  withZodObjectArg(
+    { oldGameId: zId("games") },
+    async ({ db, session }, { oldGameId }) => {
+      const oldGame = await db.get(oldGameId);
+      if (!oldGame) throw new Error("Old game doesn't exist");
+      if (!oldGame.playerIds.find((id) => id.equals(session.userId))) {
+        throw new Error("You weren't part of that game");
+      }
+      const gameId = await db.insert("games", {
+        hostId: session.userId,
+        playerIds: oldGame.playerIds,
+        roundIds: [],
+        slug: oldGame.slug,
+        state: { stage: "lobby" },
+      });
+      await db.patch(oldGame._id, { nextGameId: gameId });
+      session.gameIds.push(gameId);
+      await db.patch(session._id, { gameIds: session.gameIds });
+      return gameId;
     }
-    const gameId = await db.insert("games", {
-      hostId: session.userId,
-      playerIds: oldGame.playerIds,
-      roundIds: [],
-      slug: oldGame.slug,
-      state: { stage: "lobby" },
-    });
-    await db.patch(oldGame._id, { nextGameId: gameId });
-    session.gameIds.push(gameId);
-    await db.patch(session._id, { gameIds: session.gameIds });
-    return gameId;
-  })
+  )
 );
 
 export const get = queryWithSession(
-  withZodArgs(
-    [zId("games")],
-    async ({ db, session }, gameId) => {
+  withZodObjectArg(
+    { gameId: zId("games") },
+    async ({ db, session }, { gameId }) => {
       // Grab the most recent game with this code.
       const game = await db.get(gameId);
       if (!game) throw new Error("Game not found");
@@ -100,30 +103,35 @@ export const get = queryWithSession(
 );
 
 export const join = mutationWithSession(
-  withZodArgs([z.string().length(4)], async ({ db, session }, slug: string) => {
-    // Grab the most recent game with this slug, if it exists
-    const game = await db
-      .query("games")
-      .withIndex("s", (q) => q.eq("slug", slug))
-      .order("desc")
-      .first();
-    if (!game) throw new Error("Game not found");
-    if (game.playerIds.length >= MaxPlayers) throw new Error("Game is full");
-    if (game.state.stage !== "lobby") throw new Error("Game has started");
-    // keep session up to date, so we know what game this session's in.
-    session.gameIds.push(game._id);
-    await db.patch(session._id, { gameIds: session.gameIds });
-    // Already in game
-    if (game.playerIds.find((id) => id.equals(session.userId)) !== undefined) {
-      console.warn("User joining game they're already in");
-    } else {
-      const playerIds = game.playerIds;
-      playerIds.push(session.userId);
-      await db.patch(game._id, { playerIds });
-    }
+  withZodObjectArg(
+    { gameCode: z.string().length(4) },
+    async ({ db, session }, { gameCode }) => {
+      // Grab the most recent game with this gameCode, if it exists
+      const game = await db
+        .query("games")
+        .withIndex("s", (q) => q.eq("slug", gameCode))
+        .order("desc")
+        .first();
+      if (!game) throw new Error("Game not found");
+      if (game.playerIds.length >= MaxPlayers) throw new Error("Game is full");
+      if (game.state.stage !== "lobby") throw new Error("Game has started");
+      // keep session up to date, so we know what game this session's in.
+      session.gameIds.push(game._id);
+      await db.patch(session._id, { gameIds: session.gameIds });
+      // Already in game
+      if (
+        game.playerIds.find((id) => id.equals(session.userId)) !== undefined
+      ) {
+        console.warn("User joining game they're already in");
+      } else {
+        const playerIds = game.playerIds;
+        playerIds.push(session.userId);
+        await db.patch(game._id, { playerIds });
+      }
 
-    return game._id;
-  })
+      return game._id;
+    }
+  )
 );
 
 export const submit = mutationWithSession(
@@ -166,10 +174,10 @@ export const submit = mutationWithSession(
 );
 
 export const progress = mutationWithSession(
-  withZodArgs(
-    [
-      zId("games"),
-      z.union([
+  withZodObjectArg(
+    {
+      gameId: zId("games"),
+      fromStage: z.union([
         z.literal("lobby"),
         z.literal("generate"),
         z.literal("label"),
@@ -179,8 +187,8 @@ export const progress = mutationWithSession(
         z.literal("votes"),
         z.literal("recap"),
       ]),
-    ],
-    async ({ db, session, scheduler }, gameId, fromStage) => {
+    },
+    async ({ db, session, scheduler }, { gameId, fromStage }) => {
       const game = await db.get(gameId);
       if (!game) throw new Error("Game not found");
       if (!game.hostId.equals(session.userId))
@@ -198,13 +206,10 @@ export const progress = mutationWithSession(
       }
       await db.patch(game._id, { state });
       if (state.stage === "lobby") {
-        scheduler.runAfter(
-          GenerateDurationMs,
-          "game:progress",
-          session._id,
+        scheduler.runAfter(GenerateDurationMs, "game:progress", session._id, {
           gameId,
-          state.stage
-        );
+          fromStage: state.stage,
+        });
       }
     }
   )

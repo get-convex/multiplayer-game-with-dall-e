@@ -1,5 +1,5 @@
 import { z } from "zod";
-import withZodArgs from "./lib/withZod";
+import { withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import { mutation, query } from "./_generated/server";
@@ -9,9 +9,9 @@ import { MaxPromptLength } from "./shared";
 const ImageTimeoutMs = 30000;
 
 export const start = mutationWithSession(
-  withZodArgs(
-    [z.string().max(MaxPromptLength)],
-    async ({ db, session, scheduler }, prompt) => {
+  withZodObjectArg(
+    { prompt: z.string().max(MaxPromptLength) },
+    async ({ db, session, scheduler }, { prompt }) => {
       const submissionId = await db.insert("submissions", {
         prompt,
         authorId: session.userId,
@@ -24,7 +24,10 @@ export const start = mutationWithSession(
       // new user if we log in.
       session.submissionIds.push(submissionId);
       db.patch(session._id, { submissionIds: session.submissionIds });
-      scheduler.runAfter(0, "actions/createImage", prompt, submissionId);
+      scheduler.runAfter(0, "actions/openai:createImage", {
+        prompt,
+        submissionId,
+      });
       scheduler.runAfter(ImageTimeoutMs, "submissions:timeout", submissionId);
       return submissionId;
     },
@@ -49,9 +52,9 @@ export const timeout = mutation(
 );
 
 export const get = queryWithSession(
-  withZodArgs(
-    [zId("submissions")],
-    async ({ db, session, storage }, submissionId) => {
+  withZodObjectArg(
+    { submissionId: zId("submissions") },
+    async ({ db, session, storage }, { submissionId }) => {
       const submission = await db.get(submissionId);
       if (!submission) return null;
       if (!submission.authorId.equals(session?.userId)) {

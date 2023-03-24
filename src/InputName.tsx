@@ -10,7 +10,7 @@ export function InputName() {
       name="name"
       defaultValue={profile.name}
       type="text"
-      onChange={(e) => setName(e.target.value)}
+      onChange={(e) => setName({ name: e.target.value })}
       placeholder="Enter a name"
     />
   ) : (

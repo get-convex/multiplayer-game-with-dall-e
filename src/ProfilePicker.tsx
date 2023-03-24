@@ -49,7 +49,7 @@ export default function ProfilePicker({
                 <CreateImage
                   title="Profile Picture"
                   onSubmit={async (submissionId) => {
-                    await setPicture(submissionId);
+                    await setPicture({ submissionId });
                     setOpen(false);
                   }}
                 />

@@ -85,45 +85,6 @@ export const withZodFunction = <
   };
 };
 
-// See withZodArgs
-export const queryWithZodArgs = <
-  Args extends [z.ZodTypeAny, ...z.ZodTypeAny[]] | [],
-  Returns extends z.ZodTypeAny
->(
-  zodArgs: Args,
-  func: (
-    ctx: QueryCtx,
-    ...args: z.output<z.ZodTuple<Args>>
-  ) => z.input<z.ZodPromise<Returns>>,
-  zodReturn?: Returns
-) => query(withZodArgs(zodArgs, func, zodReturn));
-
-// See withZodArgs
-export const mutationWithZodArgs = <
-  Args extends [z.ZodTypeAny, ...z.ZodTypeAny[]] | [],
-  Returns extends z.ZodTypeAny
->(
-  zodArgs: Args,
-  func: (
-    ctx: MutationCtx,
-    ...args: z.output<z.ZodTuple<Args>>
-  ) => z.input<z.ZodPromise<Returns>>,
-  zodReturn?: Returns
-) => mutation(withZodArgs(zodArgs, func, zodReturn));
-
-// See withZodArgs
-export const actionWithZodArgs = <
-  Args extends [z.ZodTypeAny, ...z.ZodTypeAny[]] | [],
-  Returns extends z.ZodTypeAny
->(
-  zodArgs: Args,
-  func: (
-    ctx: ActionCtx,
-    ...args: z.output<z.ZodTuple<Args>>
-  ) => z.input<z.ZodPromise<Returns>>,
-  zodReturn?: Returns
-) => action(withZodArgs(zodArgs, func, zodReturn));
-
 // See withZodObjectArg
 export const queryWithZodObjectArg = <
   Arg extends { [key: string]: z.ZodTypeAny },
@@ -163,4 +124,4 @@ export const actionWithZodObjectArg = <
   zodReturn?: Returns
 ) => action(withZodObjectArg(zodArgs, func, zodReturn));
 
-export default withZodArgs;
+export default withZodObjectArg;
