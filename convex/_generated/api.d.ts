@@ -11,7 +11,7 @@
 
 import type { ApiFromModules } from "convex/api";
 import type * as actions_checkPrompt from "../actions/checkPrompt";
-import type * as actions_createImage from "../actions/createImage";
+import type * as actions_openai from "../actions/openai";
 import type * as crons from "../crons";
 import type * as game from "../game";
 import type * as lib_withSession from "../lib/withSession";
@@ -36,7 +36,7 @@ import type * as users from "../users";
  */
 export type API = ApiFromModules<{
   "actions/checkPrompt": typeof actions_checkPrompt;
-  "actions/createImage": typeof actions_createImage;
+  "actions/openai": typeof actions_openai;
   crons: typeof crons;
   game: typeof game;
   "lib/withSession": typeof lib_withSession;

@@ -13,7 +13,9 @@
  * With the `SessionProvider` inside the `ConvexProvider` but outside your app.
  */
 import {
+  ActionNames,
   MutationNames,
+  NamedAction,
   NamedMutation,
   NamedQuery,
   QueryNames,
@@ -21,7 +23,11 @@ import {
 import React, { useContext, useEffect, useState } from "react";
 import { API } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
-import { useQuery, useMutation } from "../../convex/_generated/react";
+import {
+  useQuery,
+  useMutation,
+  useAction,
+} from "../../convex/_generated/react";
 
 const StoreKey = "ConvexSessionId";
 
@@ -132,5 +138,37 @@ export const useSessionMutation = <Name extends ValidMutationNames>(
       NamedMutation<API, Name>
     >;
     return originalMutation(...newArgs);
+  };
+};
+
+type SessionFunctionObj<Args extends {}> = (
+  args: {
+    sessionId: Id<"sessions"> | null;
+  } & Args
+) => any;
+
+type SessionFunctionArgsObj<Fn extends SessionFunctionObj<any>> =
+  Fn extends SessionFunctionObj<infer Args> ? Omit<Args, "sessionId"> : never;
+
+// All the valid actions that take {sessionId: Id<"sessions"> | null}.
+type ValidActionNames = {
+  [Name in ActionNames<API>]: NamedAction<
+    API,
+    Name
+  > extends SessionFunctionObj<any>
+    ? Name
+    : never;
+}[ActionNames<API>];
+// Like useAction, but for an Action that takes a session ID.
+export const useSessionAction = <Name extends ActionNames<API>>(name: Name) => {
+  const sessionId = useContext(SessionContext);
+  const originalAction = useAction(name);
+  return (
+    args: SessionFunctionArgsObj<NamedAction<API, Name>>
+  ): Promise<ReturnType<NamedAction<API, Name>>> => {
+    const newArgs = [
+      { sessionId, ...(args as object) },
+    ] as unknown as Parameters<NamedAction<API, Name>>;
+    return originalAction(...newArgs);
   };
 };

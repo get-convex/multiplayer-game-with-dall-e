@@ -1,20 +1,75 @@
 import fetch from "node-fetch";
 import { Configuration, OpenAIApi } from "openai";
+import { z } from "zod";
+import { withZodObjectArg } from "../lib/withZod";
+import { zId } from "../lib/zodUtils";
 import { Id } from "../_generated/dataModel";
 import { action } from "../_generated/server";
 
-export default action(
-  async ({ runMutation }, prompt: string, submissionId: Id<"submissions">) => {
+export const addOption = action(
+  withZodObjectArg(
+    {
+      gameId: z.optional(zId("games")),
+      roundId: zId("rounds"),
+      prompt: z.string(),
+      sessionId: zId("sessions"),
+    },
+    async ({ runMutation }, { gameId, roundId, prompt, sessionId }) => {
+      const openai = makeOpenAIClient();
+      // Check if the prompt is offensive.
+      const modResponse = await openai.createModeration({
+        input: prompt,
+      });
+      const modResult = modResponse.data.results[0];
+      if (modResult.flagged) {
+        return {
+          success: false,
+          retry: false,
+          reason: `Your prompt was flagged: ${JSON.stringify(
+            modResult.categories
+          )}`,
+        } as const;
+      }
+      await runMutation("round:addOption", sessionId, {
+        gameId,
+        roundId,
+        prompt,
+      });
+      return { success: true } as const;
+    },
+    z.union([
+      z.object({ success: z.literal(true) }),
+      z.object({
+        success: z.literal(false),
+        retry: z.boolean(),
+        reason: z.string(),
+      }),
+    ])
+  )
+);
+
+const makeOpenAIClient = () => {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error(
+      "Add your OPENAI_API_KEY as an env variable in the " +
+        "[dashboard](https://dasboard.convex.dev)"
+    );
+  }
+  return new OpenAIApi(new Configuration({ apiKey }));
+};
+
+export const createImage = action(
+  async (
+    { runMutation },
+    {
+      prompt,
+      submissionId,
+    }: { prompt: string; submissionId: Id<"submissions"> }
+  ) => {
     const start = Date.now();
     const elapsedMs = () => Date.now() - start;
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      throw new Error(
-        "Add your OPENAI_API_KEY as an env variable in the " +
-          "[dashboard](https://dasboard.convex.dev)"
-      );
-    }
-    const openai = new OpenAIApi(new Configuration({ apiKey }));
+    const openai = makeOpenAIClient();
 
     const fail = (reason: string): Promise<never> =>
       runMutation("submissions:update", submissionId, {

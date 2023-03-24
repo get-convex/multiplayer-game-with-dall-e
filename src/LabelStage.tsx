@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { LabelState } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
-import { useSessionMutation } from "./hooks/sessionsClient";
+import { useSessionAction } from "./hooks/sessionsClient";
 import { Submissions } from "./Submissions";
 
 export function LabelStage({
@@ -15,7 +15,7 @@ export function LabelStage({
 }) {
   const [error, setError] = useState<string>();
   const [prompt, setPrompt] = useState("");
-  const addPrompt = useSessionMutation("round:addOption");
+  const addPrompt = useSessionAction("actions/openai:addOption");
   return (
     <div className="max-w-lg">
       <img
