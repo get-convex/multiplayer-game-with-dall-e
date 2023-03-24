@@ -2,7 +2,7 @@ import { z } from "zod";
 import { withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { MaxPromptLength } from "./shared";
 
@@ -35,7 +35,7 @@ export const start = mutationWithSession(
   )
 );
 
-export const timeout = mutation(
+export const timeout = internalMutation(
   async ({ db }, submissionId: Id<"submissions">) => {
     const submission = await db.get(submissionId);
     if (!submission) throw new Error("No submission found");
@@ -107,11 +107,13 @@ export const health = query(async ({ db }) => {
 });
 
 // TODO: limit to only accessible from the dall-e action
-export const update = mutation(async ({ db }, { submissionId, result }) => {
-  await db.patch(submissionId, { result });
-});
+export const update = internalMutation(
+  async ({ db }, { submissionId, result }) => {
+    await db.patch(submissionId, { result });
+  }
+);
 
 // Generate a short-lived upload URL.
-export const generateUploadUrl = mutation(async ({ storage }) => {
+export const generateUploadUrl = internalMutation(async ({ storage }) => {
   return await storage.generateUploadUrl();
 });

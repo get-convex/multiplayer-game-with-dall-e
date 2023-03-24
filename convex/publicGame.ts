@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { internalMutation, query } from "./_generated/server";
 
 export const get = query(async ({ db }) => {
   const publicGame = await db.query("publicGame").unique();
@@ -12,7 +12,7 @@ export const get = query(async ({ db }) => {
 const PublicGuessMs = 15000;
 const PublicRevealMs = 10000;
 
-export const progress = mutation(
+export const progress = internalMutation(
   async ({ db, scheduler }, fromStage: "guess" | "reveal") => {
     const publicGame = await db.query("publicGame").unique();
     if (!publicGame) throw new Error("No public game");
