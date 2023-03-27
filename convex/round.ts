@@ -195,6 +195,16 @@ function levenshteinDistance(a: string, b: string) {
   return matrix[b.length][a.length];
 }
 
+export const OptionResultZ = z.union([
+  z.object({ success: z.literal(true) }),
+  z.object({
+    success: z.literal(false),
+    retry: z.optional(z.boolean()),
+    reason: z.string(),
+  }),
+]);
+export type OptionResult = z.infer<typeof OptionResultZ>;
+
 export const addOption = mutationWithSession(
   async (
     { db, scheduler, session },
@@ -203,7 +213,7 @@ export const addOption = mutationWithSession(
       roundId,
       prompt,
     }: { gameId?: Id<"games">; roundId: Id<"rounds">; prompt: string }
-  ) => {
+  ): Promise<OptionResult> => {
     const round = await db.get(roundId);
     if (!round) throw new Error("Round not found");
     if (round.stage !== "label") {

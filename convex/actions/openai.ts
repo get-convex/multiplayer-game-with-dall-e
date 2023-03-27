@@ -7,6 +7,7 @@ import {
 import { z } from "zod";
 import { withZodObjectArg } from "../lib/withZod";
 import { zId } from "../lib/zodUtils";
+import { OptionResult, OptionResultZ } from "../round";
 import { Id } from "../_generated/dataModel";
 import { action } from "../_generated/server";
 
@@ -34,21 +35,14 @@ export const addOption = action(
           )}`,
         } as const;
       }
-      await runMutation("round:addOption", sessionId, {
+      const status = (await runMutation("round:addOption", sessionId, {
         gameId,
         roundId,
         prompt,
-      });
-      return { success: true } as const;
+      })) as OptionResult; // Casting to avoid circular reference.
+      return status;
     },
-    z.union([
-      z.object({ success: z.literal(true) }),
-      z.object({
-        success: z.literal(false),
-        retry: z.boolean(),
-        reason: z.string(),
-      }),
-    ])
+    OptionResultZ
   )
 );
 
