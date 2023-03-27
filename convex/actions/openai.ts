@@ -7,7 +7,7 @@ import {
 import { z } from "zod";
 import { withZodObjectArg } from "../lib/withZod";
 import { zId } from "../lib/zodUtils";
-import { OptionResult, OptionResultZ } from "../shared";
+import { OptionResult, OptionResultZ } from "../round";
 import { Id } from "../_generated/dataModel";
 import { action } from "../_generated/server";
 

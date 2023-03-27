@@ -14,12 +14,21 @@ import {
   RevealState,
   RevealStateZ,
 } from "./shared";
-import { OptionResult } from "./shared";
+//import { OptionResult } from "./shared";
 
 const LabelDurationMs = 30000;
 const GuessDurationMs = 30000;
 const RevealDurationMs = 30000;
 
+export const OptionResultZ = z.union([
+  z.object({ success: z.literal(true) }),
+  z.object({
+    success: z.literal(false),
+    retry: z.optional(z.boolean()),
+    reason: z.string(),
+  }),
+]);
+export type OptionResult = z.infer<typeof OptionResultZ>;
 export const newRound = (
   authorId: Id<"users">,
   imageStorageId: string,
