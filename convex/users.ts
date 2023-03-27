@@ -76,7 +76,7 @@ export const getMyProfile = queryWithSession(async ({ db, session }) => {
  */
 export const setName = mutationWithSession(
   withZodObjectArg(
-    { name: z.string().length(100) },
+    { name: z.string().max(100) },
     async ({ db, session }, { name }) => {
       const user = await getUserById(db, session.userId);
       db.patch(user._id, { name });
