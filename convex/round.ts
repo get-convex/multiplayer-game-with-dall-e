@@ -14,6 +14,7 @@ import {
   RevealState,
   RevealStateZ,
 } from "./shared";
+import { OptionResult } from "./shared";
 
 const LabelDurationMs = 30000;
 const GuessDurationMs = 30000;
@@ -194,16 +195,6 @@ function levenshteinDistance(a: string, b: string) {
 
   return matrix[b.length][a.length];
 }
-
-export const OptionResultZ = z.union([
-  z.object({ success: z.literal(true) }),
-  z.object({
-    success: z.literal(false),
-    retry: z.optional(z.boolean()),
-    reason: z.string(),
-  }),
-]);
-export type OptionResult = z.infer<typeof OptionResultZ>;
 
 export const addOption = mutationWithSession(
   async (

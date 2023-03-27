@@ -107,3 +107,13 @@ export const RevealStateZ = z.object({
 export type RevealState = z.infer<typeof RevealStateZ>;
 
 export const MaxPromptLength = 100;
+
+export const OptionResultZ = z.union([
+  z.object({ success: z.literal(true) }),
+  z.object({
+    success: z.literal(false),
+    retry: z.optional(z.boolean()),
+    reason: z.string(),
+  }),
+]);
+export type OptionResult = z.infer<typeof OptionResultZ>;
