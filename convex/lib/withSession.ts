@@ -100,15 +100,7 @@ export const mutationWithSession = <Args extends any[], Output>(
     ...args: Args
   ) => Promise<Output>
 ) => {
-  return mutation(
-    withSession((ctx, ...args: Args) => {
-      const { session } = ctx;
-      if (!session) {
-        throw new Error("Session not initialized yet");
-      }
-      return func({ ...ctx, session }, ...args);
-    })
-  );
+  return mutation(withSession(func));
 };
 
 /**
