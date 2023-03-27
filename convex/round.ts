@@ -229,7 +229,7 @@ export const addOption = mutationWithSession(
           levenshteinDistance(
             option.prompt.toLocaleLowerCase(),
             prompt.toLocaleLowerCase()
-          ) >
+          ) <
           prompt.length / 2
       ) !== -1
     ) {
