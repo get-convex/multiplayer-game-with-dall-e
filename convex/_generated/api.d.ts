@@ -10,7 +10,6 @@
  */
 
 import type { ApiFromModules } from "convex/api";
-import type * as actions_checkPrompt from "../actions/checkPrompt";
 import type * as actions_openai from "../actions/openai";
 import type * as crons from "../crons";
 import type * as game from "../game";
@@ -35,7 +34,6 @@ import type * as users from "../users";
  * `ConvexReactClient` to create app-specific types.
  */
 export type API = ApiFromModules<{
-  "actions/checkPrompt": typeof actions_checkPrompt;
   "actions/openai": typeof actions_openai;
   crons: typeof crons;
   game: typeof game;
