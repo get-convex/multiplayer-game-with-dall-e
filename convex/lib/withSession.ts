@@ -1,4 +1,3 @@
-import { createAnonymousUser, getOrCreateUser } from "../users";
 import { Doc, Id } from "../_generated/dataModel";
 import { mutation, MutationCtx, query, QueryCtx } from "../_generated/server";
 
@@ -127,20 +126,3 @@ export const queryWithSession = <
 ) => {
   return query(withSession(func, { optional: true }));
 };
-
-/**
- * Creates a session and returns the id. For use with the SessionProvider on the
- * client.
- */
-export const create = mutation(async ({ db, auth }) => {
-  const identity = await auth.getUserIdentity();
-  let userId = identity && (await getOrCreateUser(db, identity));
-  if (!userId) {
-    userId = await createAnonymousUser(db);
-  }
-  return db.insert("sessions", {
-    userId,
-    gameIds: [],
-    submissionIds: [],
-  });
-});

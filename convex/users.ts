@@ -2,9 +2,9 @@ import { UserIdentity } from "convex/server";
 import { getUser } from "./lib/withUser";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import md5 from "md5";
-import { DatabaseReader, DatabaseWriter } from "./_generated/server";
+import { DatabaseReader, DatabaseWriter, mutation } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
-import { randomSlug } from "./game";
+import { randomSlug } from "./lib/randomSlug";
 import withZodObjectArg from "./lib/withZod";
 import { z } from "zod";
 import { zId } from "./lib/zodUtils";
@@ -146,3 +146,20 @@ function createGravatarUrl(key: string): string {
   // ?d=monsterid uses a default of a monster image when the hash isn't found.
   return `https://www.gravatar.com/avatar/${hash}?d=monsterid`;
 }
+
+/**
+ * Creates a session and returns the id. For use with the SessionProvider on the
+ * client.
+ */
+export const createSession = mutation(async ({ db, auth }) => {
+  const identity = await auth.getUserIdentity();
+  let userId = identity && (await getOrCreateUser(db, identity));
+  if (!userId) {
+    userId = await createAnonymousUser(db);
+  }
+  return db.insert("sessions", {
+    userId,
+    gameIds: [],
+    submissionIds: [],
+  });
+});

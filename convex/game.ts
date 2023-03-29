@@ -6,6 +6,7 @@ import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import { ClientGameStateZ, MaxPlayers } from "./shared";
 import { getUserById } from "./users";
 import { Doc, Id } from "./_generated/dataModel";
+import { randomSlug } from "./lib/randomSlug";
 
 const GenerateDurationMs = 120000;
 
@@ -247,38 +248,4 @@ const nextState = (
       break;
   }
   return state;
-};
-
-const LETTERS = [
-  "B",
-  "C",
-  "D",
-  "F",
-  "G",
-  "H",
-  "J",
-  "K",
-  "L",
-  "M",
-  "N",
-  "P",
-  "Q",
-  "R",
-  "S",
-  "T",
-  "V",
-  "W",
-  "X",
-  "Z",
-  "2",
-  "5",
-  "6",
-  "9",
-];
-export const randomSlug = (): string => {
-  var acc = [];
-  for (var i = 0; i < 4; i++) {
-    acc.push(LETTERS[Math.floor(Math.random() * LETTERS.length)]);
-  }
-  return acc.join("");
 };

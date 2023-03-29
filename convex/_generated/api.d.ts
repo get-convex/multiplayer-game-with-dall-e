@@ -13,6 +13,7 @@ import type { ApiFromModules } from "convex/api";
 import type * as actions_openai from "../actions/openai";
 import type * as crons from "../crons";
 import type * as game from "../game";
+import type * as lib_randomSlug from "../lib/randomSlug";
 import type * as lib_withSession from "../lib/withSession";
 import type * as lib_withUser from "../lib/withUser";
 import type * as lib_withZod from "../lib/withZod";
@@ -37,6 +38,7 @@ export type API = ApiFromModules<{
   "actions/openai": typeof actions_openai;
   crons: typeof crons;
   game: typeof game;
+  "lib/randomSlug": typeof lib_randomSlug;
   "lib/withSession": typeof lib_withSession;
   "lib/withUser": typeof lib_withUser;
   "lib/withZod": typeof lib_withZod;
