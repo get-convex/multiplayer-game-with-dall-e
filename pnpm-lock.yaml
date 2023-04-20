@@ -9,7 +9,7 @@ specifiers:
   '@vitejs/plugin-react': ^3.0.0
   autoprefixer: ^10.4.13
   classnames: ^2.3.2
-  convex: ^0.12.0
+  convex: ^0.13.0
   md5: ^2.3.0
   node-fetch: ^3.3.0
   openai: ^3.1.0
@@ -28,7 +28,7 @@ dependencies:
   '@headlessui/react': 1.7.13_biqbaboplfbrettd7655fr4n2y
   '@types/node': 18.11.18
   classnames: 2.3.2
-  convex: 0.12.0_biqbaboplfbrettd7655fr4n2y
+  convex: 0.13.0_biqbaboplfbrettd7655fr4n2y
   md5: 2.3.0
   node-fetch: 3.3.0
   openai: 3.1.0
@@ -774,8 +774,8 @@ packages:
     resolution: {integrity: sha512-ASFBup0Mz1uyiIjANan1jzLQami9z1PoYSZCiiYW2FczPbenXc45FZdBZLzOT+r6+iciuEModtmCti+hjaAk0A==}
     dev: true
 
-  /convex/0.12.0_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-6OKXxOZeS2qprLIKjyJ4J6a+mXBRRO97DVR5BOts6x1KFzZ3MWng5mkRaTeFXYUV9Ess+PUc46VtbPYvZUjhfg==}
+  /convex/0.13.0_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-9YEtY2pWyExnpfS0K7DomY+pdl2i9LgDnN4am4eUkLHQ0u1j7USqmE6AAz3oBWyjsqJuiqyvIEW18K7c/JDtXg==}
     engines: {node: '>=16.15.1', npm: '>=7.0.0'}
     hasBin: true
     peerDependencies:
@@ -796,6 +796,7 @@ packages:
       base64-js: 1.5.1
       encoding: 0.1.13
       esbuild: 0.15.18
+      jwt-decode: 3.1.2
       node-fetch: 2.6.9_encoding@0.1.13
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -1288,6 +1289,10 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
     dev: true
+
+  /jwt-decode/3.1.2:
+    resolution: {integrity: sha512-UfpWE/VZn0iP50d8cz9NrZLM9lSWhcJ+0Gt/nm4by88UL+J1SiKN8/5dkjMmbEzwL2CAe+67GsegCbIKtbp75A==}
+    dev: false
 
   /lilconfig/2.0.6:
     resolution: {integrity: sha512-9JROoBW7pobfsx+Sq2JsASvCo6Pfo6WWoUW79HuB1BCoBXD4PLWJPqDF6fNj67pqBYTbAHkE57M1kS/+L1neOg==}
