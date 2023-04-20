@@ -8,6 +8,17 @@ import { randomSlug } from "./lib/randomSlug";
 import withZodObjectArg from "./lib/withZod";
 import { z } from "zod";
 import { zId } from "./lib/zodUtils";
+import { defineTable } from "convex/schema";
+import { v } from "convex/values";
+
+export const usersSchema = {
+  users: defineTable({
+    name: v.string(),
+    pictureUrl: v.string(),
+    tokenIdentifier: v.optional(v.string()),
+    claimedByUserId: v.optional(v.id("users")),
+  }).index("by_token", ["tokenIdentifier"]),
+};
 
 export const loggedIn = mutationWithSession(async ({ auth, db, session }) => {
   const identity = await auth.getUserIdentity();

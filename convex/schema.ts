@@ -1,98 +1,80 @@
-import { defineSchema, defineTable, s } from "convex/schema";
+import { defineSchema, defineTable } from "convex/schema";
+import { usersSchema } from "./users";
+import { v } from "convex/values";
 
 export default defineSchema({
-  // For withUser:
-  users: defineTable({
-    name: s.string(),
-    pictureUrl: s.string(),
-    tokenIdentifier: s.optional(s.string()),
-    claimedByUserId: s.optional(s.id("users")),
-  }).index("by_token", ["tokenIdentifier"]),
-  // End withUser
-
-  // For presence:
-  presence: defineTable({
-    sessionId: s.id("sessions"),
-    game: s.string(),
-    updated: s.number(),
-    data: s.any(),
-  })
-    // Index for fetching presence data
-    .index("by_game_updated", ["game", "updated"])
-    // Index for updating presence data
-    .index("by_session_game", ["sessionId", "game"]),
-  // End presence
+  ...usersSchema,
 
   // For sessions:
   sessions: defineTable({
-    userId: s.id("users"),
-    submissionIds: s.array(s.id("submissions")),
-    gameIds: s.array(s.id("games")),
+    userId: v.id("users"),
+    submissionIds: v.array(v.id("submissions")),
+    gameIds: v.array(v.id("games")),
   }), // Make as specific as you want
   // End sessions
 
   games: defineTable({
-    hostId: s.id("users"),
-    playerIds: s.array(s.id("users")),
-    slug: s.string(),
-    roundIds: s.array(s.id("rounds")),
-    state: s.union(
-      s.object({
-        stage: s.union(
-          s.literal("lobby"),
-          s.literal("generate"),
-          s.literal("recap")
+    hostId: v.id("users"),
+    playerIds: v.array(v.id("users")),
+    slug: v.string(),
+    roundIds: v.array(v.id("rounds")),
+    state: v.union(
+      v.object({
+        stage: v.union(
+          v.literal("lobby"),
+          v.literal("generate"),
+          v.literal("recap")
         ),
       }),
-      s.object({
-        stage: s.literal("rounds"),
-        roundId: s.id("rounds"),
+      v.object({
+        stage: v.literal("rounds"),
+        roundId: v.id("rounds"),
       })
     ),
-    nextGameId: s.optional(s.id("games")),
+    nextGameId: v.optional(v.id("games")),
   }).index("s", ["slug"]),
 
   publicGame: defineTable({
-    roundId: s.id("rounds"),
+    roundId: v.id("rounds"),
   }),
 
   submissions: defineTable({
-    prompt: s.string(),
-    authorId: s.id("users"),
-    result: s.union(
-      s.object({
-        status: s.literal("generating"),
-        details: s.string(),
+    prompt: v.string(),
+    authorId: v.id("users"),
+    result: v.union(
+      v.object({
+        status: v.literal("generating"),
+        details: v.string(),
       }),
-      s.object({
-        status: s.literal("failed"),
-        reason: s.string(),
-        elapsedMs: s.number(),
+      v.object({
+        status: v.literal("failed"),
+        reason: v.string(),
+        elapsedMs: v.number(),
       }),
-      s.object({
-        status: s.literal("saved"),
-        imageStorageId: s.string(),
-        elapsedMs: s.number(),
+      v.object({
+        status: v.literal("saved"),
+        imageStorageId: v.string(),
+        elapsedMs: v.number(),
       })
     ),
   }),
 
   rounds: defineTable({
-    authorId: s.id("users"),
-    imageStorageId: s.string(),
-    stageStart: s.number(),
-    stageEnd: s.number(),
-    stage: s.union(s.literal("label"), s.literal("guess"), s.literal("reveal")),
-    options: s.array(
-      s.object({
-        authorId: s.id("users"),
-        prompt: s.string(),
-        votes: s.array(s.id("users")),
-        likes: s.array(s.id("users")),
+    authorId: v.id("users"),
+    imageStorageId: v.string(),
+    stageStart: v.number(),
+    stageEnd: v.number(),
+    stage: v.union(v.literal("label"), v.literal("guess"), v.literal("reveal")),
+    options: v.array(
+      v.object({
+        authorId: v.id("users"),
+        prompt: v.string(),
+        votes: v.array(v.id("users")),
+        likes: v.array(v.id("users")),
       })
     ),
     // For public games
-    lastUsed: s.optional(s.number()),
-    publicRound: s.optional(s.boolean()),
+    lastUsed: v.optional(v.number()),
+    publicRound: v.optional(v.boolean()),
   }).index("public_game", ["publicRound", "stage", "lastUsed"]),
 });

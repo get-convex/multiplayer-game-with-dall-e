@@ -10,6 +10,7 @@ import {
 import { Doc, Id } from "./_generated/dataModel";
 import {
   DatabaseWriter,
+  MutationCtx,
   internalMutation,
   mutation,
 } from "./_generated/server";
@@ -203,7 +204,7 @@ function levenshteinDistance(a: string, b: string) {
   return matrix[b.length][a.length];
 }
 
-export const OptionResultZ = z.union([
+const OptionResultZ = z.union([
   z.object({ success: z.literal(true) }),
   z.object({
     success: z.literal(false),
@@ -216,7 +217,8 @@ export type OptionResult = z.infer<typeof OptionResultZ>;
 export const addOption = internalMutation(
   withSession(
     async (
-      { db, scheduler, session },
+      // TODO: why doesn't this work out of the box?
+      { db, scheduler, session }: MutationCtx & { session: Doc<"sessions"> },
       {
         gameId,
         roundId,

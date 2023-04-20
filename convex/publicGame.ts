@@ -13,7 +13,10 @@ const PublicGuessMs = 15000;
 const PublicRevealMs = 10000;
 
 export const progress = internalMutation(
-  async ({ db, scheduler }, fromStage: "guess" | "reveal") => {
+  async (
+    { db, scheduler },
+    { fromStage }: { fromStage: "guess" | "reveal" }
+  ) => {
     const publicGame = await db.query("publicGame").unique();
     if (!publicGame) throw new Error("No public game");
     const currentRound = await db.get(publicGame.roundId);
@@ -32,7 +35,9 @@ export const progress = internalMutation(
           (option) => option.likes.length || option.votes.length
         )
       ) {
-        scheduler.runAfter(PublicGuessMs, "publicGame:progress", "guess");
+        scheduler.runAfter(PublicGuessMs, "publicGame:progress", {
+          fromStage: "guess",
+        });
         return "guess again";
       }
       await db.patch(currentRound._id, {
@@ -65,7 +70,9 @@ export const progress = internalMutation(
     const { _id, _creationTime, ...rest } = round;
     const roundId = await db.insert("rounds", rest);
     await db.patch(publicGame._id, { roundId });
-    scheduler.runAfter(PublicGuessMs, "publicGame:progress", "guess");
+    scheduler.runAfter(PublicGuessMs, "publicGame:progress", {
+      fromStage: "guess",
+    });
     return "->guess";
   }
 );

@@ -7,6 +7,7 @@ import { ClientGameStateZ, MaxPlayers } from "./shared";
 import { getUserById } from "./users";
 import { Doc, Id } from "./_generated/dataModel";
 import { randomSlug } from "./lib/randomSlug";
+import { v } from "convex/values";
 
 const GenerateDurationMs = 120000;
 
@@ -207,7 +208,8 @@ export const progress = mutationWithSession(
       }
       await db.patch(game._id, { state });
       if (state.stage === "lobby") {
-        scheduler.runAfter(GenerateDurationMs, "game:progress", session._id, {
+        scheduler.runAfter(GenerateDurationMs, "game:progress", {
+          sessionId: session._id,
           gameId,
           fromStage: state.stage,
         });

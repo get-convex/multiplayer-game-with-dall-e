@@ -1,50 +1,47 @@
+"use node";
 import fetch from "node-fetch";
 import {
   Configuration,
   CreateModerationResponseResultsInner,
   OpenAIApi,
 } from "openai";
-import { z } from "zod";
-import { withZodObjectArg } from "../lib/withZod";
-import { zId } from "../lib/zodUtils";
-import { OptionResult, OptionResultZ } from "../round";
-import { Id } from "../_generated/dataModel";
-import { action } from "../_generated/server";
+import { Id } from "./_generated/dataModel";
+import { action } from "./_generated/server";
+import { v } from "convex/values";
+import { OptionResult } from "./round";
 
-export const addOption = action(
-  withZodObjectArg(
-    {
-      gameId: z.optional(zId("games")),
-      roundId: zId("rounds"),
-      prompt: z.string(),
-      sessionId: zId("sessions"),
-    },
-    async ({ runMutation }, { gameId, roundId, prompt, sessionId }) => {
-      const openai = makeOpenAIClient();
-      // Check if the prompt is offensive.
-      const modResponse = await openai.createModeration({
-        input: prompt,
-      });
-      const modResult = modResponse.data.results[0];
-      if (modResult.flagged) {
-        return {
-          success: false,
-          retry: false,
-          reason: `Your prompt was flagged: ${flaggedCategories(modResult).join(
-            ", "
-          )}`,
-        } as const;
-      }
-      const status = (await runMutation("round:addOption", sessionId, {
-        gameId,
-        roundId,
-        prompt,
-      })) as OptionResult; // Casting to avoid circular reference.
-      return status;
-    },
-    OptionResultZ
-  )
-);
+export const addOption = action({
+  args: {
+    gameId: v.optional(v.id("games")),
+    roundId: v.id("rounds"),
+    prompt: v.string(),
+    sessionId: v.id("sessions"),
+  },
+  handler: async ({ runMutation }, { gameId, roundId, prompt, sessionId }) => {
+    const openai = makeOpenAIClient();
+    // Check if the prompt is offensive.
+    const modResponse = await openai.createModeration({
+      input: prompt,
+    });
+    const modResult = modResponse.data.results[0];
+    if (modResult.flagged) {
+      return {
+        success: false,
+        retry: false,
+        reason: `Your prompt was flagged: ${flaggedCategories(modResult).join(
+          ", "
+        )}`,
+      } as const;
+    }
+    const status = (await runMutation("round:addOption", {
+      sessionId,
+      gameId,
+      roundId,
+      prompt,
+    })) as OptionResult; // Casting to avoid circular reference.
+    return status;
+  },
+});
 
 const makeOpenAIClient = () => {
   const apiKey = process.env.OPENAI_API_KEY;

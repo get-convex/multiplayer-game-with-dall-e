@@ -3,7 +3,7 @@ import { withZodObjectArg } from "./lib/withZod";
 import { zId } from "./lib/zodUtils";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import { internalMutation, query } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
+import { Doc, Id } from "./_generated/dataModel";
 import { MaxPromptLength } from "./shared";
 
 const ImageTimeoutMs = 30000;
@@ -24,11 +24,13 @@ export const start = mutationWithSession(
       // new user if we log in.
       session.submissionIds.push(submissionId);
       db.patch(session._id, { submissionIds: session.submissionIds });
-      scheduler.runAfter(0, "actions/openai:createImage", {
+      scheduler.runAfter(0, "openai:createImage", {
         prompt,
         submissionId,
       });
-      scheduler.runAfter(ImageTimeoutMs, "submissions:timeout", submissionId);
+      scheduler.runAfter(ImageTimeoutMs, "submissions:timeout", {
+        submissionId,
+      });
       return submissionId;
     },
     zId("submissions")
@@ -36,7 +38,7 @@ export const start = mutationWithSession(
 );
 
 export const timeout = internalMutation(
-  async ({ db }, submissionId: Id<"submissions">) => {
+  async ({ db }, { submissionId }: { submissionId: Id<"submissions"> }) => {
     const submission = await db.get(submissionId);
     if (!submission) throw new Error("No submission found");
     if (submission.result.status === "generating") {
@@ -108,7 +110,13 @@ export const health = query(async ({ db }) => {
 
 // TODO: limit to only accessible from the dall-e action
 export const update = internalMutation(
-  async ({ db }, { submissionId, result }) => {
+  async (
+    { db },
+    {
+      submissionId,
+      result,
+    }: { submissionId: Id<"submissions">; result: Doc<"submissions">["result"] }
+  ) => {
     await db.patch(submissionId, { result });
   }
 );
