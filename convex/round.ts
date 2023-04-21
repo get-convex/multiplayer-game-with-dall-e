@@ -10,9 +10,9 @@ import {
 import { Doc, Id } from "./_generated/dataModel";
 import {
   DatabaseWriter,
-  MutationCtx,
   internalMutation,
   mutation,
+  query,
 } from "./_generated/server";
 import {
   GuessState,
@@ -23,6 +23,7 @@ import {
   RevealState,
   RevealStateZ,
 } from "./shared";
+import { v } from "convex/values";
 
 const LabelDurationMs = 30000;
 const GuessDurationMs = 30000;
@@ -48,9 +49,9 @@ export const startRound = async (db: DatabaseWriter, roundId: Id<"rounds">) => {
   });
 };
 
-export const getRound = queryWithSession(
-  withZodObjectArg(
-    { roundId: zId("rounds") },
+export const getRound = query({
+  args: { roundId: v.id("rounds"), sessionId: v.id("sessions") },
+  handler: withSession(
     async ({ db, session, storage }, { roundId }) => {
       const round = await db.get(roundId);
       if (!round) throw new Error("Round not found");
@@ -143,10 +144,10 @@ export const getRound = queryWithSession(
           };
           return revealState;
       }
-    },
-    z.union([LabelStateZ, GuessStateZ, RevealStateZ])
-  )
-);
+    }
+    // z.union([LabelStateZ, GuessStateZ, RevealStateZ])
+  ),
+});
 const CorrectAuthorScore = 1000;
 const AlternateAuthorScore = 500;
 const CorrectGuesserScore = 200;
@@ -214,16 +215,17 @@ const OptionResultZ = z.union([
 ]);
 export type OptionResult = z.infer<typeof OptionResultZ>;
 
-export const addOption = internalMutation(
-  withSession(
+export const addOption = internalMutation({
+  args: {
+    gameId: v.optional(v.id("games")),
+    roundId: v.id("rounds"),
+    prompt: v.string(),
+    sessionId: v.union(v.id("sessions"), v.null()),
+  },
+  handler: withSession(
     async (
-      // TODO: why doesn't this work out of the box?
-      { db, scheduler, session }: MutationCtx & { session: Doc<"sessions"> },
-      {
-        gameId,
-        roundId,
-        prompt,
-      }: { gameId?: Id<"games">; roundId: Id<"rounds">; prompt: string }
+      { db, scheduler, session },
+      { gameId, roundId, prompt }
     ): Promise<OptionResult> => {
       const round = await db.get(roundId);
       if (!round) throw new Error("Round not found");
@@ -278,8 +280,8 @@ export const addOption = internalMutation(
       }
       return { success: true };
     }
-  )
-);
+  ),
+});
 
 export const progress = mutation(
   async (
