@@ -1,11 +1,7 @@
-import {
-  ObjectType,
-  PropertyValidators,
-  ValidatedFunction,
-} from "convex/server";
+import { ValidatedFunction } from "convex/server";
 import { Doc, Id } from "../_generated/dataModel";
 import { mutation, MutationCtx, query, QueryCtx } from "../_generated/server";
-import { v } from "convex/values";
+import { v, Validator } from "convex/values";
 
 // /**
 //  * Wrapper for a Convex query or mutation function that provides a session in ctx.
@@ -71,6 +67,8 @@ import { v } from "convex/values";
  */
 // <Output, ArgsValidator extends PropertyValidators>(func: ValidatedFunction<MutationCtx<DataModel, API>, ArgsValidator, Output>): RegisteredMutation<Visibility, [ObjectType<ArgsValidator>], Output>;
 
+// XXX These should be exported from the npm package
+type PropertyValidators = Record<string, Validator<any, any, any>>;
 const sessionIdValidator = v.union(v.id("sessions"), v.null());
 export function withSession<
   Ctx extends QueryCtx,
@@ -82,26 +80,24 @@ export function withSession<
 }: ValidatedFunction<
   Ctx & { session: Doc<"sessions"> | null },
   ArgsValidator,
-  Output
+  Promise<Output>
 >): ValidatedFunction<
   Ctx,
   ArgsValidator & { sessionId: typeof sessionIdValidator },
-  Output
+  Promise<Output>
 > {
   return {
     args: { ...args, sessionId: sessionIdValidator },
-    handler: async (
-      ctx: Ctx,
-      allArgs: ObjectType<
-        ArgsValidator & { sessionId: typeof sessionIdValidator }
-      >
-    ) => {
+    handler: async (ctx: Ctx, allArgs: any) => {
       const { sessionId, ...args } = allArgs;
+
       if (sessionId && sessionId.tableName !== "sessions")
         throw new Error(
           "Invalid Session ID. Use useSessionMutation or useSessionQuery."
         );
-      const session = sessionId ? await ctx.db.get(sessionId) : null;
+      const session = sessionId
+        ? await ctx.db.get<"sessions">(sessionId)
+        : null;
       // todo: make optional
       if (!session) {
         throw new Error(
@@ -110,10 +106,22 @@ export function withSession<
             "Are you requiring a session from a query that executes immediately?"
         );
       }
-      return handler({ ...ctx, session }, allArgs);
+      return handler({ ...ctx, session }, args);
     },
   };
 }
+
+const XXXtest = query(
+  withSession({
+    args: {
+      myArg: v.string(),
+    },
+    handler: async (ctx, args) => {
+      type Args = typeof args;
+      type Session = typeof ctx.session;
+    },
+  })
+);
 
 /**
  * Wrapper for a Convex mutation function that provides a session in ctx.
