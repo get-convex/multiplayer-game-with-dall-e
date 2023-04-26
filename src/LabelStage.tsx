@@ -15,7 +15,7 @@ export function LabelStage({
 }) {
   const [error, setError] = useState<string>();
   const [prompt, setPrompt] = useState("");
-  const addPrompt = useSessionAction("actions/openai:addOption");
+  const addPrompt = useSessionAction("openai:addOption");
   return (
     <div className="max-w-lg">
       <img

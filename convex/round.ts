@@ -1,7 +1,4 @@
 import { WithoutSystemFields } from "convex/server";
-import { z } from "zod";
-import { withZodObjectArg } from "./lib/withZod";
-import { zId } from "./lib/zodUtils";
 import {
   mutationWithSession,
   queryWithSession,
@@ -13,15 +10,8 @@ import {
   internalMutation,
   mutation,
 } from "./_generated/server";
-import {
-  GuessState,
-  GuessStateZ,
-  LabelState,
-  LabelStateZ,
-  MaxPlayers,
-  RevealState,
-  RevealStateZ,
-} from "./shared";
+import { GuessState, LabelState, MaxPlayers, RevealState } from "./shared";
+import { v } from "convex/values";
 
 const LabelDurationMs = 30000;
 const GuessDurationMs = 30000;
@@ -47,105 +37,106 @@ export const startRound = async (db: DatabaseWriter, roundId: Id<"rounds">) => {
   });
 };
 
-export const getRound = queryWithSession(
-  withZodObjectArg(
-    { roundId: zId("rounds") },
-    async ({ db, session, storage }, { roundId }) => {
-      const round = await db.get(roundId);
-      if (!round) throw new Error("Round not found");
-      const { stage, stageStart, stageEnd } = round;
-      const imageUrl = await storage.getUrl(round.imageStorageId);
-      if (!imageUrl) throw new Error("Image not found");
+export const getRound = queryWithSession({
+  args: { roundId: v.id("rounds") },
+  handler: async (
+    { db, session, storage },
+    { roundId }
+  ): Promise<LabelState | GuessState | RevealState> => {
+    const round = await db.get(roundId);
+    if (!round) throw new Error("Round not found");
+    const { stage, stageStart, stageEnd } = round;
+    const imageUrl = await storage.getUrl(round.imageStorageId);
+    if (!imageUrl) throw new Error("Image not found");
 
-      const userInfo = async (userId: Id<"users">) => {
-        const user = (await db.get(userId))!;
-        return {
-          me: user._id.equals(session?.userId),
-          name: user.name,
-          pictureUrl: user.pictureUrl,
-        };
+    const userInfo = async (userId: Id<"users">) => {
+      const user = (await db.get(userId))!;
+      return {
+        me: user._id.equals(session?.userId),
+        name: user.name,
+        pictureUrl: user.pictureUrl,
       };
+    };
 
-      switch (stage) {
-        case "label":
-          const labelState: LabelState = {
-            stage,
-            mine: round.authorId.equals(session?.userId),
-            imageUrl,
-            stageStart,
-            stageEnd,
-            submitted: await Promise.all(
-              round.options.map((option) => userInfo(option.authorId))
+    switch (stage) {
+      case "label":
+        const labelState: LabelState = {
+          stage,
+          mine: round.authorId.equals(session?.userId),
+          imageUrl,
+          stageStart,
+          stageEnd,
+          submitted: await Promise.all(
+            round.options.map((option) => userInfo(option.authorId))
+          ),
+        };
+        return labelState;
+      case "guess":
+        const allGuesses = round.options.reduce(
+          (all, { votes }) => all.concat(votes),
+          [] as Id<"users">[]
+        );
+        const myGuess = round.options.find(
+          (o) => !!o.votes.find((voteId) => voteId.equals(session?.userId))
+        )?.prompt;
+        const myPrompt = round.options.find((o) =>
+          o.authorId.equals(session?.userId)
+        )?.prompt;
+        const guessState: GuessState = {
+          options: round.options.map((option) => option.prompt),
+          stage,
+          mine: round.authorId.equals(session?.userId),
+          imageUrl,
+          stageStart,
+          stageEnd,
+          myPrompt,
+          myGuess,
+          submitted: await Promise.all(allGuesses.map(userInfo)),
+        };
+        return guessState;
+      case "reveal":
+        const allUsers = new Set(
+          round.options.map((option) => option.authorId)
+        );
+
+        round.options.forEach((option) => {
+          for (const id of option.votes) {
+            allUsers.add(id);
+          }
+          for (const id of option.likes) {
+            allUsers.add(id);
+          }
+        });
+        const revealState: RevealState = {
+          results: round.options.map((option) => ({
+            authorId: option.authorId.id,
+            prompt: option.prompt,
+            votes: option.votes.map((uId) => uId.id),
+            likes: option.likes.map((uId) => uId.id),
+            scoreDeltas: calculateScoreDeltas(
+              option.authorId.equals(round.authorId),
+              option
             ),
-          };
-          return labelState;
-        case "guess":
-          const allGuesses = round.options.reduce(
-            (all, { votes }) => all.concat(votes),
-            [] as Id<"users">[]
-          );
-          const myGuess = round.options.find(
-            (o) => !!o.votes.find((voteId) => voteId.equals(session?.userId))
-          )?.prompt;
-          const myPrompt = round.options.find((o) =>
-            o.authorId.equals(session?.userId)
-          )?.prompt;
-          const guessState: GuessState = {
-            options: round.options.map((option) => option.prompt),
-            stage,
-            mine: round.authorId.equals(session?.userId),
-            imageUrl,
-            stageStart,
-            stageEnd,
-            myPrompt,
-            myGuess,
-            submitted: await Promise.all(allGuesses.map(userInfo)),
-          };
-          return guessState;
-        case "reveal":
-          const allUsers = new Set(
-            round.options.map((option) => option.authorId)
-          );
-
-          round.options.forEach((option) => {
-            for (const id of option.votes) {
-              allUsers.add(id);
-            }
-            for (const id of option.likes) {
-              allUsers.add(id);
-            }
-          });
-          const revealState: RevealState = {
-            results: round.options.map((option) => ({
-              authorId: option.authorId.id,
-              prompt: option.prompt,
-              votes: option.votes.map((uId) => uId.id),
-              likes: option.likes.map((uId) => uId.id),
-              scoreDeltas: calculateScoreDeltas(
-                option.authorId.equals(round.authorId),
-                option
-              ),
-            })),
-            stage,
-            me: session!.userId.id,
-            authorId: round.authorId.id,
-            imageUrl,
-            stageStart,
-            stageEnd,
-            users: new Map(
-              await Promise.all(
-                [...allUsers.keys()].map(
-                  async (userId) => [userId.id, await userInfo(userId)] as const
-                )
+          })),
+          stage,
+          me: session!.userId.id,
+          authorId: round.authorId.id,
+          imageUrl,
+          stageStart,
+          stageEnd,
+          users: new Map(
+            await Promise.all(
+              [...allUsers.keys()].map(
+                async (userId) => [userId.id, await userInfo(userId)] as const
               )
-            ),
-          };
-          return revealState;
-      }
-    },
-    z.union([LabelStateZ, GuessStateZ, RevealStateZ])
-  )
-);
+            )
+          ),
+        };
+        return revealState;
+    }
+  },
+});
+
 const CorrectAuthorScore = 1000;
 const AlternateAuthorScore = 500;
 const CorrectGuesserScore = 200;
@@ -203,25 +194,20 @@ function levenshteinDistance(a: string, b: string) {
   return matrix[b.length][a.length];
 }
 
-export const OptionResultZ = z.union([
-  z.object({ success: z.literal(true) }),
-  z.object({
-    success: z.literal(false),
-    retry: z.optional(z.boolean()),
-    reason: z.string(),
-  }),
-]);
-export type OptionResult = z.infer<typeof OptionResultZ>;
+export type OptionResult =
+  | { success: true }
+  | { success: false; retry?: boolean; reason: string };
 
 export const addOption = internalMutation(
-  withSession(
-    async (
+  withSession({
+    args: {
+      gameId: v.optional(v.id("games")),
+      roundId: v.id("rounds"),
+      prompt: v.string(),
+    },
+    handler: async (
       { db, scheduler, session },
-      {
-        gameId,
-        roundId,
-        prompt,
-      }: { gameId?: Id<"games">; roundId: Id<"rounds">; prompt: string }
+      { gameId, roundId, prompt }
     ): Promise<OptionResult> => {
       const round = await db.get(roundId);
       if (!round) throw new Error("Round not found");
@@ -275,8 +261,8 @@ export const addOption = internalMutation(
         });
       }
       return { success: true };
-    }
-  )
+    },
+  })
 );
 
 export const progress = mutation(
@@ -325,124 +311,120 @@ const beginGuessPatch = (round: Doc<"rounds">): Partial<Doc<"rounds">> => ({
   stageEnd: Date.now() + GuessDurationMs,
 });
 
-export const guess = mutationWithSession(
-  withZodObjectArg(
-    {
-      roundId: zId("rounds"),
-      prompt: z.string(),
-      gameId: z.optional(zId("games")),
-    },
-    async ({ db, session }, { roundId, prompt, gameId }) => {
-      const round = await db.get(roundId);
-      if (!round) throw new Error("Round not found");
-      if (round.stage !== "guess") {
-        return { success: false, reason: "Too late to vote." };
-      }
-      const optionVotedFor = round.options.find(
-        (option) => option.prompt === prompt
+export const guess = mutationWithSession({
+  args: {
+    roundId: v.id("rounds"),
+    prompt: v.string(),
+    gameId: v.optional(v.id("games")),
+  },
+  handler: async ({ db, session }, { roundId, prompt, gameId }) => {
+    const round = await db.get(roundId);
+    if (!round) throw new Error("Round not found");
+    if (round.stage !== "guess") {
+      return { success: false, reason: "Too late to vote." };
+    }
+    const optionVotedFor = round.options.find(
+      (option) => option.prompt === prompt
+    );
+    if (!optionVotedFor) {
+      return {
+        success: false,
+        retry: true,
+        reason: "This prompt does not exist.",
+      };
+    }
+    if (optionVotedFor.authorId.equals(session.userId)) {
+      return {
+        success: false,
+        retry: true,
+        reason: "You can't vote for your own prompt.",
+      };
+    }
+    const existingVote = round.options.find(
+      (option) =>
+        option.votes.findIndex((vote) => vote.equals(session.userId)) !== -1
+    );
+    if (prompt === existingVote?.prompt) {
+      return {
+        success: false,
+        retry: true,
+        reason: "You already voted for this option.",
+      };
+    }
+    if (existingVote) {
+      // Remove existing vote
+      const voteIndex = existingVote.votes.findIndex((vote) =>
+        vote.equals(session.userId)
       );
-      if (!optionVotedFor) {
-        return {
-          success: false,
-          retry: true,
-          reason: "This prompt does not exist.",
-        };
-      }
-      if (optionVotedFor.authorId.equals(session.userId)) {
-        return {
-          success: false,
-          retry: true,
-          reason: "You can't vote for your own prompt.",
-        };
-      }
-      const existingVote = round.options.find(
-        (option) =>
-          option.votes.findIndex((vote) => vote.equals(session.userId)) !== -1
-      );
-      if (prompt === existingVote?.prompt) {
-        return {
-          success: false,
-          retry: true,
-          reason: "You already voted for this option.",
-        };
-      }
-      if (existingVote) {
-        // Remove existing vote
-        const voteIndex = existingVote.votes.findIndex((vote) =>
-          vote.equals(session.userId)
-        );
-        existingVote.votes = existingVote.votes
-          .slice(0, voteIndex)
-          .concat(...existingVote.votes.slice(voteIndex + 1));
-      }
-      optionVotedFor.votes.push(session.userId);
-      await db.patch(round._id, { options: round.options });
+      existingVote.votes = existingVote.votes
+        .slice(0, voteIndex)
+        .concat(...existingVote.votes.slice(voteIndex + 1));
+    }
+    optionVotedFor.votes.push(session.userId);
+    await db.patch(round._id, { options: round.options });
 
-      if (gameId) {
-        const game = (await db.get(gameId))!;
-        const noGuess = new Set(game.playerIds.map((id) => id.toString()));
-        noGuess.delete(round.authorId.toString());
-        for (const option of round.options) {
-          for (const vote of option.votes) {
-            noGuess.delete(vote.toString());
-          }
-        }
-        if (noGuess.size === 0) {
-          await db.patch(round._id, revealPatch(round));
+    if (gameId) {
+      const game = (await db.get(gameId))!;
+      const noGuess = new Set(game.playerIds.map((id) => id.toString()));
+      noGuess.delete(round.authorId.toString());
+      for (const option of round.options) {
+        for (const vote of option.votes) {
+          noGuess.delete(vote.toString());
         }
       }
-      return { success: true, retry: true };
+      if (noGuess.size === 0) {
+        await db.patch(round._id, revealPatch(round));
+      }
     }
-  )
-);
+    return { success: true, retry: true };
+  },
+});
 
-export const like = mutationWithSession(
-  withZodObjectArg(
-    {
-      roundId: zId("rounds"),
-      prompt: z.string(),
-      gameId: z.optional(zId("games")),
-    },
-    async ({ db, session }, { roundId, prompt, gameId }) => {
-      const round = await db.get(roundId);
-      if (!round) throw new Error("Round not found");
-      if (round.stage !== "guess") {
-        return { success: false, reason: "Too late to like." };
-      }
-      const optionVotedFor = round.options.find(
-        (option) => option.prompt === prompt
-      );
-      if (!optionVotedFor) {
-        return {
-          success: false,
-          retry: true,
-          reason: "This prompt does not exist.",
-        };
-      }
-      if (optionVotedFor.authorId.equals(session.userId)) {
-        return {
-          success: false,
-          retry: true,
-          reason: "You can't like your own prompt.",
-        };
-      }
-      const existingLike = round.options.find(
-        (option) =>
-          option.likes.findIndex((like) => like.equals(session.userId)) !== -1
-      );
-      if (prompt === existingLike?.prompt) {
-        return {
-          success: false,
-          retry: true,
-          reason: "You already voted for this option.",
-        };
-      }
-      optionVotedFor.likes.push(session.userId);
-      await db.patch(round._id, { options: round.options });
-      [];
+export const like = mutationWithSession({
+  args: {
+    roundId: v.id("rounds"),
+    prompt: v.string(),
+    gameId: v.optional(v.id("games")),
+  },
+  handler: async ({ db, session }, { roundId, prompt, gameId }) => {
+    const round = await db.get(roundId);
+    if (!round) throw new Error("Round not found");
+    if (round.stage !== "guess") {
+      return { success: false, reason: "Too late to like." };
     }
-  )
-);
+    const optionVotedFor = round.options.find(
+      (option) => option.prompt === prompt
+    );
+    if (!optionVotedFor) {
+      return {
+        success: false,
+        retry: true,
+        reason: "This prompt does not exist.",
+      };
+    }
+    if (optionVotedFor.authorId.equals(session.userId)) {
+      return {
+        success: false,
+        retry: true,
+        reason: "You can't like your own prompt.",
+      };
+    }
+    const existingLike = round.options.find(
+      (option) =>
+        option.likes.findIndex((like) => like.equals(session.userId)) !== -1
+    );
+    if (prompt === existingLike?.prompt) {
+      return {
+        success: false,
+        retry: true,
+        reason: "You already voted for this option.",
+      };
+    }
+    optionVotedFor.likes.push(session.userId);
+    await db.patch(round._id, { options: round.options });
+    [];
+  },
+});
 
 // Modifies parameter to progress to guessing
 const revealPatch = (round: Doc<"rounds">) => ({

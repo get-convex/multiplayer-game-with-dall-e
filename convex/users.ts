@@ -2,12 +2,15 @@ import { UserIdentity } from "convex/server";
 import { getUser } from "./lib/withUser";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import md5 from "md5";
-import { DatabaseReader, DatabaseWriter, mutation } from "./_generated/server";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  mutation,
+  query,
+} from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { randomSlug } from "./lib/randomSlug";
-import withZodObjectArg from "./lib/withZod";
-import { z } from "zod";
-import { zId } from "./lib/zodUtils";
+import { v } from "convex/values";
 
 export const loggedIn = mutationWithSession(async ({ auth, db, session }) => {
   const identity = await auth.getUserIdentity();
@@ -74,32 +77,28 @@ export const getMyProfile = queryWithSession(async ({ db, session }) => {
 /**
  * Updates the name in the current session.
  */
-export const setName = mutationWithSession(
-  withZodObjectArg(
-    { name: z.string().max(100) },
-    async ({ db, session }, { name }) => {
-      const user = await getUserById(db, session.userId);
-      db.patch(user._id, { name });
-    }
-  )
-);
+export const setName = mutationWithSession({
+  args: { name: v.string() },
+  handler: async ({ db, session }, { name }) => {
+    const user = await getUserById(db, session.userId);
+    if (name.length > 100) throw new Error("Name too long");
+    db.patch(user._id, { name });
+  },
+});
 
-export const setPicture = mutationWithSession(
-  withZodObjectArg(
-    { submissionId: zId("submissions") },
-    async ({ db, session, storage }, { submissionId }) => {
-      const submission = await db.get(submissionId);
-      if (!submission) throw new Error("No submission found");
-      if (!submission.authorId.equals(session.userId))
-        throw new Error("Not yours");
-      if (submission.result.status !== "saved")
-        throw new Error("Bad submission");
-      const pictureUrl = await storage.getUrl(submission.result.imageStorageId);
-      if (!pictureUrl) throw new Error("Picture is missing");
-      db.patch(session.userId, { pictureUrl });
-    }
-  )
-);
+export const setPicture = mutationWithSession({
+  args: { submissionId: v.id("submissions") },
+  handler: async ({ db, session, storage }, { submissionId }) => {
+    const submission = await db.get(submissionId);
+    if (!submission) throw new Error("No submission found");
+    if (!submission.authorId.equals(session.userId))
+      throw new Error("Not yours");
+    if (submission.result.status !== "saved") throw new Error("Bad submission");
+    const pictureUrl = await storage.getUrl(submission.result.imageStorageId);
+    if (!pictureUrl) throw new Error("Picture is missing");
+    db.patch(session.userId, { pictureUrl });
+  },
+});
 
 export const getUserById = async (db: DatabaseReader, userId: Id<"users">) => {
   let user = (await db.get(userId))!;
