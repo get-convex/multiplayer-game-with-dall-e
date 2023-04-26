@@ -6,10 +6,12 @@ import {
 } from "convex/server";
 import { Doc, Id } from "../_generated/dataModel";
 import { mutation, MutationCtx, query, QueryCtx } from "../_generated/server";
-import { ObjectType, v, Validator } from "convex/values";
+import {
+  // TODO: import these once they're exported
+  /*ObjectType, PropertyValidators,*/ v,
+  Validator,
+} from "convex/values";
 
-// XXX These should be exported from the npm package
-type PropertyValidators = Record<string, Validator<any, any, any>>;
 const sessionIdValidator = v.union(v.id("sessions"), v.null());
 
 // Add two overloads so you can pass no arguments and get a version where
@@ -161,10 +163,14 @@ export function mutationWithSession(func: any): any {
  * Wrapper for a Convex query function that provides a session in ctx.
  *
  * Requires an `Id<"sessions">` as the first parameter. This is provided by
- * default by using {@link useSessionQuery}.
+ * default by using {@link useSessionQuery}. It validates and strips this
+ * parameter for you.
  * E.g.:
  * ```ts
- * export default queryWithSession(async ({ db, auth, session }, { arg1 }) => {...}));
+ * export default queryWithSession({
+ *   args: { arg1: v.any() },
+ *   handler: async ({ db, auth, session }, { arg1 }) => {...}
+ * });
  * ```
  * If the session isn't initialized yet, it will pass null.
  * @param func - Your function that can now take in a `session` in the ctx param.
@@ -194,3 +200,30 @@ export function queryWithSession<Output>(
 export function queryWithSession(func: any): any {
   return query(withSession(func, { optional: true }));
 }
+
+// XXX These should be exported from the npm package
+type PropertyValidators = Record<string, Validator<any, any, any>>;
+declare type Expand<ObjectType extends Record<any, any>> =
+  ObjectType extends Record<any, any>
+    ? {
+        [Key in keyof ObjectType]: ObjectType[Key];
+      }
+    : never;
+declare type OptionalKeys<
+  PropertyValidators extends Record<string, Validator<any, any, any>>
+> = {
+  [Property in keyof PropertyValidators]: PropertyValidators[Property]["isOptional"] extends true
+    ? Property
+    : never;
+}[keyof PropertyValidators];
+declare type RequiredKeys<
+  PropertyValidators extends Record<string, Validator<any, any, any>>
+> = Exclude<keyof PropertyValidators, OptionalKeys<PropertyValidators>>;
+declare type ObjectType<Validators extends PropertyValidators> = Expand<
+  {
+    [Property in OptionalKeys<Validators>]?: Validators[Property]["type"];
+  } & {
+    [Property in RequiredKeys<Validators>]: Validators[Property]["type"];
+  }
+>;
+// XXX end of inlined types - in the future, just import ObjectType and PropertyValidators from convex/values
