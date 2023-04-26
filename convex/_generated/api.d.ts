@@ -15,8 +15,6 @@ import type * as game from "../game";
 import type * as lib_randomSlug from "../lib/randomSlug";
 import type * as lib_withSession from "../lib/withSession";
 import type * as lib_withUser from "../lib/withUser";
-import type * as lib_withZod from "../lib/withZod";
-import type * as lib_zodUtils from "../lib/zodUtils";
 import type * as openai from "../openai";
 import type * as publicGame from "../publicGame";
 import type * as round from "../round";
@@ -39,8 +37,6 @@ export type API = ApiFromModules<{
   "lib/randomSlug": typeof lib_randomSlug;
   "lib/withSession": typeof lib_withSession;
   "lib/withUser": typeof lib_withUser;
-  "lib/withZod": typeof lib_withZod;
-  "lib/zodUtils": typeof lib_zodUtils;
   openai: typeof openai;
   publicGame: typeof publicGame;
   round: typeof round;
