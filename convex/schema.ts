@@ -1,9 +1,13 @@
 import { defineSchema, defineTable } from "convex/schema";
-import { usersSchema } from "./users";
 import { v } from "convex/values";
 
 export default defineSchema({
-  ...usersSchema,
+  users: defineTable({
+    name: v.string(),
+    pictureUrl: v.string(),
+    tokenIdentifier: v.optional(v.string()),
+    claimedByUserId: v.optional(v.id("users")),
+  }).index("by_token", ["tokenIdentifier"]),
 
   // For sessions:
   sessions: defineTable({
