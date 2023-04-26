@@ -1,5 +1,4 @@
 import {
-  ObjectType,
   RegisteredMutation,
   RegisteredQuery,
   UnvalidatedFunction,
@@ -7,7 +6,7 @@ import {
 } from "convex/server";
 import { Doc, Id } from "../_generated/dataModel";
 import { mutation, MutationCtx, query, QueryCtx } from "../_generated/server";
-import { v, Validator } from "convex/values";
+import { ObjectType, v, Validator } from "convex/values";
 
 // XXX These should be exported from the npm package
 type PropertyValidators = Record<string, Validator<any, any, any>>;
