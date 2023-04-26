@@ -64,7 +64,7 @@ const flaggedCategories = (
 
 export const createImage = action(
   async (
-    { runMutation },
+    { runMutation, storage },
     {
       prompt,
       submissionId,
@@ -131,22 +131,9 @@ export const createImage = action(
     if (!imageResponse.ok) {
       await fail(`failed to download: ${imageResponse.statusText}`);
     }
-    const image = Buffer.from(await imageResponse.arrayBuffer());
 
-    // Create a Convex url to upload the image to.
-    const postUrl = await runMutation("submissions:generateUploadUrl");
-
-    // Upload the image to Convex storage.
-    const postImageResponse = await fetch(postUrl, {
-      method: "POST",
-      headers: { "Content-Type": imageResponse.headers.get("content-type")! },
-      body: image,
-    });
-    if (!postImageResponse.ok) await fail(postImageResponse.statusText);
-    // Get the storageId for the upload.
-    const { storageId } = (await postImageResponse.json()) as {
-      storageId: string;
-    };
+    // Store it in Convex storage
+    const storageId = await storage.store(await imageResponse.blob());
 
     // Write storageId as the body of the message to the Convex database.
     await runMutation("submissions:update", {

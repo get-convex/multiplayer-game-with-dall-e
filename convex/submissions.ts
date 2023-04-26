@@ -97,8 +97,3 @@ export const update = internalMutation(
     await db.patch(submissionId, { result });
   }
 );
-
-// Generate a short-lived upload URL.
-export const generateUploadUrl = internalMutation(async ({ storage }) => {
-  return await storage.generateUploadUrl();
-});
