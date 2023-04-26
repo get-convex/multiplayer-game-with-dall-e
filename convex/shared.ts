@@ -3,107 +3,89 @@
  * Do not import any client-specific or server-specific code
  */
 
-import { z } from "zod";
-import { zId } from "./lib/zodUtils";
+import { Id } from "./_generated/dataModel";
 
 export const MaxPlayers = 8;
 
-export const ClientGameStateZ = z.object({
-  gameCode: z.string(),
-  hosting: z.boolean(),
-  players: z.array(
-    z.object({
-      me: z.boolean(),
-      name: z.string(),
-      pictureUrl: z.string(),
-      submitted: z.boolean(),
-      score: z.number(),
-      likes: z.number(),
-    })
-  ),
-  playing: z.boolean(),
-  state: z.union([
-    z.object({
-      stage: z.union([z.literal("lobby"), z.literal("generate")]),
-    }),
-    z.object({
-      stage: z.literal("rounds"),
-      roundId: zId("rounds"),
-    }),
-    z.object({
-      stage: z.literal("recap"),
-    }),
-  ]),
-  nextGameId: z.nullable(zId("games")),
-});
+export type ClientGameState = {
+  gameCode: string;
+  hosting: boolean;
+  players: {
+    me: boolean;
+    name: string;
+    pictureUrl: string;
+    submitted: boolean;
+    score: number;
+    likes: number;
+  }[];
+  playing: boolean;
+  state:
+    | {
+        stage: "lobby" | "generate";
+      }
+    | {
+        stage: "rounds";
+        roundId: Id<"rounds">;
+      }
+    | {
+        stage: "recap";
+      };
+  nextGameId: null | Id<"games">;
+};
 
-export type ClientGameState = z.infer<typeof ClientGameStateZ>;
+export type LabelState = {
+  stage: "label";
+  mine: boolean;
+  imageUrl: string;
+  stageStart: number;
+  stageEnd: number;
+  submitted: {
+    me: boolean;
+    name: string;
+    pictureUrl: string;
+  }[];
+};
 
-export const LabelStateZ = z.object({
-  stage: z.literal("label"),
-  mine: z.boolean(),
-  imageUrl: z.string(),
-  stageStart: z.number(),
-  stageEnd: z.number(),
-  submitted: z.array(
-    z.object({
-      me: z.boolean(),
-      name: z.string(),
-      pictureUrl: z.string(),
-    })
-  ),
-});
+export type GuessState = {
+  stage: "guess";
+  mine: boolean;
+  imageUrl: string;
+  stageStart: number;
+  stageEnd: number;
+  myPrompt?: string;
+  myGuess?: string;
+  submitted: {
+    me: boolean;
+    name: string;
+    pictureUrl: string;
+  }[];
+  options: string[];
+};
 
-export type LabelState = z.infer<typeof LabelStateZ>;
-
-export const GuessStateZ = z.object({
-  stage: z.literal("guess"),
-  mine: z.boolean(),
-  imageUrl: z.string(),
-  stageStart: z.number(),
-  stageEnd: z.number(),
-  myPrompt: z.optional(z.string()),
-  myGuess: z.optional(z.string()),
-  submitted: z.array(
-    z.object({
-      me: z.boolean(),
-      name: z.string(),
-      pictureUrl: z.string(),
-    })
-  ),
-  options: z.array(z.string()),
-});
-
-export type GuessState = z.infer<typeof GuessStateZ>;
-
-const userIdString = z.string();
-export const RevealStateZ = z.object({
-  stage: z.literal("reveal"),
-  me: userIdString,
-  authorId: userIdString,
-  imageUrl: z.string(),
-  stageStart: z.number(),
-  stageEnd: z.number(),
-  users: z.map(
-    z.string(),
-    z.object({
-      me: z.boolean(),
-      name: z.string(),
-      pictureUrl: z.string(),
-    })
-  ),
-  results: z.array(
-    z.object({
-      authorId: userIdString,
-      prompt: z.string(),
-      votes: z.array(userIdString),
-      likes: z.array(userIdString),
-      // userid to score
-      scoreDeltas: z.map(userIdString, z.number()),
-    })
-  ),
-});
-
-export type RevealState = z.infer<typeof RevealStateZ>;
+type userIdString = string;
+export type RevealState = {
+  stage: "reveal";
+  me: userIdString;
+  authorId: userIdString;
+  imageUrl: string;
+  stageStart: number;
+  stageEnd: number;
+  users: Map<
+    string,
+    {
+      me: boolean;
+      name: string;
+      pictureUrl: string;
+    }
+  >;
+  results: {
+    authorId: userIdString;
+    prompt: string;
+    votes: userIdString[];
+    likes: userIdString[];
+    // userid to score
+    scoreDeltas: Map<userIdString, number>;
+  }[];
+};
 
 export const MaxPromptLength = 100;
