@@ -6,18 +6,16 @@ import { Doc } from "../_generated/dataModel";
  *
  * Throws an exception if there isn't a user logged in.
  * Pass this to `query`, `mutation`, or another wrapper. E.g.:
- * export default mutation(withUser(async ({ db, auth, user }, arg1) => {...}));
+ * export default mutation({
+ *   handler: withUser(async ({ db, auth, user }, {args}) => {...})
+ * });
  * @param func - Your function that can now take in a `user` in the first param.
  * @returns A function to be passed to `query` or `mutation`.
  */
-export const withUser = <
-  Ctx extends QueryCtx,
-  Args extends Record<string, any>,
-  Output
->(
-  func: (ctx: Ctx & { user: Doc<"users"> }, args: Args) => Promise<Output>
-): ((ctx: Ctx, args: Args) => Promise<Output>) => {
-  return async (ctx: Ctx, args: Args) => {
+export const withUser = <Ctx extends QueryCtx, Args extends [any] | [], Output>(
+  func: (ctx: Ctx & { user: Doc<"users"> }, ...args: Args) => Promise<Output>
+): ((ctx: Ctx, ...args: Args) => Promise<Output>) => {
+  return async (ctx: Ctx, ...args: Args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new Error(
@@ -35,7 +33,7 @@ export const withUser = <
       )
       .unique();
     if (!user) throw new Error("User not found");
-    return func({ ...ctx, user }, args);
+    return func({ ...ctx, user }, ...args);
   };
 };
 
