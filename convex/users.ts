@@ -1,7 +1,7 @@
 import { UserIdentity } from "convex/server";
 import { getUser } from "./lib/withUser";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
-// import md5 from "md5";
+import md5 from "md5";
 import {
   DatabaseReader,
   DatabaseWriter,
