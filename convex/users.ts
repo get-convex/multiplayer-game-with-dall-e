@@ -1,8 +1,13 @@
 import { UserIdentity } from "convex/server";
 import { getUser } from "./lib/withUser";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
-import md5 from "md5";
-import { DatabaseReader, DatabaseWriter, mutation } from "./_generated/server";
+// import md5 from "md5";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  mutation,
+  query,
+} from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { randomSlug } from "./lib/randomSlug";
 import { defineTable } from "convex/schema";
@@ -17,18 +22,15 @@ export const usersSchema = {
   }).index("by_token", ["tokenIdentifier"]),
 };
 
-export const loggedIn = mutationWithSession({
-  args: {},
-  handler: async ({ auth, db, session }) => {
-    const identity = await auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Trying to store a user without authentication present.");
-    }
-    const userId = await getOrCreateUser(db, identity);
-    if (!userId.equals(session.userId)) {
-      claimSessionUser(db, session, userId);
-    }
-  },
+export const loggedIn = mutationWithSession(async ({ auth, db, session }) => {
+  const identity = await auth.getUserIdentity();
+  if (!identity) {
+    throw new Error("Trying to store a user without authentication present.");
+  }
+  const userId = await getOrCreateUser(db, identity);
+  if (!userId.equals(session.userId)) {
+    claimSessionUser(db, session, userId);
+  }
 });
 
 async function claimSessionUser(
@@ -76,13 +78,10 @@ async function claimSessionUser(
 /**
  * Gets the name from the current session.
  */
-export const getMyProfile = queryWithSession({
-  args: {},
-  handler: async ({ db, session }) => {
-    if (!session) return null;
-    const { name, pictureUrl } = await getUserById(db, session.userId);
-    return { name, pictureUrl };
-  },
+export const getMyProfile = queryWithSession(async ({ db, session }) => {
+  if (!session) return null;
+  const { name, pictureUrl } = await getUserById(db, session.userId);
+  return { name, pictureUrl };
 });
 
 /**
@@ -140,16 +139,13 @@ export const createAnonymousUser = (db: DatabaseWriter) => {
   });
 };
 
-export const loggedOut = mutationWithSession({
-  args: {},
-  handler: async ({ db, session }) => {
-    // Wipe the slate clean
-    await db.replace(session._id, {
-      userId: await createAnonymousUser(db),
-      gameIds: [],
-      submissionIds: [],
-    });
-  },
+export const loggedOut = mutationWithSession(async ({ db, session }) => {
+  // Wipe the slate clean
+  await db.replace(session._id, {
+    userId: await createAnonymousUser(db),
+    gameIds: [],
+    submissionIds: [],
+  });
 });
 
 function createGravatarUrl(key: string): string {

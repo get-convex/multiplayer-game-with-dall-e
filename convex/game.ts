@@ -1,27 +1,29 @@
 import { calculateScoreDeltas, newRound, startRound } from "./round";
-import { mutationWithSession, queryWithSession } from "./lib/withSession";
+import {
+  mutationWithSession,
+  queryWithSession,
+  withSession,
+} from "./lib/withSession";
 import { ClientGameState, MaxPlayers } from "./shared";
 import { getUserById } from "./users";
 import { Doc, Id } from "./_generated/dataModel";
 import { randomSlug } from "./lib/randomSlug";
 import { v } from "convex/values";
+import { mutation } from "./_generated/server";
 
 const GenerateDurationMs = 120000;
 
-export const create = mutationWithSession({
-  args: {}, // TODO: support no args?
-  handler: async ({ db, session }) => {
-    const gameId = await db.insert("games", {
-      hostId: session.userId,
-      playerIds: [session.userId],
-      roundIds: [],
-      slug: randomSlug(),
-      state: { stage: "lobby" },
-    });
-    session.gameIds.push(gameId);
-    await db.patch(session._id, { gameIds: session.gameIds });
-    return gameId;
-  },
+export const create = mutationWithSession(async ({ db, session }) => {
+  const gameId = await db.insert("games", {
+    hostId: session.userId,
+    playerIds: [session.userId],
+    roundIds: [],
+    slug: randomSlug(),
+    state: { stage: "lobby" },
+  });
+  session.gameIds.push(gameId);
+  await db.patch(session._id, { gameIds: session.gameIds });
+  return gameId;
 });
 
 export const playAgain = mutationWithSession({
