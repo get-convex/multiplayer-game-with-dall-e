@@ -1,5 +1,4 @@
 "use node";
-import fetch from "node-fetch";
 import {
   Configuration,
   CreateModerationResponseResultsInner,
