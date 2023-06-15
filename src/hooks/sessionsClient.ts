@@ -1,3 +1,5 @@
+import { api } from "../../convex/_generated/api";
+import { useQuery, useMutation, useAction } from "convex/react";
 /**
  * React helpers for adding session data to Convex functions.
  *
@@ -16,11 +18,6 @@ import { NamedAction, NamedMutation, NamedQuery } from "convex/browser";
 import React, { useContext, useEffect, useState } from "react";
 import { API } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
-import {
-  useQuery,
-  useMutation,
-  useAction,
-} from "../../convex/_generated/react";
 
 const StoreKey = "ConvexSessionId";
 
@@ -51,7 +48,7 @@ export const SessionProvider: React.FC<{
     }
     return null;
   });
-  const createSession = useMutation("users:createSession");
+  const createSession = useMutation(api.users.createSession);
 
   // Get or set the ID from our desired storage location, whenever it changes.
   useEffect(() => {

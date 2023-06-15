@@ -1,11 +1,12 @@
+import { api } from "../convex/_generated/api";
+import { useMutation } from "convex/react";
 import { useEffect, useState } from "react";
-import { useMutation } from "../convex/_generated/react";
 
 export const Countdown: React.FC<{ start: number; end: number }> = ({
   start,
   end,
 }) => {
-  const getServerTime = useMutation("round:serverNow");
+  const getServerTime = useMutation(api.round.serverNow);
   const [, setNow] = useState(Date.now());
   const [skew, setSkew] = useState(0);
   useEffect(() => {

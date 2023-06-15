@@ -1,11 +1,12 @@
+import { api } from "../convex/_generated/api";
+import { useQuery } from "convex/react";
 import { useState } from "react";
 import { MaxPromptLength } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
-import { useQuery } from "../convex/_generated/react";
 import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
 
 export const Health = () => {
-  const health = useQuery("submissions:health") ?? null;
+  const health = useQuery(api.submissions.health) ?? null;
   return (
     health && (
       <section className="flex flex-col gap-1 w-full text-neutral-400">

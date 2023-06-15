@@ -13,6 +13,7 @@ import type { ApiFromModules } from "convex/server";
 import type * as crons from "../crons";
 import type * as game from "../game";
 import type * as lib_randomSlug from "../lib/randomSlug";
+import type * as lib_relationships from "../lib/relationships";
 import type * as lib_rowLevelSecurity from "../lib/rowLevelSecurity";
 import type * as lib_withSession from "../lib/withSession";
 import type * as lib_withUser from "../lib/withUser";
@@ -36,6 +37,7 @@ export declare const api: ApiFromModules<{
   crons: typeof crons;
   game: typeof game;
   "lib/randomSlug": typeof lib_randomSlug;
+  "lib/relationships": typeof lib_relationships;
   "lib/rowLevelSecurity": typeof lib_rowLevelSecurity;
   "lib/withSession": typeof lib_withSession;
   "lib/withUser": typeof lib_withUser;

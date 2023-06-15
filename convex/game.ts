@@ -1,3 +1,4 @@
+import { api } from "./_generated/api";
 import { calculateScoreDeltas, newRound, startRound } from "./round";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import { ClientGameState, MaxPlayers } from "./shared";
@@ -27,7 +28,7 @@ export const playAgain = mutationWithSession({
   handler: async ({ db, session }, { oldGameId }) => {
     const oldGame = await db.get(oldGameId);
     if (!oldGame) throw new Error("Old game doesn't exist");
-    if (!oldGame.playerIds.find((id) => id.equals(session.userId))) {
+    if (!oldGame.playerIds.find((id) => id === session.userId)) {
       throw new Error("You weren't part of that game");
     }
     const gameId = await db.insert("games", {
@@ -51,17 +52,17 @@ export const get = queryWithSession({
     const game = await db.get(gameId);
     if (!game) throw new Error("Game not found");
     const rounds = pruneNull(await getAll(db, game.roundIds));
-    const playerLikes = new Map<string, number>();
-    const playerScore = new Map<string, number>();
+    const playerLikes = new Map<Id<"users">, number>();
+    const playerScore = new Map<Id<"users">, number>();
     for (const round of rounds) {
       if (round.stage === "reveal") {
         for (const option of round.options) {
           playerLikes.set(
-            option.authorId.id,
-            option.likes.length + (playerLikes.get(option.authorId.id) ?? 0)
+            option.authorId,
+            option.likes.length + (playerLikes.get(option.authorId) ?? 0)
           );
           for (const [userId, delta] of calculateScoreDeltas(
-            option.authorId.equals(round.authorId),
+            option.authorId === round.authorId,
             option
           )) {
             playerScore.set(userId, delta + (playerScore.get(userId) ?? 0));
@@ -74,18 +75,18 @@ export const get = queryWithSession({
       const player = (await getUserById(db, playerId))!;
       const { name, pictureUrl } = player;
       return {
-        me: player._id.equals(session?.userId),
+        me: player._id === session?.userId,
         name,
         pictureUrl,
-        score: playerScore.get(player._id.id) ?? 0,
-        likes: playerLikes.get(player._id.id) ?? 0,
-        submitted: !!roundPlayerIds.find((id) => id.equals(playerId)),
+        score: playerScore.get(player._id) ?? 0,
+        likes: playerLikes.get(player._id) ?? 0,
+        submitted: !!roundPlayerIds.find((id) => id === playerId),
       };
     });
     return {
       gameCode: game.slug,
-      hosting: game.hostId.equals(session?.userId),
-      playing: !!game.playerIds.find((id) => id.equals(session?.userId)),
+      hosting: game.hostId === session?.userId,
+      playing: !!game.playerIds.find((id) => id === session?.userId),
       players,
       state: game.state,
       nextGameId: game.nextGameId ?? null,
@@ -109,7 +110,7 @@ export const join = mutationWithSession({
     session.gameIds.push(game._id);
     await db.patch(session._id, { gameIds: session.gameIds });
     // Already in game
-    if (game.playerIds.find((id) => id.equals(session.userId)) !== undefined) {
+    if (game.playerIds.find((id) => id === session.userId) !== undefined) {
       console.warn("User joining game they're already in");
     } else {
       const playerIds = game.playerIds;
@@ -130,13 +131,13 @@ export const submit = mutationWithSession({
     if (submission?.result.status !== "saved") {
       throw new Error(`Can't add ${submission?.result.status} submissions.`);
     }
-    if (!submission.authorId.equals(session.userId)) {
+    if (submission.authorId !== session.userId) {
       throw new Error("This is not your submission.");
     }
     const { authorId, prompt, result } = submission;
     for (const roundId of game.roundIds) {
       const round = (await db.get(roundId))!;
-      if (round.authorId.equals(authorId)) {
+      if (round.authorId === authorId) {
         throw new Error("You already submitted.");
       }
     }
@@ -175,8 +176,7 @@ export const progress = mutationWithSession({
   handler: async ({ db, session, scheduler }, { gameId, fromStage }) => {
     const game = await db.get(gameId);
     if (!game) throw new Error("Game not found");
-    if (!game.hostId.equals(session.userId))
-      throw new Error("You are not the host");
+    if (game.hostId !== session.userId) throw new Error("You are not the host");
     const state = nextState(game.state, game.roundIds);
     if (game.state.stage !== fromStage) {
       // Just ignore requests that have already been applied.
@@ -191,7 +191,7 @@ export const progress = mutationWithSession({
     game.state = state;
     await db.replace(game._id, game);
     if (state.stage === "lobby") {
-      scheduler.runAfter(GenerateDurationMs, "game:progress", {
+      scheduler.runAfter(GenerateDurationMs, api.game.progress, {
         sessionId: session._id,
         gameId,
         fromStage: state.stage,
@@ -217,14 +217,14 @@ const nextState = (
       };
       break;
     case "rounds":
-      if (state.roundId.equals(roundIds[roundIds.length - 1])) {
+      if (state.roundId === roundIds[roundIds.length - 1]) {
         // If it was the last round, go to recap.
         state = { stage: "recap" };
       } else {
         // Otherwise go to the next round.
         const lastRoundId = state.roundId;
-        const prevIndex = roundIds.findIndex((roundId) =>
-          roundId.equals(lastRoundId)
+        const prevIndex = roundIds.findIndex(
+          (roundId) => roundId === lastRoundId
         );
         if (prevIndex === -1) throw new Error("Previous round doesn't exist");
         state.roundId = roundIds[prevIndex + 1];

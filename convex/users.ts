@@ -14,7 +14,7 @@ export const loggedIn = mutationWithSession(async ({ auth, db, session }) => {
     throw new Error("Trying to store a user without authentication present.");
   }
   const userId = await getOrCreateUser(db, identity);
-  if (!userId.equals(session.userId)) {
+  if (userId !== session.userId) {
     claimSessionUser(db, session, userId);
   }
 });
@@ -33,26 +33,26 @@ async function claimSessionUser(
   await db.patch(session._id, { userId: newUserId });
   for (const submissionId of session.submissionIds) {
     const submission = await db.get(submissionId);
-    if (submission && submission.authorId.equals(userToClaim._id)) {
+    if (submission && submission.authorId === userToClaim._id) {
       await db.patch(submission?._id, { authorId: newUserId });
     }
   }
   for (const gameId of session.gameIds) {
     const game = (await db.get(gameId))!;
-    if (game.hostId.equals(userToClaim._id)) {
+    if (game.hostId === userToClaim._id) {
       await db.patch(game._id, { hostId: newUserId });
     }
     const playerIds = game.playerIds.map((playerId) =>
-      playerId.equals(userToClaim._id) ? newUserId : playerId
+      playerId === userToClaim._id ? newUserId : playerId
     );
     await db.patch(game._id, { playerIds });
     for (const roundId of game.roundIds) {
       const round = (await db.get(roundId))!;
-      if (round.authorId.equals(userToClaim._id)) {
+      if (round.authorId === userToClaim._id) {
         await db.patch(round._id, { authorId: newUserId });
       }
       const options = round.options.map((option) =>
-        option.authorId.equals(userToClaim._id)
+        option.authorId === userToClaim._id
           ? { ...option, authorId: newUserId }
           : option
       );

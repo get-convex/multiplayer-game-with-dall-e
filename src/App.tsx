@@ -1,6 +1,7 @@
+import { api } from "../convex/_generated/api";
+import { useQuery } from "convex/react";
 import { useCallback, useEffect, useState } from "react";
 import { Id } from "../convex/_generated/dataModel";
-import { useQuery } from "../convex/_generated/react";
 import Game from "./Game";
 import GameRound from "./GameRound";
 import { useSessionMutation } from "./hooks/sessionsClient";
@@ -22,7 +23,7 @@ function App() {
   }, [gameId]);
   const [gameCode, setGameCode] = useState("");
   const joinGame = useSessionMutation("game:join");
-  const publicRoundId = useQuery("publicGame:get");
+  const publicRoundId = useQuery(api.publicGame.get);
   const done = useCallback((gameId: Id<"games"> | null) => {
     setGameId(gameId);
   }, []);

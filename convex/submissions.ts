@@ -1,3 +1,4 @@
+import { api } from "./_generated/api";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import { internalMutation, query } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
@@ -23,11 +24,11 @@ export const start = mutationWithSession({
     // new user if we log in.
     session.submissionIds.push(submissionId);
     db.patch(session._id, { submissionIds: session.submissionIds });
-    scheduler.runAfter(0, "openai:createImage", {
+    scheduler.runAfter(0, api.openai.createImage, {
       prompt,
       submissionId,
     });
-    scheduler.runAfter(ImageTimeoutMs, "submissions:timeout", {
+    scheduler.runAfter(ImageTimeoutMs, api.submissions.timeout, {
       submissionId,
     });
     return submissionId;

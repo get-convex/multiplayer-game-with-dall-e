@@ -1,3 +1,4 @@
+import { api } from "./_generated/api";
 import { WithoutSystemFields } from "convex/server";
 import {
   mutationWithSession,
@@ -53,7 +54,7 @@ export const getRound = queryWithSession({
     const userInfo = async (userId: Id<"users">) => {
       const user = (await db.get(userId))!;
       return {
-        me: user._id.equals(session?.userId),
+        me: user._id === session?.userId,
         name: user.name,
         pictureUrl: user.pictureUrl,
       };
@@ -63,7 +64,7 @@ export const getRound = queryWithSession({
       case "label":
         const labelState: LabelState = {
           stage,
-          mine: round.authorId.equals(session?.userId),
+          mine: round.authorId === session?.userId,
           imageUrl,
           stageStart,
           stageEnd,
@@ -78,15 +79,15 @@ export const getRound = queryWithSession({
           [] as Id<"users">[]
         );
         const myGuess = round.options.find(
-          (o) => !!o.votes.find((voteId) => voteId.equals(session?.userId))
+          (o) => !!o.votes.find((voteId) => voteId === session?.userId)
         )?.prompt;
-        const myPrompt = round.options.find((o) =>
-          o.authorId.equals(session?.userId)
+        const myPrompt = round.options.find(
+          (o) => o.authorId === session?.userId
         )?.prompt;
         const guessState: GuessState = {
           options: round.options.map((option) => option.prompt),
           stage,
-          mine: round.authorId.equals(session?.userId),
+          mine: round.authorId === session?.userId,
           imageUrl,
           stageStart,
           stageEnd,
@@ -110,25 +111,25 @@ export const getRound = queryWithSession({
         });
         const revealState: RevealState = {
           results: round.options.map((option) => ({
-            authorId: option.authorId.id,
+            authorId: option.authorId,
             prompt: option.prompt,
-            votes: option.votes.map((uId) => uId.id),
-            likes: option.likes.map((uId) => uId.id),
+            votes: option.votes.map((uId) => uId),
+            likes: option.likes.map((uId) => uId),
             scoreDeltas: calculateScoreDeltas(
-              option.authorId.equals(round.authorId),
+              option.authorId === round.authorId,
               option
             ),
           })),
           stage,
-          me: session!.userId.id,
-          authorId: round.authorId.id,
+          me: session!.userId,
+          authorId: round.authorId,
           imageUrl,
           stageStart,
           stageEnd,
           users: new Map(
             await asyncMap(
               allUsers.keys(),
-              async (userId) => [userId.id, await userInfo(userId)] as const
+              async (userId) => [userId, await userInfo(userId)] as const
             )
           ),
         };
@@ -147,14 +148,14 @@ export function calculateScoreDeltas(
 ) {
   const scoreDeltas = new Map([
     [
-      option.authorId.id,
+      option.authorId,
       option.votes.length *
         (isCorrect ? CorrectAuthorScore : AlternateAuthorScore),
     ],
   ]);
   if (isCorrect) {
     for (const userId of option.votes) {
-      scoreDeltas.set(userId.id, CorrectGuesserScore);
+      scoreDeltas.set(userId, CorrectGuesserScore);
     }
   }
   return scoreDeltas;
@@ -214,12 +215,12 @@ export const addOption = internalMutation(
       if (round.stage !== "label") {
         return { success: false, reason: "Too late to add a prompt." };
       }
-      if (round.authorId.equals(session.userId)) {
+      if (round.authorId === session.userId) {
         throw new Error("You can't submit a prompt for your own image.");
       }
       if (
-        round.options.findIndex((option) =>
-          option.authorId.equals(session.userId)
+        round.options.findIndex(
+          (option) => option.authorId === session.userId
         ) !== -1
       ) {
         return { success: false, reason: "You already added a prompt." };
@@ -255,7 +256,7 @@ export const addOption = internalMutation(
       if (round.options.length === game?.playerIds.length) {
         // All players have added options
         await db.patch(round._id, beginGuessPatch(round));
-        scheduler.runAfter(GuessDurationMs, "round:progress", {
+        scheduler.runAfter(GuessDurationMs, api.round.progress, {
           roundId: round._id,
           fromStage: "guess",
         });
@@ -274,7 +275,7 @@ export const progress = mutation(
     }: { roundId: Id<"rounds">; fromStage: Doc<"rounds">["stage"] }
   ) => {
     const round = await db.get(roundId);
-    if (!round) throw new Error("Round not found: " + roundId.id);
+    if (!round) throw new Error("Round not found: " + roundId);
     if (round.stage === fromStage) {
       const stage = fromStage === "label" ? "guess" : "reveal";
       await db.patch(round._id, { stage });
@@ -333,7 +334,7 @@ export const guess = mutationWithSession({
         reason: "This prompt does not exist.",
       };
     }
-    if (optionVotedFor.authorId.equals(session.userId)) {
+    if (optionVotedFor.authorId === session.userId) {
       return {
         success: false,
         retry: true,
@@ -342,7 +343,7 @@ export const guess = mutationWithSession({
     }
     const existingVote = round.options.find(
       (option) =>
-        option.votes.findIndex((vote) => vote.equals(session.userId)) !== -1
+        option.votes.findIndex((vote) => vote === session.userId) !== -1
     );
     if (prompt === existingVote?.prompt) {
       return {
@@ -353,9 +354,7 @@ export const guess = mutationWithSession({
     }
     if (existingVote) {
       // Remove existing vote
-      const voteIndex = existingVote.votes.findIndex((vote) =>
-        vote.equals(session.userId)
-      );
+      const voteIndex = existingVote.votes.indexOf(session.userId);
       existingVote.votes = existingVote.votes
         .slice(0, voteIndex)
         .concat(...existingVote.votes.slice(voteIndex + 1));
@@ -402,7 +401,7 @@ export const like = mutationWithSession({
         reason: "This prompt does not exist.",
       };
     }
-    if (optionVotedFor.authorId.equals(session.userId)) {
+    if (optionVotedFor.authorId === session.userId) {
       return {
         success: false,
         retry: true,
@@ -411,7 +410,7 @@ export const like = mutationWithSession({
     }
     const existingLike = round.options.find(
       (option) =>
-        option.likes.findIndex((like) => like.equals(session.userId)) !== -1
+        option.likes.findIndex((like) => like === session.userId) !== -1
     );
     if (prompt === existingLike?.prompt) {
       return {

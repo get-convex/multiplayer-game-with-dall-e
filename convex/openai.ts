@@ -1,4 +1,5 @@
-"use node";
+"use node";;
+import { api } from "./_generated/api";
 import {
   Configuration,
   CreateModerationResponseResultsInner,
@@ -32,7 +33,7 @@ export const addOption = action({
         )}`,
       } as const;
     }
-    const status = (await runMutation("round:addOption", {
+    const status = (await runMutation(api.round.addOption, {
       sessionId,
       gameId,
       roundId,
@@ -74,7 +75,7 @@ export const createImage = action(
     const openai = makeOpenAIClient();
 
     const fail = (reason: string): Promise<never> =>
-      runMutation("submissions:update", {
+      runMutation(api.submissions.update, {
         submissionId,
         result: {
           status: "failed",
@@ -85,7 +86,7 @@ export const createImage = action(
         throw new Error(reason);
       });
 
-    runMutation("submissions:update", {
+    runMutation(api.submissions.update, {
       submissionId,
       result: {
         status: "generating",
@@ -103,7 +104,7 @@ export const createImage = action(
       );
     }
 
-    runMutation("submissions:update", {
+    runMutation(api.submissions.update, {
       submissionId,
       result: {
         status: "generating",
@@ -118,7 +119,7 @@ export const createImage = action(
     const dallEImageUrl = opanaiResponse.data.data[0]["url"];
     if (!dallEImageUrl) return await fail("No image URL returned from OpenAI");
 
-    runMutation("submissions:update", {
+    runMutation(api.submissions.update, {
       submissionId,
       result: {
         status: "generating",
@@ -135,7 +136,7 @@ export const createImage = action(
     const storageId = await storage.store(await imageResponse.blob());
 
     // Write storageId as the body of the message to the Convex database.
-    await runMutation("submissions:update", {
+    await runMutation(api.submissions.update, {
       submissionId,
       result: {
         status: "saved",
