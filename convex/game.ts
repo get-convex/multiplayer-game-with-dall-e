@@ -1,15 +1,11 @@
 import { calculateScoreDeltas, newRound, startRound } from "./round";
-import {
-  mutationWithSession,
-  queryWithSession,
-  withSession,
-} from "./lib/withSession";
+import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import { ClientGameState, MaxPlayers } from "./shared";
 import { getUserById } from "./users";
 import { Doc, Id } from "./_generated/dataModel";
 import { randomSlug } from "./lib/randomSlug";
 import { v } from "convex/values";
-import { mutation } from "./_generated/server";
+import { asyncMap, getAll, pruneNull } from "./lib/relationships";
 
 const GenerateDurationMs = 120000;
 
@@ -54,9 +50,7 @@ export const get = queryWithSession({
     // Grab the most recent game with this code.
     const game = await db.get(gameId);
     if (!game) throw new Error("Game not found");
-    const rounds = await Promise.all(
-      game.roundIds.map(async (roundId) => (await db.get(roundId))!)
-    );
+    const rounds = pruneNull(await getAll(db, game.roundIds));
     const playerLikes = new Map<string, number>();
     const playerScore = new Map<string, number>();
     for (const round of rounds) {
@@ -76,20 +70,18 @@ export const get = queryWithSession({
       }
     }
     const roundPlayerIds = rounds.map((round) => round.authorId);
-    const players = await Promise.all(
-      game.playerIds.map(async (playerId) => {
-        const player = (await getUserById(db, playerId))!;
-        const { name, pictureUrl } = player;
-        return {
-          me: player._id.equals(session?.userId),
-          name,
-          pictureUrl,
-          score: playerScore.get(player._id.id) ?? 0,
-          likes: playerLikes.get(player._id.id) ?? 0,
-          submitted: !!roundPlayerIds.find((id) => id.equals(playerId)),
-        };
-      })
-    );
+    const players = await asyncMap(game.playerIds, async (playerId) => {
+      const player = (await getUserById(db, playerId))!;
+      const { name, pictureUrl } = player;
+      return {
+        me: player._id.equals(session?.userId),
+        name,
+        pictureUrl,
+        score: playerScore.get(player._id.id) ?? 0,
+        likes: playerLikes.get(player._id.id) ?? 0,
+        submitted: !!roundPlayerIds.find((id) => id.equals(playerId)),
+      };
+    });
     return {
       gameCode: game.slug,
       hosting: game.hostId.equals(session?.userId),
@@ -196,7 +188,8 @@ export const progress = mutationWithSession({
     if (state.stage === "rounds") {
       await startRound(db, state.roundId);
     }
-    await db.patch(game._id, { state });
+    game.state = state;
+    await db.replace(game._id, game);
     if (state.stage === "lobby") {
       scheduler.runAfter(GenerateDurationMs, "game:progress", {
         sessionId: session._id,

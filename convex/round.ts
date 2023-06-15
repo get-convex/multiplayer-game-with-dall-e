@@ -12,6 +12,7 @@ import {
 } from "./_generated/server";
 import { GuessState, LabelState, MaxPlayers, RevealState } from "./shared";
 import { v } from "convex/values";
+import { asyncMap } from "./lib/relationships";
 
 const LabelDurationMs = 30000;
 const GuessDurationMs = 30000;
@@ -66,8 +67,8 @@ export const getRound = queryWithSession({
           imageUrl,
           stageStart,
           stageEnd,
-          submitted: await Promise.all(
-            round.options.map((option) => userInfo(option.authorId))
+          submitted: await asyncMap(round.options, (option) =>
+            userInfo(option.authorId)
           ),
         };
         return labelState;
@@ -91,7 +92,7 @@ export const getRound = queryWithSession({
           stageEnd,
           myPrompt,
           myGuess,
-          submitted: await Promise.all(allGuesses.map(userInfo)),
+          submitted: await asyncMap(allGuesses, userInfo),
         };
         return guessState;
       case "reveal":
@@ -125,10 +126,9 @@ export const getRound = queryWithSession({
           stageStart,
           stageEnd,
           users: new Map(
-            await Promise.all(
-              [...allUsers.keys()].map(
-                async (userId) => [userId.id, await userInfo(userId)] as const
-              )
+            await asyncMap(
+              allUsers.keys(),
+              async (userId) => [userId.id, await userInfo(userId)] as const
             )
           ),
         };

@@ -3,6 +3,7 @@ import { internalMutation, query } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { MaxPromptLength } from "./shared";
 import { v } from "convex/values";
+import { withMutationRLS, withQueryRLS } from "./rls";
 
 const ImageTimeoutMs = 30000;
 
@@ -38,25 +39,21 @@ export const timeout = internalMutation(
     const submission = await db.get(submissionId);
     if (!submission) throw new Error("No submission found");
     if (submission.result.status === "generating") {
-      db.patch(submissionId, {
-        result: {
-          status: "failed",
-          reason: "Timed out",
-          elapsedMs: ImageTimeoutMs,
-        },
-      });
+      submission.result = {
+        status: "failed",
+        reason: "Timed out",
+        elapsedMs: ImageTimeoutMs,
+      };
+      db.replace(submissionId, submission);
     }
   }
 );
 
 export const get = queryWithSession({
   args: { submissionId: v.id("submissions") },
-  handler: async ({ db, session, storage }, { submissionId }) => {
+  handler: withQueryRLS(async ({ db, session, storage }, { submissionId }) => {
     const submission = await db.get(submissionId);
     if (!submission) return null;
-    if (!submission.authorId.equals(session?.userId)) {
-      throw new Error("This isn't your submission");
-    }
     if (submission.result.status === "saved") {
       const { imageStorageId, ...rest } = submission.result;
       const url = await storage.getUrl(imageStorageId);
@@ -64,7 +61,7 @@ export const get = queryWithSession({
       return { url, ...rest };
     }
     return submission.result;
-  },
+  }),
 });
 
 export const health = query(async ({ db }) => {
@@ -85,15 +82,22 @@ export const health = query(async ({ db }) => {
   return n ? [totalTime / n, successes / n] : [5000, 1.0];
 });
 
-// TODO: limit to only accessible from the dall-e action
 export const update = internalMutation(
-  async (
-    { db },
-    {
-      submissionId,
-      result,
-    }: { submissionId: Id<"submissions">; result: Doc<"submissions">["result"] }
-  ) => {
-    await db.patch(submissionId, { result });
-  }
+  withMutationRLS(
+    async (
+      { db },
+      {
+        submissionId,
+        result,
+      }: {
+        submissionId: Id<"submissions">;
+        result: Doc<"submissions">["result"];
+      }
+    ) => {
+      const submission = await db.get(submissionId);
+      if (!submission) throw new Error("Unknown submission");
+      submission.result = result;
+      await db.replace(submissionId, submission);
+    }
+  )
 );

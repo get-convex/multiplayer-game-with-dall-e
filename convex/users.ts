@@ -2,15 +2,11 @@ import { UserIdentity } from "convex/server";
 import { getUser } from "./lib/withUser";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import md5 from "md5";
-import {
-  DatabaseReader,
-  DatabaseWriter,
-  mutation,
-  query,
-} from "./_generated/server";
+import { DatabaseReader, DatabaseWriter, mutation } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { randomSlug } from "./lib/randomSlug";
 import { v } from "convex/values";
+import { withMutationRLS } from "./rls";
 
 export const loggedIn = mutationWithSession(async ({ auth, db, session }) => {
   const identity = await auth.getUserIdentity();
@@ -79,25 +75,26 @@ export const getMyProfile = queryWithSession(async ({ db, session }) => {
  */
 export const setName = mutationWithSession({
   args: { name: v.string() },
-  handler: async ({ db, session }, { name }) => {
+  handler: withMutationRLS(async ({ db, session }, { name }) => {
     const user = await getUserById(db, session.userId);
     if (name.length > 100) throw new Error("Name too long");
-    db.patch(user._id, { name });
-  },
+    await db.patch(user._id, { name });
+  }),
 });
 
 export const setPicture = mutationWithSession({
   args: { submissionId: v.id("submissions") },
-  handler: async ({ db, session, storage }, { submissionId }) => {
-    const submission = await db.get(submissionId);
-    if (!submission) throw new Error("No submission found");
-    if (!submission.authorId.equals(session.userId))
-      throw new Error("Not yours");
-    if (submission.result.status !== "saved") throw new Error("Bad submission");
-    const pictureUrl = await storage.getUrl(submission.result.imageStorageId);
-    if (!pictureUrl) throw new Error("Picture is missing");
-    db.patch(session.userId, { pictureUrl });
-  },
+  handler: withMutationRLS(
+    async ({ db, session, storage }, { submissionId }) => {
+      const submission = await db.get(submissionId);
+      if (!submission) throw new Error("No submission found");
+      if (submission.result.status !== "saved")
+        throw new Error("Bad submission");
+      const pictureUrl = await storage.getUrl(submission.result.imageStorageId);
+      if (!pictureUrl) throw new Error("Picture is missing");
+      await db.patch(session.userId, { pictureUrl });
+    }
+  ),
 });
 
 export const getUserById = async (db: DatabaseReader, userId: Id<"users">) => {
