@@ -1,12 +1,12 @@
 import { cronJobs } from "convex/server";
-import { api } from "./_generated/api";
+import { internal } from "./_generated/api";
 
 const cron = cronJobs();
 
 cron.interval(
   "public game progress",
   { seconds: 10 },
-  api.publicGame.progress,
+  internal.publicGame.progress,
   {
     fromStage: "reveal",
   }

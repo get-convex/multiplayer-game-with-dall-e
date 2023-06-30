@@ -12,7 +12,7 @@
     "@headlessui/react": "^1.7.13",
     "@types/node": "^18.11.18",
     "classnames": "^2.3.2",
-    "convex": "0.17.0-alpha.1",
+    "convex": "0.18.0-alpha.1",
     "md5": "^2.3.0",
     "openai": "^3.1.0",
     "react": "^18.2.0",

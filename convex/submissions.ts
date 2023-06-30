@@ -1,4 +1,4 @@
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import { internalMutation, query } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
@@ -28,7 +28,7 @@ export const start = mutationWithSession({
       prompt,
       submissionId,
     });
-    scheduler.runAfter(ImageTimeoutMs, api.submissions.timeout, {
+    scheduler.runAfter(ImageTimeoutMs, internal.submissions.timeout, {
       submissionId,
     });
     return submissionId;

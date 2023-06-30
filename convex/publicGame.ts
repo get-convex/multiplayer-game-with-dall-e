@@ -1,4 +1,4 @@
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { internalMutation, query } from "./_generated/server";
 
 export const get = query(async ({ db }) => {
@@ -36,7 +36,7 @@ export const progress = internalMutation(
           (option) => option.likes.length || option.votes.length
         )
       ) {
-        scheduler.runAfter(PublicGuessMs, api.publicGame.progress, {
+        scheduler.runAfter(PublicGuessMs, internal.publicGame.progress, {
           fromStage: "guess",
         });
         return "guess again";
@@ -71,7 +71,7 @@ export const progress = internalMutation(
     const { _id, _creationTime, ...rest } = round;
     const roundId = await db.insert("rounds", rest);
     await db.patch(publicGame._id, { roundId });
-    scheduler.runAfter(PublicGuessMs, api.publicGame.progress, {
+    scheduler.runAfter(PublicGuessMs, internal.publicGame.progress, {
       fromStage: "guess",
     });
     return "->guess";

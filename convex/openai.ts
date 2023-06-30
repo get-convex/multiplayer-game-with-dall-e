@@ -1,5 +1,5 @@
-"use node";;
-import { api } from "./_generated/api";
+"use node";
+import { api, internal } from "./_generated/api";
 import {
   Configuration,
   CreateModerationResponseResultsInner,
@@ -33,7 +33,7 @@ export const addOption = action({
         )}`,
       } as const;
     }
-    const status = (await runMutation(api.round.addOption, {
+    const status = (await runMutation(internal.round.addOption, {
       sessionId,
       gameId,
       roundId,
@@ -75,7 +75,7 @@ export const createImage = action(
     const openai = makeOpenAIClient();
 
     const fail = (reason: string): Promise<never> =>
-      runMutation(api.submissions.update, {
+      runMutation(internal.submissions.update, {
         submissionId,
         result: {
           status: "failed",
@@ -86,7 +86,7 @@ export const createImage = action(
         throw new Error(reason);
       });
 
-    runMutation(api.submissions.update, {
+    runMutation(internal.submissions.update, {
       submissionId,
       result: {
         status: "generating",
@@ -104,7 +104,7 @@ export const createImage = action(
       );
     }
 
-    runMutation(api.submissions.update, {
+    runMutation(internal.submissions.update, {
       submissionId,
       result: {
         status: "generating",
@@ -119,7 +119,7 @@ export const createImage = action(
     const dallEImageUrl = opanaiResponse.data.data[0]["url"];
     if (!dallEImageUrl) return await fail("No image URL returned from OpenAI");
 
-    runMutation(api.submissions.update, {
+    runMutation(internal.submissions.update, {
       submissionId,
       result: {
         status: "generating",
@@ -136,7 +136,7 @@ export const createImage = action(
     const storageId = await storage.store(await imageResponse.blob());
 
     // Write storageId as the body of the message to the Convex database.
-    await runMutation(api.submissions.update, {
+    await runMutation(internal.submissions.update, {
       submissionId,
       result: {
         status: "saved",
