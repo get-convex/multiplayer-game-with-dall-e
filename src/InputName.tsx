@@ -1,4 +1,4 @@
-import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
+import { useSessionMutation, useSessionQuery } from "./hooks/useServerSession";
 import useSingleFlight from "./hooks/useSingleFlight";
 
 export function InputName() {

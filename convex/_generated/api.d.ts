@@ -16,6 +16,7 @@ import type {
 } from "convex/server";
 import type * as crons from "../crons";
 import type * as game from "../game";
+import type * as lib_middlewareUtils from "../lib/middlewareUtils";
 import type * as lib_randomSlug from "../lib/randomSlug";
 import type * as lib_relationships from "../lib/relationships";
 import type * as lib_rowLevelSecurity from "../lib/rowLevelSecurity";
@@ -40,6 +41,7 @@ import type * as users from "../users";
 declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   game: typeof game;
+  "lib/middlewareUtils": typeof lib_middlewareUtils;
   "lib/randomSlug": typeof lib_randomSlug;
   "lib/relationships": typeof lib_relationships;
   "lib/rowLevelSecurity": typeof lib_rowLevelSecurity;

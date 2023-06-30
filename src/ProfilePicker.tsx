@@ -1,7 +1,7 @@
 import { Fragment, useState } from "react";
 
 import { Dialog, Transition } from "@headlessui/react";
-import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
+import { useSessionMutation, useSessionQuery } from "./hooks/useServerSession";
 import { CreateImage } from "./CreateImage";
 import { ProfilePicture } from "./ProfilePicture";
 

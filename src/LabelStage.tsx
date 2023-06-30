@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { LabelState } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
-import { useSessionAction } from "./hooks/sessionsClient";
+import { useSessionAction } from "./hooks/useServerSession";
 import { Submissions } from "./Submissions";
 
 export function LabelStage({

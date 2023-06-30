@@ -2,7 +2,7 @@ import classNames from "classnames";
 import { useState } from "react";
 import { GuessState } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
-import { useSessionMutation } from "./hooks/sessionsClient";
+import { useSessionMutation } from "./hooks/useServerSession";
 import { Submissions } from "./Submissions";
 
 export function GuessStage({

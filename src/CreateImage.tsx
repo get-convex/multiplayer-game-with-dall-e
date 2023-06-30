@@ -3,7 +3,7 @@ import { useQuery } from "convex/react";
 import { useState } from "react";
 import { MaxPromptLength } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
-import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
+import { useSessionMutation, useSessionQuery } from "./hooks/useServerSession";
 
 export const Health = () => {
   const health = useQuery(api.submissions.health) ?? null;

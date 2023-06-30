@@ -1,4 +1,4 @@
-import { useSessionMutation } from "./hooks/sessionsClient";
+import { useSessionMutation } from "./hooks/useServerSession";
 
 export function JoinGame(props: { gameCode: string }) {
   const joinGame = useSessionMutation("game:join");

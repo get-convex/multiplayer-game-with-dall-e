@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Id } from "../convex/_generated/dataModel";
 import Game from "./Game";
 import GameRound from "./GameRound";
-import { useSessionMutation } from "./hooks/sessionsClient";
+import { useSessionMutation } from "./hooks/useServerSession";
 
 const ConvexIdLength = 22;
 

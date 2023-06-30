@@ -4,7 +4,7 @@ import { ClientGameState } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
 import { Countdown } from "./Countdown";
 import { GuessStage } from "./GuessStage";
-import { useSessionQuery } from "./hooks/sessionsClient";
+import { useSessionQuery } from "./hooks/useServerSession";
 import { LabelStage } from "./LabelStage";
 import { Loading } from "./Loading";
 import { NextButton } from "./NextButton";

@@ -3,7 +3,7 @@ import { ClientGameState } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
 import GameRound from "./GameRound";
 import { Generate } from "./Generate";
-import { useSessionMutation, useSessionQuery } from "./hooks/sessionsClient";
+import { useSessionMutation, useSessionQuery } from "./hooks/useServerSession";
 import { Lobby } from "./Lobby";
 import { NextButton } from "./NextButton";
 import { Recap } from "./Recap";
