@@ -3,6 +3,7 @@ import { LabelState } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
 import { useSessionAction } from "./hooks/useServerSession";
 import { Submissions } from "./Submissions";
+import { api } from "../convex/_generated/api";
 
 export function LabelStage({
   round,
@@ -15,7 +16,7 @@ export function LabelStage({
 }) {
   const [error, setError] = useState<string>();
   const [prompt, setPrompt] = useState("");
-  const addPrompt = useSessionAction("openai:addOption");
+  const addPrompt = useSessionAction(api.openai.addOption);
   return (
     <div className="max-w-lg">
       <img

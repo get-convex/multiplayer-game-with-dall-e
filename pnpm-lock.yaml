@@ -9,7 +9,7 @@ specifiers:
   '@vitejs/plugin-react': ^3.0.0
   autoprefixer: ^10.4.13
   classnames: ^2.3.2
-  convex: 0.18.0-alpha.1
+  convex: 0.18.0
   md5: ^2.3.0
   openai: ^3.1.0
   postcss: ^8.4.21
@@ -26,7 +26,7 @@ dependencies:
   '@headlessui/react': 1.7.13_biqbaboplfbrettd7655fr4n2y
   '@types/node': 18.11.18
   classnames: 2.3.2
-  convex: 0.18.0-alpha.1_biqbaboplfbrettd7655fr4n2y
+  convex: 0.18.0_biqbaboplfbrettd7655fr4n2y
   md5: 2.3.0
   openai: 3.1.0
   react: 18.2.0
@@ -766,8 +766,8 @@ packages:
     resolution: {integrity: sha512-ASFBup0Mz1uyiIjANan1jzLQami9z1PoYSZCiiYW2FczPbenXc45FZdBZLzOT+r6+iciuEModtmCti+hjaAk0A==}
     dev: true
 
-  /convex/0.18.0-alpha.1_biqbaboplfbrettd7655fr4n2y:
-    resolution: {integrity: sha512-q9SHgy89RGTI4jssiGuMPa2Bt23tUNlc3hFSUdrYYnRSDwosJN6gEJoJSZqB1/e0FEETjT/BDbF65ev7DCkxhA==}
+  /convex/0.18.0_biqbaboplfbrettd7655fr4n2y:
+    resolution: {integrity: sha512-Ka6mDIcvkUJPiyn+G5Nn2/F9kEj7JFrYcLJt7GczWfn2f4oV4lsN3fragCdANOkgtKBxSc9WsXV4Cdg6HVZYPg==}
     engines: {node: '>=16.15.1', npm: '>=7.0.0'}
     hasBin: true
     peerDependencies:
