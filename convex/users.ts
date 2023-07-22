@@ -8,15 +8,17 @@ import { randomSlug } from "./lib/randomSlug";
 import { v } from "convex/values";
 import { withMutationRLS } from "./rls";
 
-export const loggedIn = mutationWithSession(async ({ auth, db, session }) => {
-  const identity = await auth.getUserIdentity();
-  if (!identity) {
-    throw new Error("Trying to store a user without authentication present.");
-  }
-  const userId = await getOrCreateUser(db, identity);
-  if (userId !== session.userId) {
-    claimSessionUser(db, session, userId);
-  }
+export const loggedIn = mutationWithSession({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Trying to store a user without authentication present.");
+    }
+    const userId = await getOrCreateUser(ctx.db, identity);
+    if (userId !== ctx.session.userId) {
+      claimSessionUser(ctx.db, ctx.session, userId);
+    }
+  },
 });
 
 async function claimSessionUser(
@@ -64,10 +66,12 @@ async function claimSessionUser(
 /**
  * Gets the name from the current session.
  */
-export const getMyProfile = queryWithSession(async ({ db, session }) => {
-  if (!session) return null;
-  const { name, pictureUrl } = await getUserById(db, session.userId);
-  return { name, pictureUrl };
+export const getMyProfile = queryWithSession({
+  handler: async (ctx) => {
+    if (!ctx.session) return null;
+    const { name, pictureUrl } = await getUserById(ctx.db, ctx.session.userId);
+    return { name, pictureUrl };
+  },
 });
 
 /**
@@ -75,26 +79,25 @@ export const getMyProfile = queryWithSession(async ({ db, session }) => {
  */
 export const setName = mutationWithSession({
   args: { name: v.string() },
-  handler: withMutationRLS(async ({ db, session }, { name }) => {
-    const user = await getUserById(db, session.userId);
+  handler: withMutationRLS(async (ctx, { name }) => {
+    const user = await getUserById(ctx.db, ctx.session.userId);
     if (name.length > 100) throw new Error("Name too long");
-    await db.patch(user._id, { name });
+    await ctx.db.patch(user._id, { name });
   }),
 });
 
 export const setPicture = mutationWithSession({
   args: { submissionId: v.id("submissions") },
-  handler: withMutationRLS(
-    async ({ db, session, storage }, { submissionId }) => {
-      const submission = await db.get(submissionId);
-      if (!submission) throw new Error("No submission found");
-      if (submission.result.status !== "saved")
-        throw new Error("Bad submission");
-      const pictureUrl = await storage.getUrl(submission.result.imageStorageId);
-      if (!pictureUrl) throw new Error("Picture is missing");
-      await db.patch(session.userId, { pictureUrl });
-    }
-  ),
+  handler: withMutationRLS(async (ctx, { submissionId }) => {
+    const submission = await ctx.db.get(submissionId);
+    if (!submission) throw new Error("No submission found");
+    if (submission.result.status !== "saved") throw new Error("Bad submission");
+    const pictureUrl = await ctx.storage.getUrl(
+      submission.result.imageStorageId
+    );
+    if (!pictureUrl) throw new Error("Picture is missing");
+    await ctx.db.patch(ctx.session.userId, { pictureUrl });
+  }),
 });
 
 export const getUserById = async (db: DatabaseReader, userId: Id<"users">) => {
@@ -126,13 +129,15 @@ export const createAnonymousUser = (db: DatabaseWriter) => {
   });
 };
 
-export const loggedOut = mutationWithSession(async ({ db, session }) => {
-  // Wipe the slate clean
-  await db.replace(session._id, {
-    userId: await createAnonymousUser(db),
-    gameIds: [],
-    submissionIds: [],
-  });
+export const loggedOut = mutationWithSession({
+  handler: async (ctx) => {
+    // Wipe the slate clean
+    await ctx.db.replace(ctx.session._id, {
+      userId: await createAnonymousUser(ctx.db),
+      gameIds: [],
+      submissionIds: [],
+    });
+  },
 });
 
 function createGravatarUrl(key: string): string {
@@ -147,15 +152,17 @@ function createGravatarUrl(key: string): string {
  * Creates a session and returns the id. For use with the SessionProvider on the
  * client.
  */
-export const createSession = mutation(async ({ db, auth }) => {
-  const identity = await auth.getUserIdentity();
-  let userId = identity && (await getOrCreateUser(db, identity));
-  if (!userId) {
-    userId = await createAnonymousUser(db);
-  }
-  return db.insert("sessions", {
-    userId,
-    gameIds: [],
-    submissionIds: [],
-  });
+export const createSession = mutation({
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    let userId = identity && (await getOrCreateUser(ctx.db, identity));
+    if (!userId) {
+      userId = await createAnonymousUser(ctx.db);
+    }
+    return ctx.db.insert("sessions", {
+      userId,
+      gameIds: [],
+      submissionIds: [],
+    });
+  },
 });

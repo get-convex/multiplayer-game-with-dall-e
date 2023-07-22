@@ -23,7 +23,7 @@ export const Health = () => {
 };
 
 const Submission = (props: { submissionId: Id<"submissions"> }) => {
-  const result = useSessionQuery("submissions:get", props);
+  const result = useSessionQuery(api.submissions.get, props);
   switch (result?.status) {
     case "generating":
       return (
@@ -58,7 +58,7 @@ export const CreateImage = ({
   title?: string;
 }) => {
   const [prompt, setPrompt] = useState("");
-  const startSubmission = useSessionMutation("submissions:start");
+  const startSubmission = useSessionMutation(api.submissions.start);
   const [submissionId, setSubmissionId] = useState<Id<"submissions">>();
   return (
     <div className="flex flex-col gap-4 max-w-lg">

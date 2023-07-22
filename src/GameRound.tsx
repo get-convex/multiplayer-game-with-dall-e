@@ -16,7 +16,7 @@ const GameRound: React.FC<{
   gameId?: Id<"games">;
   nextButton?: React.ReactElement | false;
 }> = ({ nextButton, roundId, game, gameId }) => {
-  const round = useSessionQuery("round:getRound", { roundId });
+  const round = useSessionQuery(api.round.getRound, { roundId });
   const progress = useMutation(api.round.progress);
   if (!round) return <Loading />;
   const footer = (

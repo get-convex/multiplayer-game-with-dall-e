@@ -1,3 +1,4 @@
+import { api } from "../convex/_generated/api";
 import classNames from "classnames";
 import { useState } from "react";
 import { GuessState } from "../convex/shared";
@@ -14,8 +15,8 @@ export function GuessStage({
   roundId: Id<"rounds">;
   gameId?: Id<"games">;
 }) {
-  const submitGuess = useSessionMutation("round:guess");
-  const addLike = useSessionMutation("round:like");
+  const submitGuess = useSessionMutation(api.round.guess);
+  const addLike = useSessionMutation(api.round.like);
   const [error, setError] = useState<string>();
   const [likes, setLikes] = useState<Set<string>>(new Set());
   return (

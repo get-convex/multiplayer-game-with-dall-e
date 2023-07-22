@@ -1,5 +1,5 @@
+import { api } from "../convex/_generated/api";
 import { useCallback } from "react";
-import { ClientGameState } from "../convex/shared";
 import { Id } from "../convex/_generated/dataModel";
 import GameRound from "./GameRound";
 import { Generate } from "./Generate";
@@ -12,14 +12,14 @@ const Game: React.FC<{
   gameId: Id<"games">;
   done: (nextGameId: Id<"games"> | null) => void;
 }> = ({ gameId, done }) => {
-  const game = useSessionQuery("game:get", { gameId });
-  const submit = useSessionMutation("game:submit");
-  const playAgain = useSessionMutation("game:playAgain");
+  const game = useSessionQuery(api.game.get, { gameId });
+  const submit = useSessionMutation(api.game.submit);
+  const playAgain = useSessionMutation(api.game.playAgain);
   const addRound = useCallback(
     (submissionId: Id<"submissions">) => submit({ submissionId, gameId }),
     [submit, gameId]
   );
-  const progress = useSessionMutation("game:progress");
+  const progress = useSessionMutation(api.game.progress);
   if (!game) return <article aria-busy="true"></article>;
   if (game.nextGameId) done(game.nextGameId);
   const next = game.hosting && (

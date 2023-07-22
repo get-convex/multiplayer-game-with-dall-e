@@ -4,6 +4,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import { useSessionMutation, useSessionQuery } from "./hooks/useServerSession";
 import { CreateImage } from "./CreateImage";
 import { ProfilePicture } from "./ProfilePicture";
+import { api } from "../convex/_generated/api";
 
 export default function ProfilePicker({
   open,
@@ -12,8 +13,8 @@ export default function ProfilePicker({
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
-  const profile = useSessionQuery("users:getMyProfile");
-  const setPicture = useSessionMutation("users:setPicture");
+  const profile = useSessionQuery(api.users.getMyProfile);
+  const setPicture = useSessionMutation(api.users.setPicture);
 
   return (
     <Transition.Root show={open} as={Fragment}>

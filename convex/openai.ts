@@ -17,7 +17,7 @@ export const addOption = action({
     prompt: v.string(),
     sessionId: v.id("sessions"),
   },
-  handler: async ({ runMutation }, { gameId, roundId, prompt, sessionId }) => {
+  handler: async (ctx, { gameId, roundId, prompt, sessionId }) => {
     const openai = makeOpenAIClient();
     // Check if the prompt is offensive.
     const modResponse = await openai.createModeration({
@@ -33,7 +33,7 @@ export const addOption = action({
         )}`,
       } as const;
     }
-    const status = (await runMutation(internal.round.addOption, {
+    const status = (await ctx.runMutation(internal.round.addOption, {
       sessionId,
       gameId,
       roundId,
@@ -62,31 +62,28 @@ const flaggedCategories = (
     .map(([category]) => category);
 };
 
-export const createImage = action(
-  async (
-    { runMutation, storage },
-    {
-      prompt,
-      submissionId,
-    }: { prompt: string; submissionId: Id<"submissions"> }
-  ) => {
+export const createImage = action({
+  args: { prompt: v.string(), submissionId: v.id("submissions") },
+  handler: async (ctx, { prompt, submissionId }) => {
     const start = Date.now();
     const elapsedMs = () => Date.now() - start;
     const openai = makeOpenAIClient();
 
     const fail = (reason: string): Promise<never> =>
-      runMutation(internal.submissions.update, {
-        submissionId,
-        result: {
-          status: "failed",
-          elapsedMs: elapsedMs(),
-          reason,
-        },
-      }).then(() => {
-        throw new Error(reason);
-      });
+      ctx
+        .runMutation(internal.submissions.update, {
+          submissionId,
+          result: {
+            status: "failed",
+            elapsedMs: elapsedMs(),
+            reason,
+          },
+        })
+        .then(() => {
+          throw new Error(reason);
+        });
 
-    runMutation(internal.submissions.update, {
+    await ctx.runMutation(internal.submissions.update, {
       submissionId,
       result: {
         status: "generating",
@@ -104,7 +101,7 @@ export const createImage = action(
       );
     }
 
-    runMutation(internal.submissions.update, {
+    await ctx.runMutation(internal.submissions.update, {
       submissionId,
       result: {
         status: "generating",
@@ -119,7 +116,7 @@ export const createImage = action(
     const dallEImageUrl = opanaiResponse.data.data[0]["url"];
     if (!dallEImageUrl) return await fail("No image URL returned from OpenAI");
 
-    runMutation(internal.submissions.update, {
+    await ctx.runMutation(internal.submissions.update, {
       submissionId,
       result: {
         status: "generating",
@@ -133,10 +130,10 @@ export const createImage = action(
     }
 
     // Store it in Convex storage
-    const storageId = await storage.store(await imageResponse.blob());
+    const storageId = await ctx.storage.store(await imageResponse.blob());
 
     // Write storageId as the body of the message to the Convex database.
-    await runMutation(internal.submissions.update, {
+    await ctx.runMutation(internal.submissions.update, {
       submissionId,
       result: {
         status: "saved",
@@ -144,5 +141,5 @@ export const createImage = action(
         elapsedMs: elapsedMs(),
       },
     });
-  }
-);
+  },
+});

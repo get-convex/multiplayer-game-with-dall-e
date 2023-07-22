@@ -10,11 +10,11 @@ const ImageTimeoutMs = 30000;
 
 export const start = mutationWithSession({
   args: { prompt: v.string() },
-  handler: async ({ db, session, scheduler }, { prompt }) => {
+  handler: async (ctx, { prompt }) => {
     if (prompt.length > MaxPromptLength) throw new Error("Prompt too long");
-    const submissionId = await db.insert("submissions", {
+    const submissionId = await ctx.db.insert("submissions", {
       prompt,
-      authorId: session.userId,
+      authorId: ctx.session.userId,
       result: {
         status: "generating",
         details: "Starting...",
@@ -22,22 +22,23 @@ export const start = mutationWithSession({
     });
     // Store the current submission in the session to associate with a
     // new user if we log in.
-    session.submissionIds.push(submissionId);
-    db.patch(session._id, { submissionIds: session.submissionIds });
-    scheduler.runAfter(0, api.openai.createImage, {
+    ctx.session.submissionIds.push(submissionId);
+    ctx.db.patch(ctx.session._id, { submissionIds: ctx.session.submissionIds });
+    ctx.scheduler.runAfter(0, api.openai.createImage, {
       prompt,
       submissionId,
     });
-    scheduler.runAfter(ImageTimeoutMs, internal.submissions.timeout, {
+    ctx.scheduler.runAfter(ImageTimeoutMs, internal.submissions.timeout, {
       submissionId,
     });
     return submissionId;
   },
 });
 
-export const timeout = internalMutation(
-  async ({ db }, { submissionId }: { submissionId: Id<"submissions"> }) => {
-    const submission = await db.get(submissionId);
+export const timeout = internalMutation({
+  args: { submissionId: v.id("submissions") },
+  handler: async (ctx, { submissionId }) => {
+    const submission = await ctx.db.get(submissionId);
     if (!submission) throw new Error("No submission found");
     if (submission.result.status === "generating") {
       submission.result = {
@@ -45,19 +46,19 @@ export const timeout = internalMutation(
         reason: "Timed out",
         elapsedMs: ImageTimeoutMs,
       };
-      db.replace(submissionId, submission);
+      ctx.db.replace(submissionId, submission);
     }
-  }
-);
+  },
+});
 
 export const get = queryWithSession({
   args: { submissionId: v.id("submissions") },
-  handler: withQueryRLS(async ({ db, session, storage }, { submissionId }) => {
-    const submission = await db.get(submissionId);
+  handler: withQueryRLS(async (ctx, { submissionId }) => {
+    const submission = await ctx.db.get(submissionId);
     if (!submission) return null;
     if (submission.result.status === "saved") {
       const { imageStorageId, ...rest } = submission.result;
-      const url = await storage.getUrl(imageStorageId);
+      const url = await ctx.storage.getUrl(imageStorageId);
       if (!url) throw new Error("Image not found");
       return { url, ...rest };
     }
@@ -65,28 +66,30 @@ export const get = queryWithSession({
   }),
 });
 
-export const health = query(async ({ db }) => {
-  const latestSubmissions = await db
-    .query("submissions")
-    .order("desc")
-    .filter((q) => q.neq(q.field("result.status"), "generating"))
-    .take(5);
-  let totalTime = 0;
-  let successes = 0;
-  for (const submission of latestSubmissions) {
-    // Appease typescript
-    if (submission.result.status === "generating") continue;
-    totalTime += submission.result.elapsedMs;
-    if (submission.result.status === "saved") successes += 1;
-  }
-  const n = latestSubmissions.length;
-  return n ? [totalTime / n, successes / n] : [5000, 1.0];
+export const health = query({
+  handler: async (ctx) => {
+    const latestSubmissions = await ctx.db
+      .query("submissions")
+      .order("desc")
+      .filter((q) => q.neq(q.field("result.status"), "generating"))
+      .take(5);
+    let totalTime = 0;
+    let successes = 0;
+    for (const submission of latestSubmissions) {
+      // Appease typescript
+      if (submission.result.status === "generating") continue;
+      totalTime += submission.result.elapsedMs;
+      if (submission.result.status === "saved") successes += 1;
+    }
+    const n = latestSubmissions.length;
+    return n ? [totalTime / n, successes / n] : [5000, 1.0];
+  },
 });
 
-export const update = internalMutation(
-  withMutationRLS(
+export const update = internalMutation({
+  handler: withMutationRLS(
     async (
-      { db },
+      ctx,
       {
         submissionId,
         result,
@@ -95,10 +98,10 @@ export const update = internalMutation(
         result: Doc<"submissions">["result"];
       }
     ) => {
-      const submission = await db.get(submissionId);
+      const submission = await ctx.db.get(submissionId);
       if (!submission) throw new Error("Unknown submission");
       submission.result = result;
-      await db.replace(submissionId, submission);
+      await ctx.db.replace(submissionId, submission);
     }
-  )
-);
+  ),
+});

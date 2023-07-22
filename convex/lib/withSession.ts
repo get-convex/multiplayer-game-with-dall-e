@@ -17,13 +17,7 @@ import {
   ValidatedFunction,
 } from "convex/server";
 import { Doc, Id } from "../_generated/dataModel";
-import {
-  DatabaseReader,
-  mutation,
-  MutationCtx,
-  query,
-  QueryCtx,
-} from "../_generated/server";
+import { DatabaseReader, mutation, MutationCtx, query, QueryCtx } from "../_generated/server";
 import { ObjectType, PropertyValidators, v } from "convex/values";
 import { MergeArgsForRegistered, generateMiddleware } from "./middlewareUtils";
 

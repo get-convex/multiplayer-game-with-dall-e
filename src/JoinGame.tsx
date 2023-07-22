@@ -1,7 +1,8 @@
+import { api } from "../convex/_generated/api";
 import { useSessionMutation } from "./hooks/useServerSession";
 
 export function JoinGame(props: { gameCode: string }) {
-  const joinGame = useSessionMutation("game:join");
+  const joinGame = useSessionMutation(api.game.join);
   return (
     <div>
       <button

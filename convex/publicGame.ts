@@ -1,26 +1,25 @@
-import { api, internal } from "./_generated/api";
+import { internal } from "./_generated/api";
 import { internalMutation, query } from "./_generated/server";
 
-export const get = query(async ({ db }) => {
-  const publicGame = await db.query("publicGame").unique();
-  if (!publicGame) {
-    console.warn("No public game currently.");
-    return null;
-  }
-  return publicGame.roundId;
+export const get = query({
+  handler: async (ctx) => {
+    const publicGame = await ctx.db.query("publicGame").unique();
+    if (!publicGame) {
+      console.warn("No public game currently.");
+      return null;
+    }
+    return publicGame.roundId;
+  },
 });
 
 const PublicGuessMs = 15000;
 const PublicRevealMs = 10000;
 
-export const progress = internalMutation(
-  async (
-    { db, scheduler },
-    { fromStage }: { fromStage: "guess" | "reveal" }
-  ) => {
-    const publicGame = await db.query("publicGame").unique();
+export const progress = internalMutation({
+  handler: async (ctx, { fromStage }: { fromStage: "guess" | "reveal" }) => {
+    const publicGame = await ctx.db.query("publicGame").unique();
     if (!publicGame) throw new Error("No public game");
-    const currentRound = await db.get(publicGame.roundId);
+    const currentRound = await ctx.db.get(publicGame.roundId);
     if (!currentRound) throw new Error("Round not found");
 
     if (currentRound.stageEnd! > Date.now()) {
@@ -36,12 +35,12 @@ export const progress = internalMutation(
           (option) => option.likes.length || option.votes.length
         )
       ) {
-        scheduler.runAfter(PublicGuessMs, internal.publicGame.progress, {
+        ctx.scheduler.runAfter(PublicGuessMs, internal.publicGame.progress, {
           fromStage: "guess",
         });
         return "guess again";
       }
-      await db.patch(currentRound._id, {
+      await ctx.db.patch(currentRound._id, {
         stage: "reveal",
         stageStart: Date.now(),
         stageEnd: Date.now() + PublicRevealMs,
@@ -51,7 +50,7 @@ export const progress = internalMutation(
     if (currentRound.stage !== "reveal") {
       throw new Error(`Invalid stage: ${currentRound.stage}`);
     }
-    const round = await db
+    const round = await ctx.db
       .query("rounds")
       .withIndex("public_game", (q) =>
         q.eq("publicRound", false).eq("stage", "reveal")
@@ -59,7 +58,7 @@ export const progress = internalMutation(
       .order("asc")
       .first();
     if (!round) throw new Error("No public round.");
-    await db.patch(round._id, { lastUsed: Date.now() });
+    await ctx.db.patch(round._id, { lastUsed: Date.now() });
     for (const option of round.options) {
       option.likes = [];
       option.votes = [];
@@ -69,11 +68,11 @@ export const progress = internalMutation(
     round.stageEnd = Date.now() + PublicGuessMs;
     round.publicRound = true;
     const { _id, _creationTime, ...rest } = round;
-    const roundId = await db.insert("rounds", rest);
-    await db.patch(publicGame._id, { roundId });
-    scheduler.runAfter(PublicGuessMs, internal.publicGame.progress, {
+    const roundId = await ctx.db.insert("rounds", rest);
+    await ctx.db.patch(publicGame._id, { roundId });
+    ctx.scheduler.runAfter(PublicGuessMs, internal.publicGame.progress, {
       fromStage: "guess",
     });
     return "->guess";
-  }
-);
+  },
+});

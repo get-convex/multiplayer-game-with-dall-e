@@ -6,11 +6,7 @@ import {
   withSession,
 } from "./lib/withSession";
 import { Doc, Id } from "./_generated/dataModel";
-import {
-  DatabaseWriter,
-  internalMutation,
-  mutation,
-} from "./_generated/server";
+import { DatabaseWriter, internalMutation, mutation } from "./_generated/server";
 import { GuessState, LabelState, MaxPlayers, RevealState } from "./shared";
 import { v } from "convex/values";
 import { asyncMap } from "./lib/relationships";
@@ -42,19 +38,19 @@ export const startRound = async (db: DatabaseWriter, roundId: Id<"rounds">) => {
 export const getRound = queryWithSession({
   args: { roundId: v.id("rounds") },
   handler: async (
-    { db, session, storage },
+    ctx,
     { roundId }
   ): Promise<LabelState | GuessState | RevealState> => {
-    const round = await db.get(roundId);
+    const round = await ctx.db.get(roundId);
     if (!round) throw new Error("Round not found");
     const { stage, stageStart, stageEnd } = round;
-    const imageUrl = await storage.getUrl(round.imageStorageId);
+    const imageUrl = await ctx.storage.getUrl(round.imageStorageId);
     if (!imageUrl) throw new Error("Image not found");
 
     const userInfo = async (userId: Id<"users">) => {
-      const user = (await db.get(userId))!;
+      const user = (await ctx.db.get(userId))!;
       return {
-        me: user._id === session?.userId,
+        me: user._id === ctx.session?.userId,
         name: user.name,
         pictureUrl: user.pictureUrl,
       };
@@ -64,7 +60,7 @@ export const getRound = queryWithSession({
       case "label":
         const labelState: LabelState = {
           stage,
-          mine: round.authorId === session?.userId,
+          mine: round.authorId === ctx.session?.userId,
           imageUrl,
           stageStart,
           stageEnd,
@@ -79,15 +75,15 @@ export const getRound = queryWithSession({
           [] as Id<"users">[]
         );
         const myGuess = round.options.find(
-          (o) => !!o.votes.find((voteId) => voteId === session?.userId)
+          (o) => !!o.votes.find((voteId) => voteId === ctx.session?.userId)
         )?.prompt;
         const myPrompt = round.options.find(
-          (o) => o.authorId === session?.userId
+          (o) => o.authorId === ctx.session?.userId
         )?.prompt;
         const guessState: GuessState = {
           options: round.options.map((option) => option.prompt),
           stage,
-          mine: round.authorId === session?.userId,
+          mine: round.authorId === ctx.session?.userId,
           imageUrl,
           stageStart,
           stageEnd,
@@ -121,7 +117,7 @@ export const getRound = queryWithSession({
             ),
           })),
           stage,
-          me: session!.userId,
+          me: ctx.session!.userId,
           authorId: round.authorId,
           imageUrl,
           stageStart,
@@ -207,20 +203,20 @@ export const addOption = internalMutation(
       prompt: v.string(),
     },
     handler: async (
-      { db, scheduler, session },
+      ctx,
       { gameId, roundId, prompt }
     ): Promise<OptionResult> => {
-      const round = await db.get(roundId);
+      const round = await ctx.db.get(roundId);
       if (!round) throw new Error("Round not found");
       if (round.stage !== "label") {
         return { success: false, reason: "Too late to add a prompt." };
       }
-      if (round.authorId === session.userId) {
+      if (round.authorId === ctx.session.userId) {
         throw new Error("You can't submit a prompt for your own image.");
       }
       if (
         round.options.findIndex(
-          (option) => option.authorId === session.userId
+          (option) => option.authorId === ctx.session.userId
         ) !== -1
       ) {
         return { success: false, reason: "You already added a prompt." };
@@ -246,17 +242,17 @@ export const addOption = internalMutation(
       }
 
       round.options.push({
-        authorId: session.userId,
+        authorId: ctx.session.userId,
         prompt,
         votes: [],
         likes: [],
       });
-      await db.patch(round._id, { options: round.options });
-      const game = gameId && (await db.get(gameId));
+      await ctx.db.patch(round._id, { options: round.options });
+      const game = gameId && (await ctx.db.get(gameId));
       if (round.options.length === game?.playerIds.length) {
         // All players have added options
-        await db.patch(round._id, beginGuessPatch(round));
-        scheduler.runAfter(GuessDurationMs, api.round.progress, {
+        await ctx.db.patch(round._id, beginGuessPatch(round));
+        ctx.scheduler.runAfter(GuessDurationMs, api.round.progress, {
           roundId: round._id,
           fromStage: "guess",
         });
@@ -268,17 +264,17 @@ export const addOption = internalMutation(
 
 export const progress = mutation(
   async (
-    { db },
+    ctx,
     {
       roundId,
       fromStage,
     }: { roundId: Id<"rounds">; fromStage: Doc<"rounds">["stage"] }
   ) => {
-    const round = await db.get(roundId);
+    const round = await ctx.db.get(roundId);
     if (!round) throw new Error("Round not found: " + roundId);
     if (round.stage === fromStage) {
       const stage = fromStage === "label" ? "guess" : "reveal";
-      await db.patch(round._id, { stage });
+      await ctx.db.patch(round._id, { stage });
     }
   }
 );
@@ -318,8 +314,8 @@ export const guess = mutationWithSession({
     prompt: v.string(),
     gameId: v.optional(v.id("games")),
   },
-  handler: async ({ db, session }, { roundId, prompt, gameId }) => {
-    const round = await db.get(roundId);
+  handler: async (ctx, { roundId, prompt, gameId }) => {
+    const round = await ctx.db.get(roundId);
     if (!round) throw new Error("Round not found");
     if (round.stage !== "guess") {
       return { success: false, reason: "Too late to vote." };
@@ -334,7 +330,7 @@ export const guess = mutationWithSession({
         reason: "This prompt does not exist.",
       };
     }
-    if (optionVotedFor.authorId === session.userId) {
+    if (optionVotedFor.authorId === ctx.session.userId) {
       return {
         success: false,
         retry: true,
@@ -343,7 +339,7 @@ export const guess = mutationWithSession({
     }
     const existingVote = round.options.find(
       (option) =>
-        option.votes.findIndex((vote) => vote === session.userId) !== -1
+        option.votes.findIndex((vote) => vote === ctx.session.userId) !== -1
     );
     if (prompt === existingVote?.prompt) {
       return {
@@ -354,16 +350,16 @@ export const guess = mutationWithSession({
     }
     if (existingVote) {
       // Remove existing vote
-      const voteIndex = existingVote.votes.indexOf(session.userId);
+      const voteIndex = existingVote.votes.indexOf(ctx.session.userId);
       existingVote.votes = existingVote.votes
         .slice(0, voteIndex)
         .concat(...existingVote.votes.slice(voteIndex + 1));
     }
-    optionVotedFor.votes.push(session.userId);
-    await db.patch(round._id, { options: round.options });
+    optionVotedFor.votes.push(ctx.session.userId);
+    await ctx.db.patch(round._id, { options: round.options });
 
     if (gameId) {
-      const game = (await db.get(gameId))!;
+      const game = (await ctx.db.get(gameId))!;
       const noGuess = new Set(game.playerIds.map((id) => id.toString()));
       noGuess.delete(round.authorId.toString());
       for (const option of round.options) {
@@ -372,7 +368,7 @@ export const guess = mutationWithSession({
         }
       }
       if (noGuess.size === 0) {
-        await db.patch(round._id, revealPatch(round));
+        await ctx.db.patch(round._id, revealPatch(round));
       }
     }
     return { success: true, retry: true };
@@ -385,8 +381,8 @@ export const like = mutationWithSession({
     prompt: v.string(),
     gameId: v.optional(v.id("games")),
   },
-  handler: async ({ db, session }, { roundId, prompt, gameId }) => {
-    const round = await db.get(roundId);
+  handler: async (ctx, { roundId, prompt, gameId }) => {
+    const round = await ctx.db.get(roundId);
     if (!round) throw new Error("Round not found");
     if (round.stage !== "guess") {
       return { success: false, reason: "Too late to like." };
@@ -401,7 +397,7 @@ export const like = mutationWithSession({
         reason: "This prompt does not exist.",
       };
     }
-    if (optionVotedFor.authorId === session.userId) {
+    if (optionVotedFor.authorId === ctx.session.userId) {
       return {
         success: false,
         retry: true,
@@ -410,7 +406,7 @@ export const like = mutationWithSession({
     }
     const existingLike = round.options.find(
       (option) =>
-        option.likes.findIndex((like) => like === session.userId) !== -1
+        option.likes.findIndex((like) => like === ctx.session.userId) !== -1
     );
     if (prompt === existingLike?.prompt) {
       return {
@@ -419,8 +415,8 @@ export const like = mutationWithSession({
         reason: "You already voted for this option.",
       };
     }
-    optionVotedFor.likes.push(session.userId);
-    await db.patch(round._id, { options: round.options });
+    optionVotedFor.likes.push(ctx.session.userId);
+    await ctx.db.patch(round._id, { options: round.options });
     [];
   },
 });
