@@ -1,12 +1,11 @@
 "use node";
-import { api, internal } from "./_generated/api";
+import { internal } from "./_generated/api";
 import {
   Configuration,
   CreateModerationResponseResultsInner,
   OpenAIApi,
 } from "openai";
-import { Id } from "./_generated/dataModel";
-import { action } from "./_generated/server";
+import { action, internalAction } from "./_generated/server";
 import { v } from "convex/values";
 import { OptionResult } from "./round";
 
@@ -62,7 +61,7 @@ const flaggedCategories = (
     .map(([category]) => category);
 };
 
-export const createImage = action({
+export const createImage = internalAction({
   args: { prompt: v.string(), submissionId: v.id("submissions") },
   handler: async (ctx, { prompt, submissionId }) => {
     const start = Date.now();

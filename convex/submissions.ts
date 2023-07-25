@@ -1,4 +1,4 @@
-import { api, internal } from "./_generated/api";
+import { internal } from "./_generated/api";
 import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import { internalMutation, query } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
@@ -24,7 +24,7 @@ export const start = mutationWithSession({
     // new user if we log in.
     ctx.session.submissionIds.push(submissionId);
     ctx.db.patch(ctx.session._id, { submissionIds: ctx.session.submissionIds });
-    ctx.scheduler.runAfter(0, api.openai.createImage, {
+    ctx.scheduler.runAfter(0, internal.openai.createImage, {
       prompt,
       submissionId,
     });
@@ -87,21 +87,19 @@ export const health = query({
 });
 
 export const update = internalMutation({
-  handler: withMutationRLS(
-    async (
-      ctx,
-      {
-        submissionId,
-        result,
-      }: {
-        submissionId: Id<"submissions">;
-        result: Doc<"submissions">["result"];
-      }
-    ) => {
-      const submission = await ctx.db.get(submissionId);
-      if (!submission) throw new Error("Unknown submission");
-      submission.result = result;
-      await ctx.db.replace(submissionId, submission);
+  handler: async (
+    ctx,
+    {
+      submissionId,
+      result,
+    }: {
+      submissionId: Id<"submissions">;
+      result: Doc<"submissions">["result"];
     }
-  ),
+  ) => {
+    const submission = await ctx.db.get(submissionId);
+    if (!submission) throw new Error("Unknown submission");
+    submission.result = result;
+    await ctx.db.replace(submissionId, submission);
+  },
 });
