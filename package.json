@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "dev:backend": "convex dev",
     "dev:frontend": "vite --open --clearScreen false",
-    "dev:init": "convex dev --once"
+    "dev:init": "convex dev --until-success"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.13",
