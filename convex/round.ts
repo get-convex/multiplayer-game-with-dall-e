@@ -6,7 +6,11 @@ import {
   withSession,
 } from "./lib/withSession";
 import { Doc, Id } from "./_generated/dataModel";
-import { DatabaseWriter, internalMutation, mutation } from "./_generated/server";
+import {
+  DatabaseWriter,
+  internalMutation,
+  mutation,
+} from "./_generated/server";
 import { GuessState, LabelState, MaxPlayers, RevealState } from "./shared";
 import { v } from "convex/values";
 import { asyncMap } from "./lib/relationships";
@@ -122,12 +126,10 @@ export const getRound = queryWithSession({
           imageUrl,
           stageStart,
           stageEnd,
-          users: new Map(
-            await asyncMap(
-              allUsers.keys(),
-              async (userId) => [userId, await userInfo(userId)] as const
-            )
-          ),
+          users: await asyncMap(allUsers.keys(), async (userId) => ({
+            userId,
+            ...(await userInfo(userId)),
+          })),
         };
         return revealState;
     }
@@ -142,16 +144,17 @@ export function calculateScoreDeltas(
   isCorrect: boolean,
   option: Doc<"rounds">["options"][0]
 ) {
-  const scoreDeltas = new Map([
-    [
-      option.authorId,
-      option.votes.length *
+  const scoreDeltas = [
+    {
+      userId: option.authorId,
+      score:
+        option.votes.length *
         (isCorrect ? CorrectAuthorScore : AlternateAuthorScore),
-    ],
-  ]);
+    },
+  ];
   if (isCorrect) {
     for (const userId of option.votes) {
-      scoreDeltas.set(userId, CorrectGuesserScore);
+      scoreDeltas.push({ userId, score: CorrectGuesserScore });
     }
   }
   return scoreDeltas;

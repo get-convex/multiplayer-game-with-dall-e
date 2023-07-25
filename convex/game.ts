@@ -54,20 +54,18 @@ export const get = queryWithSession({
     const game = await ctx.db.get(gameId);
     if (!game) throw new Error("Game not found");
     const rounds = pruneNull(await getAll(ctx.db, game.roundIds));
-    const playerLikes = new Map<Id<"users">, number>();
-    const playerScore = new Map<Id<"users">, number>();
+    const playerLikes: Record<Id<"users">, number> = {};
+    const playerScore: Record<Id<"users">, number> = {};
     for (const round of rounds) {
       if (round.stage === "reveal") {
         for (const option of round.options) {
-          playerLikes.set(
-            option.authorId,
-            option.likes.length + (playerLikes.get(option.authorId) ?? 0)
-          );
-          for (const [userId, delta] of calculateScoreDeltas(
+          playerLikes[option.authorId] =
+            option.likes.length + (playerLikes[option.authorId] ?? 0);
+          for (const { userId, score: delta } of calculateScoreDeltas(
             option.authorId === round.authorId,
             option
           )) {
-            playerScore.set(userId, delta + (playerScore.get(userId) ?? 0));
+            playerScore[userId] = delta + (playerScore[userId] ?? 0);
           }
         }
       }
@@ -80,8 +78,8 @@ export const get = queryWithSession({
         me: player._id === ctx.session?.userId,
         name,
         pictureUrl,
-        score: playerScore.get(player._id) ?? 0,
-        likes: playerLikes.get(player._id) ?? 0,
+        score: playerScore[player._id] ?? 0,
+        likes: playerLikes[player._id] ?? 0,
         submitted: !!roundPlayerIds.find((id) => id === playerId),
       };
     });

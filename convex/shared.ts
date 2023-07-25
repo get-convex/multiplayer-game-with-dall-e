@@ -62,29 +62,26 @@ export type GuessState = {
   options: string[];
 };
 
-type userIdString = string;
 export type RevealState = {
   stage: "reveal";
-  me: userIdString;
-  authorId: userIdString;
+  me: Id<"users">;
+  authorId: Id<"users">;
   imageUrl: string;
   stageStart: number;
   stageEnd: number;
-  users: Map<
-    string,
-    {
-      me: boolean;
-      name: string;
-      pictureUrl: string;
-    }
-  >;
+  users: {
+    userId: Id<"users">;
+    me: boolean;
+    name: string;
+    pictureUrl: string;
+  }[];
   results: {
-    authorId: userIdString;
+    authorId: Id<"users">;
     prompt: string;
-    votes: userIdString[];
-    likes: userIdString[];
+    votes: Id<"users">[];
+    likes: Id<"users">[];
     // userid to score
-    scoreDeltas: Map<userIdString, number>;
+    scoreDeltas: { userId: Id<"users">; score: number }[];
   }[];
 };
 
