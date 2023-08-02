@@ -35,7 +35,7 @@ export const progress = internalMutation({
           (option) => option.likes.length || option.votes.length
         )
       ) {
-        ctx.scheduler.runAfter(PublicGuessMs, internal.publicGame.progress, {
+        await ctx.scheduler.runAfter(PublicGuessMs, internal.publicGame.progress, {
           fromStage: "guess",
         });
         return "guess again";
@@ -70,7 +70,7 @@ export const progress = internalMutation({
     const { _id, _creationTime, ...rest } = round;
     const roundId = await ctx.db.insert("rounds", rest);
     await ctx.db.patch(publicGame._id, { roundId });
-    ctx.scheduler.runAfter(PublicGuessMs, internal.publicGame.progress, {
+    await ctx.scheduler.runAfter(PublicGuessMs, internal.publicGame.progress, {
       fromStage: "guess",
     });
     return "->guess";
