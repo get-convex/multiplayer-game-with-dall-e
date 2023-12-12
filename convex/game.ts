@@ -1,16 +1,18 @@
 import { api } from "./_generated/api";
 import { calculateScoreDeltas, newRound, startRound } from "./round";
-import { mutationWithSession, queryWithSession } from "./lib/withSession";
 import { ClientGameState, MaxPlayers } from "./shared";
 import { getUserById } from "./users";
 import { Doc, Id } from "./_generated/dataModel";
 import { randomSlug } from "./lib/randomSlug";
 import { v } from "convex/values";
-import { asyncMap, getAll, pruneNull } from "./lib/relationships";
+import { asyncMap, pruneNull } from "convex-helpers";
+import { getAll } from "convex-helpers/server/relationships";
+import { sessionMutation, sessionQuery } from "./lib/myFunctions";
 
 const GenerateDurationMs = 120000;
 
-export const create = mutationWithSession({
+export const create = sessionMutation({
+  args: {},
   handler: async (ctx) => {
     const gameId = await ctx.db.insert("games", {
       hostId: ctx.session.userId,
@@ -25,7 +27,7 @@ export const create = mutationWithSession({
   },
 });
 
-export const playAgain = mutationWithSession({
+export const playAgain = sessionMutation({
   args: { oldGameId: v.id("games") },
   handler: async (ctx, { oldGameId }) => {
     const oldGame = await ctx.db.get(oldGameId);
@@ -47,7 +49,7 @@ export const playAgain = mutationWithSession({
   },
 });
 
-export const get = queryWithSession({
+export const get = sessionQuery({
   args: { gameId: v.id("games") },
   handler: async (ctx, { gameId }): Promise<ClientGameState> => {
     // Grab the most recent game with this code.
@@ -94,7 +96,7 @@ export const get = queryWithSession({
   },
 });
 
-export const join = mutationWithSession({
+export const join = sessionMutation({
   args: { gameCode: v.string() },
   handler: async (ctx, { gameCode }) => {
     // Grab the most recent game with this gameCode, if it exists
@@ -122,7 +124,7 @@ export const join = mutationWithSession({
   },
 });
 
-export const submit = mutationWithSession({
+export const submit = sessionMutation({
   args: { submissionId: v.id("submissions"), gameId: v.id("games") },
   handler: async (ctx, { submissionId, gameId }) => {
     const game = await ctx.db.get(gameId);
@@ -159,7 +161,7 @@ export const submit = mutationWithSession({
   },
 });
 
-export const progress = mutationWithSession({
+export const progress = sessionMutation({
   args: {
     gameId: v.id("games"),
     fromStage: v.union(
@@ -192,7 +194,7 @@ export const progress = mutationWithSession({
     game.state = state;
     await ctx.db.replace(game._id, game);
     if (state.stage === "lobby") {
-      ctx.scheduler.runAfter(GenerateDurationMs, api.game.progress, {
+      await ctx.scheduler.runAfter(GenerateDurationMs, api.game.progress, {
         sessionId: ctx.session._id,
         gameId,
         fromStage: state.stage,

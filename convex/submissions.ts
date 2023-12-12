@@ -1,14 +1,17 @@
 import { internal } from "./_generated/api";
-import { mutationWithSession, queryWithSession } from "./lib/withSession";
-import { internalMutation, query } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { MaxPromptLength } from "./shared";
 import { v } from "convex/values";
-import { withMutationRLS, withQueryRLS } from "./rls";
+import {
+  myInternalMutation,
+  myQuery,
+  sessionMutation,
+  sessionQuery,
+} from "./lib/myFunctions";
 
 const ImageTimeoutMs = 30000;
 
-export const start = mutationWithSession({
+export const start = sessionMutation({
   args: { prompt: v.string() },
   handler: async (ctx, { prompt }) => {
     if (prompt.length > MaxPromptLength) throw new Error("Prompt too long");
@@ -23,19 +26,21 @@ export const start = mutationWithSession({
     // Store the current submission in the session to associate with a
     // new user if we log in.
     ctx.session.submissionIds.push(submissionId);
-    ctx.db.patch(ctx.session._id, { submissionIds: ctx.session.submissionIds });
-    ctx.scheduler.runAfter(0, internal.openai.createImage, {
+    await ctx.db.patch(ctx.session._id, {
+      submissionIds: ctx.session.submissionIds,
+    });
+    await ctx.scheduler.runAfter(0, internal.openai.createImage, {
       prompt,
       submissionId,
     });
-    ctx.scheduler.runAfter(ImageTimeoutMs, internal.submissions.timeout, {
+    await ctx.scheduler.runAfter(ImageTimeoutMs, internal.submissions.timeout, {
       submissionId,
     });
     return submissionId;
   },
 });
 
-export const timeout = internalMutation({
+export const timeout = myInternalMutation({
   args: { submissionId: v.id("submissions") },
   handler: async (ctx, { submissionId }) => {
     const submission = await ctx.db.get(submissionId);
@@ -46,14 +51,14 @@ export const timeout = internalMutation({
         reason: "Timed out",
         elapsedMs: ImageTimeoutMs,
       };
-      ctx.db.replace(submissionId, submission);
+      await ctx.db.replace(submissionId, submission);
     }
   },
 });
 
-export const get = queryWithSession({
+export const get = sessionQuery({
   args: { submissionId: v.id("submissions") },
-  handler: withQueryRLS(async (ctx, { submissionId }) => {
+  handler: async (ctx, { submissionId }) => {
     const submission = await ctx.db.get(submissionId);
     if (!submission) return null;
     if (submission.result.status === "saved") {
@@ -63,10 +68,10 @@ export const get = queryWithSession({
       return { url, ...rest };
     }
     return submission.result;
-  }),
+  },
 });
 
-export const health = query({
+export const health = myQuery({
   handler: async (ctx) => {
     const latestSubmissions = await ctx.db
       .query("submissions")
@@ -86,7 +91,7 @@ export const health = query({
   },
 });
 
-export const update = internalMutation({
+export const update = myInternalMutation({
   handler: async (
     ctx,
     {

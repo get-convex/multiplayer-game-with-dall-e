@@ -1,19 +1,16 @@
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { WithoutSystemFields } from "convex/server";
-import {
-  mutationWithSession,
-  queryWithSession,
-  withSession,
-} from "./lib/withSession";
 import { Doc, Id } from "./_generated/dataModel";
-import {
-  DatabaseWriter,
-  internalMutation,
-  mutation,
-} from "./_generated/server";
+import { DatabaseWriter } from "./_generated/server";
 import { GuessState, LabelState, MaxPlayers, RevealState } from "./shared";
 import { v } from "convex/values";
-import { asyncMap } from "./lib/relationships";
+import { asyncMap } from "convex-helpers";
+import {
+  internalSessionMutation,
+  myMutation,
+  sessionMutation,
+  sessionQuery,
+} from "./lib/myFunctions";
 
 const LabelDurationMs = 30000;
 const GuessDurationMs = 30000;
@@ -39,7 +36,7 @@ export const startRound = async (db: DatabaseWriter, roundId: Id<"rounds">) => {
   });
 };
 
-export const getRound = queryWithSession({
+export const getRound = sessionQuery({
   args: { roundId: v.id("rounds") },
   handler: async (
     ctx,
@@ -198,74 +195,69 @@ export type OptionResult =
   | { success: true }
   | { success: false; retry?: boolean; reason: string };
 
-export const addOption = internalMutation(
-  withSession({
-    args: {
-      gameId: v.optional(v.id("games")),
-      roundId: v.id("rounds"),
-      prompt: v.string(),
-    },
-    handler: async (
-      ctx,
-      { gameId, roundId, prompt }
-    ): Promise<OptionResult> => {
-      const round = await ctx.db.get(roundId);
-      if (!round) throw new Error("Round not found");
-      if (round.stage !== "label") {
-        return { success: false, reason: "Too late to add a prompt." };
-      }
-      if (round.authorId === ctx.session.userId) {
-        throw new Error("You can't submit a prompt for your own image.");
-      }
-      if (
-        round.options.findIndex(
-          (option) => option.authorId === ctx.session.userId
-        ) !== -1
-      ) {
-        return { success: false, reason: "You already added a prompt." };
-      }
-      if (round.options.length === MaxPlayers) {
-        return { success: false, reason: "This round is full." };
-      }
-      if (
-        round.options.findIndex(
-          (option) =>
-            levenshteinDistance(
-              option.prompt.toLocaleLowerCase(),
-              prompt.toLocaleLowerCase()
-            ) <
-            prompt.length / 2
-        ) !== -1
-      ) {
-        return {
-          success: false,
-          retry: true,
-          reason: "This prompt is too similar to existing prompt(s).",
-        };
-      }
+export const addOption = internalSessionMutation({
+  args: {
+    gameId: v.optional(v.id("games")),
+    roundId: v.id("rounds"),
+    prompt: v.string(),
+  },
+  handler: async (ctx, { gameId, roundId, prompt }): Promise<OptionResult> => {
+    const round = await ctx.db.get(roundId);
+    if (!round) throw new Error("Round not found");
+    if (round.stage !== "label") {
+      return { success: false, reason: "Too late to add a prompt." };
+    }
+    if (round.authorId === ctx.session.userId) {
+      throw new Error("You can't submit a prompt for your own image.");
+    }
+    if (
+      round.options.findIndex(
+        (option) => option.authorId === ctx.session.userId
+      ) !== -1
+    ) {
+      return { success: false, reason: "You already added a prompt." };
+    }
+    if (round.options.length === MaxPlayers) {
+      return { success: false, reason: "This round is full." };
+    }
+    if (
+      round.options.findIndex(
+        (option) =>
+          levenshteinDistance(
+            option.prompt.toLocaleLowerCase(),
+            prompt.toLocaleLowerCase()
+          ) <
+          prompt.length / 2
+      ) !== -1
+    ) {
+      return {
+        success: false,
+        retry: true,
+        reason: "This prompt is too similar to existing prompt(s).",
+      };
+    }
 
-      round.options.push({
-        authorId: ctx.session.userId,
-        prompt,
-        votes: [],
-        likes: [],
+    round.options.push({
+      authorId: ctx.session.userId,
+      prompt,
+      votes: [],
+      likes: [],
+    });
+    await ctx.db.patch(round._id, { options: round.options });
+    const game = gameId && (await ctx.db.get(gameId));
+    if (round.options.length === game?.playerIds.length) {
+      // All players have added options
+      await ctx.db.patch(round._id, beginGuessPatch(round));
+      await ctx.scheduler.runAfter(GuessDurationMs, api.round.progress, {
+        roundId: round._id,
+        fromStage: "guess",
       });
-      await ctx.db.patch(round._id, { options: round.options });
-      const game = gameId && (await ctx.db.get(gameId));
-      if (round.options.length === game?.playerIds.length) {
-        // All players have added options
-        await ctx.db.patch(round._id, beginGuessPatch(round));
-        ctx.scheduler.runAfter(GuessDurationMs, api.round.progress, {
-          roundId: round._id,
-          fromStage: "guess",
-        });
-      }
-      return { success: true };
-    },
-  })
-);
+    }
+    return { success: true };
+  },
+});
 
-export const progress = mutation(
+export const progress = myMutation(
   async (
     ctx,
     {
@@ -311,7 +303,7 @@ const beginGuessPatch = (round: Doc<"rounds">): Partial<Doc<"rounds">> => ({
   stageEnd: Date.now() + GuessDurationMs,
 });
 
-export const guess = mutationWithSession({
+export const guess = sessionMutation({
   args: {
     roundId: v.id("rounds"),
     prompt: v.string(),
@@ -378,7 +370,7 @@ export const guess = mutationWithSession({
   },
 });
 
-export const like = mutationWithSession({
+export const like = sessionMutation({
   args: {
     roundId: v.id("rounds"),
     prompt: v.string(),
@@ -432,4 +424,4 @@ const revealPatch = (round: Doc<"rounds">) => ({
 });
 
 // Return the server's current time so clients can calculate timestamp offsets.
-export const serverNow = mutation(() => Date.now());
+export const serverNow = myMutation(() => Date.now());

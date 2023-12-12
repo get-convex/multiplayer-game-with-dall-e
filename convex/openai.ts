@@ -16,7 +16,10 @@ export const addOption = action({
     prompt: v.string(),
     sessionId: v.id("sessions"),
   },
-  handler: async (ctx, { gameId, roundId, prompt, sessionId }) => {
+  handler: async (
+    ctx,
+    { gameId, roundId, prompt, sessionId }
+  ): Promise<OptionResult> => {
     const openai = makeOpenAIClient();
     // Check if the prompt is offensive.
     const modResponse = await openai.createModeration({

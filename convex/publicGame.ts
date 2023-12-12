@@ -1,7 +1,7 @@
 import { internal } from "./_generated/api";
-import { internalMutation, query } from "./_generated/server";
+import { myInternalMutation, myQuery } from "./lib/myFunctions";
 
-export const get = query({
+export const get = myQuery({
   handler: async (ctx) => {
     const publicGame = await ctx.db.query("publicGame").unique();
     if (!publicGame) {
@@ -15,7 +15,7 @@ export const get = query({
 const PublicGuessMs = 15000;
 const PublicRevealMs = 10000;
 
-export const progress = internalMutation({
+export const progress = myInternalMutation({
   handler: async (ctx, { fromStage }: { fromStage: "guess" | "reveal" }) => {
     const publicGame = await ctx.db.query("publicGame").unique();
     if (!publicGame) throw new Error("No public game");
@@ -35,9 +35,13 @@ export const progress = internalMutation({
           (option) => option.likes.length || option.votes.length
         )
       ) {
-        await ctx.scheduler.runAfter(PublicGuessMs, internal.publicGame.progress, {
-          fromStage: "guess",
-        });
+        await ctx.scheduler.runAfter(
+          PublicGuessMs,
+          internal.publicGame.progress,
+          {
+            fromStage: "guess",
+          }
+        );
         return "guess again";
       }
       await ctx.db.patch(currentRound._id, {
