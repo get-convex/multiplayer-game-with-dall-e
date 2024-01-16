@@ -257,22 +257,24 @@ export const addOption = internalSessionMutation({
   },
 });
 
-export const progress = myMutation(
-  async (
-    ctx,
-    {
-      roundId,
-      fromStage,
-    }: { roundId: Id<"rounds">; fromStage: Doc<"rounds">["stage"] }
-  ) => {
+export const progress = myMutation({
+  args: {
+    roundId: v.id("rounds"),
+    fromStage: v.union(
+      v.literal("label"),
+      v.literal("guess"),
+      v.literal("reveal")
+    ),
+  },
+  handler: async (ctx, { roundId, fromStage }) => {
     const round = await ctx.db.get(roundId);
     if (!round) throw new Error("Round not found: " + roundId);
     if (round.stage === fromStage) {
       const stage = fromStage === "label" ? "guess" : "reveal";
       await ctx.db.patch(round._id, { stage });
     }
-  }
-);
+  },
+});
 
 // from https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
 function shuffle<T extends {}>(array: T[]): T[] {

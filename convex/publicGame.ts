@@ -1,3 +1,4 @@
+import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { myInternalMutation, myQuery } from "./lib/myFunctions";
 
@@ -16,7 +17,8 @@ const PublicGuessMs = 15000;
 const PublicRevealMs = 10000;
 
 export const progress = myInternalMutation({
-  handler: async (ctx, { fromStage }: { fromStage: "guess" | "reveal" }) => {
+  args: { fromStage: v.union(v.literal("guess"), v.literal("reveal")) },
+  handler: async (ctx, { fromStage }) => {
     const publicGame = await ctx.db.query("publicGame").unique();
     if (!publicGame) throw new Error("No public game");
     const currentRound = await ctx.db.get(publicGame.roundId);

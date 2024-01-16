@@ -161,6 +161,7 @@ function createGravatarUrl(key: string): string {
  * client.
  */
 export const createSession = myMutation({
+  args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     let userId = identity && (await getOrCreateUser(ctx.db, identity));
